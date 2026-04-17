@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "html5-validator": "^1.2.1"
+  }
+}
