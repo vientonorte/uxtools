@@ -285,19 +285,12 @@
 <footer>SURA Investments · UX Benchmark · 2026</footer>
 
 <script>
+  /* If the iframe fails to load, show the fallback link instead */
   const iframe = document.getElementById('benchmark-iframe');
   iframe.addEventListener('error', function() {
     document.getElementById('embed-section').style.display = 'none';
     document.getElementById('fallback').style.display = 'block';
   });
-  setTimeout(function() {
-    try {
-      if (iframe.contentDocument && iframe.contentDocument.body.innerHTML === '') {
-        document.getElementById('embed-section').style.display = 'none';
-        document.getElementById('fallback').style.display = 'block';
-      }
-    } catch(e) { /* cross-origin, embed is working */ }
-  }, 5000);
 </script>
 </body>
 </html>
