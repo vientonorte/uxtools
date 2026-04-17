@@ -1,0 +1,16 @@
+/* ── DESIGN TOKENS ─────────────────────────────────────────── */
+:root {
+  --navy:    #001A72;
+  --navy-2:  #0033A0;
+  --cyan:    #00B5E2;
+  --cyan-2:  #38CFEF;
+  --white:   #FFFFFF;
+  --slate:   #F0F4FA;
+  --muted:   #8E99B0;
+  --border:  rgba(0,26,114,0.12);
+  --shadow:  0 4px 24px rgba(0,26,114,0.10), 0 1px 4px rgba(0,26,114,0.06);
+  --radius:  16px;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+  --font-body:    'Inter', sans-serif;
+}

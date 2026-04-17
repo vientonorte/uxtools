@@ -12,10 +12,19 @@ Suite de herramientas UX en producción para SURA Investments.
 ## Estructura
 
 ```
-index.html          → Hub / landing page con tabs de productos
-benchmark.html      → Producto 1: UX Benchmark (embed Figma)
-uxflow.html         → Producto 2: UXFLOW Auto-Doc Engine
-card-para-index.html → Tarjeta para agregar en vientonorte.github.io
+index.html          → Dashboard / hub con tabs de productos
+benchmark.html      → App: UX Benchmark (embed Figma)
+uxflow.html         → App: UXFLOW Auto-Doc Engine
+css/
+  tokens.css        → Design tokens (variables, colores, tipografía)
+  base.css          → Reset, grain overlay, scrollbar
+  nav.css           → Navegación y footer compartidos
+  dashboard.css     → Estilos del dashboard (index.html)
+  benchmark.css     → Estilos de Benchmark (benchmark.html)
+  uxflow.css        → Estilos de UXFLOW (uxflow.html)
+js/
+  dashboard.js      → Lógica de tabs del dashboard
+  uxflow.js         → Motor de generación, clipboard, historial
 ```
 
 ## Deploy
