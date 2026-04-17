@@ -11,7 +11,8 @@
       tab.classList.add('active');
 
       panels.forEach(function (p) { p.classList.remove('active'); });
-      document.getElementById('panel-' + target).classList.add('active');
+      var targetPanel = document.getElementById('panel-' + target);
+      if (targetPanel) targetPanel.classList.add('active');
     });
   });
 })();
