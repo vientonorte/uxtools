@@ -1,7 +1,18 @@
 /* ─── ESTADO ─────────────────────────────────────────────── */
-var historial = JSON.parse(localStorage.getItem('uxflow-historial') || '[]');
+var historial;
+try {
+  historial = JSON.parse(localStorage.getItem('uxflow-historial') || '[]');
+} catch (e) {
+  historial = [];
+}
 
 /* ─── UTILIDADES ─────────────────────────────────────────── */
+function escapeHTML(str) {
+  var div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
+}
+
 function showToast(msg, delay) {
   delay = delay || 3000;
   var t = document.getElementById('toast');
@@ -52,17 +63,19 @@ function generarDoc() {
     var flags = { 'Chile': '🇨🇱', 'Colombia': '🇨🇴', 'México': '🇲🇽', 'Perú': '🇵🇪', 'Uruguay': '🇺🇾', 'Argentina': '🇦🇷', 'Ecuador': '🇪🇨', 'Brasil': '🇧🇷' };
     var pillBox = document.getElementById('flag-pills');
     pillBox.innerHTML = paises.slice(0, 4).map(function (p) {
-      return '<span class="flag-pill"><span class="flag-emoji">' + (flags[p] || '🌎') + '</span> ' + p + '</span>';
+      var safe = escapeHTML(p);
+      return '<span class="flag-pill"><span class="flag-emoji">' + (flags[p] || '🌎') + '</span> ' + safe + '</span>';
     }).join('');
 
     /* Tabla */
     var telefonos = { 'Chile': '+56 2 2000 0000', 'Colombia': '+57 1 555 0000', 'México': '+52 55 5000 0000', 'Perú': null, 'Uruguay': '+598 2 000 0000', 'Argentina': '+54 11 0000 0000' };
     var tbody = document.getElementById('tabla-body');
     tbody.innerHTML = paises.map(function (p) {
+      var safe = escapeHTML(p);
       var tel = telefonos[p] || null;
       return tel
-        ? '<tr><td>' + p + '</td><td>' + tel + '</td><td><span class="action-pill">Ir al Sitio</span></td></tr>'
-        : '<tr class="warn-row"><td>' + p + '</td><td><em>No disponible</em></td><td><span class="action-pill">Ir al Sitio</span></td></tr>';
+        ? '<tr><td>' + safe + '</td><td>' + escapeHTML(tel) + '</td><td><span class="action-pill">Ir al Sitio</span></td></tr>'
+        : '<tr class="warn-row"><td>' + safe + '</td><td><em>No disponible</em></td><td><span class="action-pill">Ir al Sitio</span></td></tr>';
     }).join('');
 
     /* Donut adaptivo */
@@ -125,8 +138,8 @@ function renderHistorial() {
   }
   grid.innerHTML = historial.map(function (h) {
     return '<div class="history-card" onclick="cargarDesdeHistorial(' + h.id + ')">' +
-      '<div class="history-card-title">' + h.titulo + '</div>' +
-      '<div class="history-card-date">' + h.linea + ' · ' + h.fecha + '</div>' +
+      '<div class="history-card-title">' + escapeHTML(h.titulo) + '</div>' +
+      '<div class="history-card-date">' + escapeHTML(h.linea) + ' · ' + escapeHTML(h.fecha) + '</div>' +
       '</div>';
   }).join('');
 }

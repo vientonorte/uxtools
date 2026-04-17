@@ -60,10 +60,12 @@
 <script>
   /* If the iframe fails to load, show the fallback link instead */
   var iframe = document.getElementById('benchmark-iframe');
-  iframe.addEventListener('error', function() {
-    document.getElementById('embed-section').style.display = 'none';
-    document.getElementById('fallback').style.display = 'block';
-  });
+  if (iframe) {
+    iframe.addEventListener('error', function() {
+      document.getElementById('embed-section').style.display = 'none';
+      document.getElementById('fallback').style.display = 'block';
+    });
+  }
 </script>
 </body>
 </html>
