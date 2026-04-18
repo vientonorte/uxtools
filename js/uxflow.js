@@ -114,7 +114,11 @@ function guardarHistorial() {
   var item = { titulo: titulo, linea: linea, criterios: criterios, paises: paises, fecha: fechaHoy(), id: Date.now() };
   historial.unshift(item);
   if (historial.length > 20) historial = historial.slice(0, 20);
-  localStorage.setItem('uxflow-historial', JSON.stringify(historial));
+  try {
+    localStorage.setItem('uxflow-historial', JSON.stringify(historial));
+  } catch (e) {
+    /* Storage may be full or unavailable (private browsing) */
+  }
   renderHistorial();
   showToast('💾 Guardado en historial');
 }
