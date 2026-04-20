@@ -177,12 +177,12 @@ h1 .accent {
 /* ── PRODUCT PANELS ─────────────────────────────────────── */
 .product-panel {
   display: none;
-  animation: panelIn 0.45s var(--ease-out);
+  animation: fadeInSlideUp 0.45s var(--ease-out);
 }
 .product-panel.active {
   display: block;
 }
-@keyframes panelIn {
+@keyframes fadeInSlideUp {
   from { opacity: 0; transform: translateY(16px) scale(0.99); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
