@@ -1,16 +1,67 @@
 /* ── DESIGN TOKENS ─────────────────────────────────────────── */
 :root {
+  /* ── Color Palette ─── */
   --navy:    #001A72;
   --navy-2:  #0033A0;
+  --navy-deep: #000D3A;
   --cyan:    #00B5E2;
   --cyan-2:  #38CFEF;
+  --cyan-glow: rgba(0,181,226,0.25);
   --white:   #FFFFFF;
   --slate:   #F0F4FA;
   --muted:   #8E99B0;
+  --success: #3DBA6F;
+  --warning: #FF8C00;
   --border:  rgba(0,26,114,0.12);
-  --shadow:  0 4px 24px rgba(0,26,114,0.10), 0 1px 4px rgba(0,26,114,0.06);
-  --radius:  16px;
+
+  /* ── Surfaces ─── */
+  --surface-glass:   rgba(255,255,255,0.04);
+  --surface-hover:   rgba(255,255,255,0.08);
+  --surface-active:  rgba(0,181,226,0.12);
+  --border-subtle:   rgba(255,255,255,0.08);
+  --border-medium:   rgba(255,255,255,0.14);
+  --border-accent:   rgba(0,181,226,0.35);
+
+  /* ── Elevation ─── */
+  --shadow-sm:  0 2px 8px rgba(0,13,58,0.10);
+  --shadow-md:  0 4px 24px rgba(0,13,58,0.12), 0 1px 4px rgba(0,13,58,0.06);
+  --shadow-lg:  0 12px 40px rgba(0,13,58,0.18), 0 2px 8px rgba(0,13,58,0.08);
+  --shadow-glow: 0 0 32px rgba(0,181,226,0.15);
+
+  /* ── Spacing Scale (4px base) ─── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+  --space-11: 80px;
+  --space-12: 96px;
+
+  /* ── Radius ─── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 100px;
+
+  /* ── Transitions ─── */
+  --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 0.15s;
+  --duration-base: 0.25s;
+  --duration-slow: 0.4s;
+
+  /* ── Typography ─── */
   --font-display: 'Space Grotesk', sans-serif;
   --font-mono:    'DM Mono', monospace;
   --font-body:    'Inter', sans-serif;
+
+  /* ── Legacy Aliases (backward compat) ─── */
+  --radius: var(--radius-lg);
+  --shadow: var(--shadow-md);
 }
