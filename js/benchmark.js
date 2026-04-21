@@ -309,7 +309,16 @@ function renderEval() {
     return;
   }
 
-  var html = '<div class="eval-table-wrap"><table class="eval-table"><thead><tr><th class="dim-col">Dimensión</th>';
+  var html = '<div class="eval-scale">' +
+    '<div class="eval-scale-label">Escala de evaluación</div>' +
+    '<div class="eval-scale-items">' +
+    '<div class="eval-scale-item lo"><span class="eval-scale-range">0 – 3</span><span class="eval-scale-name">Deficiente</span></div>' +
+    '<div class="eval-scale-item mid"><span class="eval-scale-range">4 – 5</span><span class="eval-scale-name">Regular</span></div>' +
+    '<div class="eval-scale-item hi"><span class="eval-scale-range">6 – 7</span><span class="eval-scale-name">Bueno</span></div>' +
+    '<div class="eval-scale-item ex"><span class="eval-scale-range">8 – 10</span><span class="eval-scale-name">Excelente</span></div>' +
+    '</div></div>';
+
+  html += '<div class="eval-table-wrap"><table class="eval-table"><thead><tr><th class="dim-col">Dimensión</th>';
   productos.forEach(function(p) {
     var imgTag = p.imagen
       ? '<div class="eval-prod-thumb"><img src="' + p.imagen + '" alt="' + escapeHTML(p.nombre) + '"></div>'
