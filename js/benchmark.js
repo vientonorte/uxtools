@@ -39,7 +39,7 @@ function loadState() {
         _nextId = Math.max.apply(null, STATE.productos.map(function(p) { return p.id; })) + 1;
       }
     }
-  } catch (e) { /* ignore parse errors */ }
+  } catch (e) { console.error('[UXBenchmark] Failed to restore saved state:', e); }
 }
 
 function saveState() {
@@ -47,7 +47,11 @@ function saveState() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(STATE));
     setSaveStatus('saved');
-  } catch (e) { /* storage may be unavailable (private browsing, full) */ }
+  } catch (e) {
+    /* Storage may be unavailable (private browsing, quota exceeded) */
+    console.warn('[UXBenchmark] Auto-save unavailable:', e);
+    setSaveStatus('unsaved');
+  }
 }
 
 function autoSave() {
@@ -497,8 +501,10 @@ function renderSavedList() {
 }
 
 /* ─── INICIALIZACIÓN ─────────────────────────────────────────── */
-loadState();
-document.getElementById('canvas-date').textContent = fechaHoy();
-renderConfig();
-renderSavedList();
-irAPaso(STATE.paso || 1);
+document.addEventListener('DOMContentLoaded', function() {
+  loadState();
+  document.getElementById('canvas-date').textContent = fechaHoy();
+  renderConfig();
+  renderSavedList();
+  irAPaso(STATE.paso || 1);
+});
