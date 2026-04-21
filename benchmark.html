@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="UX Benchmark — Análisis comparativo de experiencia de usuario para productos digitales SURA Investments.">
+  <meta name="description" content="UX Benchmark — Herramienta de análisis comparativo de experiencia de usuario para productos digitales.">
   <title>UX Benchmark — SURA Investments</title>
   <link rel="preconnect" href="https://fonts.bunny.net">
   <link href="https://fonts.bunny.net/css?family=dm-mono:400,500|space-grotesk:300,400,500,600,700|inter:400,500" rel="stylesheet">
@@ -18,54 +18,137 @@
   <a class="nav-brand" href="index.html">
     <div class="nav-logo">BM</div>
     <span class="nav-title">UX Benchmark</span>
-    <span class="nav-badge">v1.0</span>
+    <span class="nav-badge">v2.0</span>
   </a>
   <div class="nav-actions">
+    <span class="nav-save-status" id="save-status" title="Estado del guardado automático">● Auto-guardado</span>
     <a class="nav-link" href="index.html">← uxtools</a>
-    <a class="nav-link" href="https://vientonorte.github.io/">← vientonorte</a>
-    <a class="btn-nav" href="https://github.com/vientonorte/uxtools" target="_blank">GitHub</a>
+    <a class="btn-nav" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">GitHub</a>
   </div>
 </nav>
 
-<div class="hero">
-  <div class="hero-eyebrow">UX Benchmark · SURA Investments · 2026</div>
-  <h1>Benchmark<br><span class="accent">UX comparativo.</span></h1>
-  <p class="hero-sub">Análisis comparativo de experiencia de usuario para productos digitales. Evalúa patrones, métricas y buenas prácticas del mercado.</p>
-  <div class="hero-cta">
-    <a class="btn-primary" href="https://touch-swirl-23494733.figma.site" target="_blank">Abrir en Figma ↗</a>
-    <a class="btn-ghost" href="index.html">Ver todos los productos</a>
-  </div>
-</div>
+<div class="app-shell" id="app">
 
-<div class="embed-shell" id="embed-section">
-  <div class="embed-frame">
-    <iframe
-      src="https://touch-swirl-23494733.figma.site"
-      title="UX Benchmark — SURA Investments"
-      loading="lazy"
-      allow="clipboard-write"
-      sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-      id="benchmark-iframe"
-    ></iframe>
-  </div>
-</div>
+  <!-- ── SIDEBAR ─────────────────────────────────────── -->
+  <aside class="panel">
+    <div class="panel-label">Flujo de trabajo</div>
 
-<div class="fallback" id="fallback">
-  <p>No se pudo cargar el prototipo embebido.</p>
-  <p style="margin-top:12px;"><a href="https://touch-swirl-23494733.figma.site" target="_blank">Abrir Benchmark directamente en Figma ↗</a></p>
-</div>
+    <div class="step-list">
+      <button class="step-item active" id="step-nav-1" onclick="irAPaso(1)" aria-label="Ir al paso 1: Configuración">
+        <div class="step-num">01</div>
+        <div class="step-info">
+          <div class="step-name">Configuración</div>
+          <div class="step-desc">Productos y alcance</div>
+        </div>
+      </button>
+      <div class="step-connector" aria-hidden="true"></div>
+      <button class="step-item" id="step-nav-2" onclick="irAPaso(2)" aria-label="Ir al paso 2: Evaluación">
+        <div class="step-num">02</div>
+        <div class="step-info">
+          <div class="step-name">Evaluación</div>
+          <div class="step-desc">Puntuar por dimensión</div>
+        </div>
+      </button>
+      <div class="step-connector" aria-hidden="true"></div>
+      <button class="step-item" id="step-nav-3" onclick="irAPaso(3)" aria-label="Ir al paso 3: Resultados">
+        <div class="step-num">03</div>
+        <div class="step-info">
+          <div class="step-name">Resultados</div>
+          <div class="step-desc">Comparativa y exportar</div>
+        </div>
+      </button>
+    </div>
 
-<footer>SURA Investments · UX Benchmark · 2026</footer>
+    <div class="panel-divider"></div>
 
-<script>
-  /* If the iframe fails to load, show the fallback link instead */
-  var iframe = document.getElementById('benchmark-iframe');
-  if (iframe) {
-    iframe.addEventListener('error', function() {
-      document.getElementById('embed-section').style.display = 'none';
-      document.getElementById('fallback').style.display = 'block';
-    });
-  }
-</script>
+    <button class="btn-generate" onclick="avanzarPaso()" id="btn-next">Siguiente →</button>
+    <button class="btn-export" onclick="guardarSesion()" style="margin-top:8px">💾 Guardar sesión</button>
+    <button class="btn-export" onclick="nuevoBenchmark()" style="margin-top:6px">✕ Reiniciar</button>
+
+    <div class="panel-divider"></div>
+
+    <div class="panel-label">Sesiones guardadas</div>
+    <div class="saved-list" id="saved-list">
+      <div class="empty-saved">Sin sesiones guardadas.</div>
+    </div>
+  </aside>
+
+  <!-- ── CANVAS ──────────────────────────────────────── -->
+  <div class="canvas-area">
+    <div class="canvas-header">
+      <div class="canvas-meta">
+        <span class="status-dot live" aria-hidden="true"></span>
+        <span id="canvas-step-label">Paso 1 de 3 — Configuración</span>
+      </div>
+      <div class="canvas-meta" id="canvas-date">—</div>
+    </div>
+
+    <!-- STEP 1: Configuración -->
+    <section class="step-panel" id="panel-step-1" aria-label="Paso 1: Configuración">
+      <div class="step-card">
+        <div class="step-card-header">
+          <div>
+            <div class="step-card-title">Configuración del Benchmark</div>
+            <div class="step-card-sub">Define el alcance, los productos y el analista responsable</div>
+          </div>
+          <div class="step-card-meta">PASO 01</div>
+        </div>
+        <div class="step-card-body">
+
+          <div class="config-grid">
+            <div class="form-group">
+              <label for="bm-nombre">Nombre del benchmark</label>
+              <input type="text" id="bm-nombre" placeholder="Ej: Benchmark Q2 2026 — Plataformas de Inversión" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="bm-analista">Analista UX</label>
+              <input type="text" id="bm-analista" placeholder="Nombre del analista" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="section-divider-line"></div>
+
+          <div class="form-group">
+            <label>Productos a comparar <span class="label-hint">2–5 productos</span></label>
+            <div class="productos-grid" id="productos-grid"></div>
+            <button class="btn-add-product" onclick="agregarProducto()" id="btn-add-product">+ Agregar producto</button>
+          </div>
+
+          <div class="section-divider-line"></div>
+
+          <div class="form-group">
+            <label>Dimensiones de evaluación <span class="label-hint">8 dimensiones predefinidas</span></label>
+            <div class="dimensions-preview" id="dimensions-preview"></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: Evaluación -->
+    <section class="step-panel hidden" id="panel-step-2" aria-label="Paso 2: Evaluación">
+      <div class="step-card">
+        <div class="step-card-header">
+          <div>
+            <div class="step-card-title">Evaluación por Dimensión</div>
+            <div class="step-card-sub">Puntúa cada producto de 0 (pésimo) a 10 (excelente)</div>
+          </div>
+          <div class="step-card-meta">PASO 02</div>
+        </div>
+        <div class="step-card-body" id="eval-body"></div>
+      </div>
+    </section>
+
+    <!-- STEP 3: Resultados -->
+    <section class="step-panel hidden" id="panel-step-3" aria-label="Paso 3: Resultados">
+      <div id="result-area"></div>
+    </section>
+
+  </div><!-- /canvas-area -->
+</div><!-- /app-shell -->
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/benchmark.js"></script>
 </body>
 </html>
