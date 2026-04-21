@@ -524,6 +524,8 @@ function exportarResultados() {
 function guardarSesion() {
   collectFormValues();
   var nombre = STATE.config.nombre || 'Benchmark sin título';
+  /* Version = number of prior snapshots with this name + 1.
+     Calculated before unshift so the new session is not counted. */
   var version = STATE.historial.filter(function(h) { return h.nombre === nombre; }).length + 1;
   var sesion = {
     id:          Date.now(),
@@ -575,7 +577,7 @@ function renderSavedList() {
     return;
   }
   container.innerHTML = STATE.historial.map(function(h) {
-    var versionTag = h.version ? '<span class="saved-item-version">v' + h.version + '</span>' : '';
+  var versionTag = h.version != null ? '<span class="saved-item-version">v' + h.version + '</span>' : '';
     return '<div class="saved-item" onclick="cargarSesion(' + h.id + ')" role="button" tabindex="0"' +
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \')cargarSesion(' + h.id + ')"' +
       ' title="Cargar sesión: ' + escapeHTML(h.nombre) + '">' +
