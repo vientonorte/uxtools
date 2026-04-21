@@ -6,27 +6,10 @@ try {
   historial = [];
 }
 
-/* ─── UTILIDADES ─────────────────────────────────────────── */
-function escapeHTML(str) {
-  var div = document.createElement('div');
-  div.appendChild(document.createTextNode(str));
-  return div.innerHTML;
-}
-
-function showToast(msg, delay) {
-  delay = delay || 3000;
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function () { t.classList.remove('show'); }, delay);
-}
+/* ─── UTILIDADES ─── ver js/utils.js ─────────────────────────── */
 
 function scrollToApp() {
   document.getElementById('editor').scrollIntoView({ behavior: 'smooth' });
-}
-
-function fechaHoy() {
-  return new Date().toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 /* ─── GENERACIÓN DE DOC ──────────────────────────────────── */

@@ -97,24 +97,7 @@ function collectFormValues() {
   });
 }
 
-/* ─── UTILIDADES ─────────────────────────────────────────────── */
-function escapeHTML(str) {
-  var div = document.createElement('div');
-  div.appendChild(document.createTextNode(String(str)));
-  return div.innerHTML;
-}
-
-function showToast(msg) {
-  var t = document.getElementById('toast');
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 3000);
-}
-
-function fechaHoy() {
-  return new Date().toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
+/* ─── UTILIDADES ─── ver js/utils.js ─────────────────────────── */
 
 function scoreClass(s) {
   if (s >= 4) return 'hi';
