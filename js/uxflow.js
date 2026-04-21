@@ -12,6 +12,20 @@ function scrollToApp() {
   document.getElementById('editor').scrollIntoView({ behavior: 'smooth' });
 }
 
+/* ─── ESTADO GUARDADO ─────────────────────────────────────── */
+function setSaveStatus(status) {
+  var el = document.getElementById('save-status');
+  if (!el) return;
+  el.style.display = '';
+  if (status === 'saved') {
+    el.textContent = '● Guardado';
+    el.className = 'nav-save-status';
+  } else {
+    el.textContent = '○ Sin guardar';
+    el.className = 'nav-save-status unsaved';
+  }
+}
+
 /* ─── GENERACIÓN DE DOC ──────────────────────────────────── */
 function generarDoc() {
   var titulo    = document.getElementById('titulo').value || 'Proyecto UX';
@@ -104,6 +118,7 @@ function guardarHistorial() {
   }
   renderHistorial();
   showToast('💾 Guardado en historial');
+  setSaveStatus('saved');
 }
 
 function cargarDesdeHistorial(id) {
@@ -135,3 +150,4 @@ function renderHistorial() {
 document.getElementById('doc-fecha').textContent   = 'FECHA: ' + fechaHoy();
 document.getElementById('canvas-date').textContent = fechaHoy();
 renderHistorial();
+if (historial.length) setSaveStatus('saved');

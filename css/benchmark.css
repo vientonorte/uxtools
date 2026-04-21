@@ -144,22 +144,6 @@
 }
 
 /* ── NAV SAVE STATUS ────────────────────────────────────────── */
-.nav-save-status {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.5px;
-  color: var(--success);
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: rgba(61,186,111,0.1);
-  border: 1px solid rgba(61,186,111,0.2);
-}
-.nav-save-status.unsaved {
-  color: var(--warning);
-  background: rgba(255,140,0,0.1);
-  border-color: rgba(255,140,0,0.2);
-}
-
 /* ── SAVED SESSION LIST ─────────────────────────────────────── */
 .saved-list { display: flex; flex-direction: column; gap: 6px; }
 .saved-item {
