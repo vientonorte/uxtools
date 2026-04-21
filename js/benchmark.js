@@ -163,6 +163,7 @@ function collectFormValues() {
   DIMENSIONES.forEach(function(d) {
     if (!STATE.scores[d.id]) STATE.scores[d.id] = {};
     if (!STATE.notas[d.id])  STATE.notas[d.id]  = {};
+    if (!STATE.fotos[d.id])  STATE.fotos[d.id]  = {};
     STATE.productos.forEach(function(p) {
       var inp = document.getElementById('score-' + d.id + '-' + p.id);
       if (inp) {
@@ -558,6 +559,7 @@ function renderResults() {
 
   /* ── Derived analytics ──────────────────────────────── */
   var FAILURE_THRESHOLD = 2; /* score <= this is "failed" */
+  var FAILURE_PCT       = 0.4; /* product total below this fraction of max is "failed" */
 
   /* Dimensions with average score <= threshold across all products */
   var dimsFailed = DIMENSIONES.filter(function(d) {
@@ -571,10 +573,17 @@ function renderResults() {
     return avg <= FAILURE_THRESHOLD;
   });
 
-  /* Products with total score below 40 % of maximum */
+  /* Products with total score below FAILURE_PCT of maximum */
   var productosFailed = productos.filter(function(p) {
-    return totales[p.id] < maxScore * 0.4;
+    return totales[p.id] < maxScore * FAILURE_PCT;
   });
+
+  /* Helper: return the CSS class for a score badge in the results table */
+  function resultBadgeClass(score, isBest) {
+    if (score <= FAILURE_THRESHOLD && score > 0) return 'score-badge fail';
+    if (isBest) return 'score-badge best';
+    return 'score-badge ' + scoreClass(score);
+  }
 
   /* Best and worst single dimension (by average across products) */
   var dimAvgs = DIMENSIONES.map(function(d) {
@@ -633,10 +642,9 @@ function renderResults() {
     html += '<tr' + (isFailed ? ' class="dim-failed-row"' : '') + '>';
     html += '<td class="dim-n">' + (isFailed ? '<span class="failed-badge" title="Dimensión en zona de fracaso">✕</span> ' : '') + escapeHTML(d.nombre) + '</td>';
     productos.forEach(function(p) {
-      var s  = (STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined) ? STATE.scores[d.id][p.id] : 0;
+      var s      = (STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined) ? STATE.scores[d.id][p.id] : 0;
       var isBest = totales[p.id] === maxTotal;
-      var badgeCls = s <= FAILURE_THRESHOLD ? 'score-badge fail' : (isBest ? 'score-badge best' : 'score-badge ' + scoreClass(s));
-      html += '<td><span class="' + badgeCls + '">' + (s || '—') + '</span></td>';
+      html += '<td><span class="' + resultBadgeClass(s, isBest) + '">' + (s || '—') + '</span></td>';
     });
     html += '</tr>';
   });
@@ -646,7 +654,9 @@ function renderResults() {
   productos.forEach(function(p) {
     var isBest   = totales[p.id] === maxTotal;
     var isFailed = productosFailed.indexOf(p) !== -1;
-    var badgeCls = isFailed ? 'score-badge fail' : (isBest ? 'score-badge best' : 'score-badge ' + scoreClass(totales[p.id] / DIMENSIONES.length));
+    var badgeCls = isFailed ? 'score-badge fail' : resultBadgeClass(
+      totales[p.id] / DIMENSIONES.length, isBest
+    );
     html += '<td><span class="' + badgeCls + '">' + totales[p.id] + '</span></td>';
   });
   html += '</tr></tbody></table>';
@@ -741,9 +751,10 @@ function renderResults() {
       html += '<div class="failure-item">';
       html += '<div class="fi-dim-name">' + escapeHTML(d.nombre) + '</div>';
       html += '<div class="fi-products">';
+      /* Show only the products that individually scored at or below the threshold */
       productos.forEach(function(p) {
         var s = (STATE.scores[d.id] && STATE.scores[d.id][p.id]) ? STATE.scores[d.id][p.id] : 0;
-        if (s <= FAILURE_THRESHOLD) {
+        if (s > 0 && s <= FAILURE_THRESHOLD) {
           var nota = (STATE.notas[d.id] && STATE.notas[d.id][p.id]) ? STATE.notas[d.id][p.id] : '';
           html += '<div class="fi-product-row">';
           html += '<span class="fi-prod-name">' + escapeHTML(p.nombre) + '</span>';

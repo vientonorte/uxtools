@@ -664,7 +664,6 @@ input::placeholder { color: #B0BDD8; }
 }
 
 /* Score within card */
-.eval-quant-row {}
 .eval-score-wrap { display: flex; flex-direction: column; gap: 6px; }
 .eval-score-guide {
   display: flex;
@@ -683,7 +682,6 @@ input::placeholder { color: #B0BDD8; }
 .sg.hi  { background: #F0FFF8; border-color: #AAEECA; color: #2A9A5A; }
 
 /* Qualitative notes */
-.eval-qual-row {}
 .eval-nota-textarea {
   width: 100%;
   background: #F6F9FF;
@@ -707,7 +705,6 @@ input::placeholder { color: #B0BDD8; }
 .eval-nota-textarea::placeholder { color: #B0BDD8; font-style: italic; }
 
 /* Photo evidence in eval */
-.eval-foto-row {}
 .eval-foto-empty {
   display: flex;
   align-items: center;
@@ -1219,7 +1216,6 @@ input::placeholder { color: #B0BDD8; }
   flex-direction: column;
   gap: 12px;
 }
-.failure-item {}
 .fi-dim-name {
   font-family: var(--font-display);
   font-size: 12px;
