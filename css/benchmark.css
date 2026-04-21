@@ -515,7 +515,6 @@ input::placeholder { color: #B0BDD8; }
 .eval-scale-item.lo  { background: #FFF5F5; border-color: #FFCCCC; }
 .eval-scale-item.mid { background: #FFFAF0; border-color: #FFE0A0; }
 .eval-scale-item.hi  { background: #F0FFF8; border-color: #AAEECA; }
-.eval-scale-item.ex  { background: #EEF8FF; border-color: #99DDFF; }
 .eval-scale-range {
   font-family: var(--font-mono);
   font-weight: 600;
@@ -524,7 +523,6 @@ input::placeholder { color: #B0BDD8; }
 .eval-scale-item.lo  .eval-scale-range { color: #CC0000; }
 .eval-scale-item.mid .eval-scale-range { color: #A06000; }
 .eval-scale-item.hi  .eval-scale-range { color: #2A9A5A; }
-.eval-scale-item.ex  .eval-scale-range { color: #0077AA; }
 .eval-scale-name {
   font-family: var(--font-display);
   font-weight: 600;
@@ -532,7 +530,6 @@ input::placeholder { color: #B0BDD8; }
 .eval-scale-item.lo  .eval-scale-name { color: #CC0000; }
 .eval-scale-item.mid .eval-scale-name { color: #A06000; }
 .eval-scale-item.hi  .eval-scale-name { color: #2A9A5A; }
-.eval-scale-item.ex  .eval-scale-name { color: #0077AA; }
 
 /* ── EVALUATION TABLE ───────────────────────────────────────── */
 .eval-table-wrap { overflow-x: auto; }

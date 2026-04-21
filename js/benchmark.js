@@ -89,7 +89,9 @@ function collectFormValues() {
       var inp = document.getElementById('score-' + d.id + '-' + p.id);
       if (inp) {
         var val = parseInt(inp.value, 10);
-        STATE.scores[d.id][p.id] = isNaN(val) ? 0 : Math.min(10, Math.max(0, val));
+        if (!isNaN(val)) {
+          STATE.scores[d.id][p.id] = Math.min(5, Math.max(1, val));
+        }
       }
     });
   });
@@ -115,14 +117,14 @@ function fechaHoy() {
 }
 
 function scoreClass(s) {
-  if (s >= 7) return 'hi';
-  if (s >= 5) return 'md';
+  if (s >= 4) return 'hi';
+  if (s >= 3) return 'md';
   return 'lo';
 }
 
 function scoreInputClass(s) {
-  if (s >= 7) return 'score-input score-high';
-  if (s >= 4) return 'score-input score-mid';
+  if (s >= 4) return 'score-input score-high';
+  if (s >= 3) return 'score-input score-mid';
   return 'score-input score-low';
 }
 
@@ -312,10 +314,9 @@ function renderEval() {
   var html = '<div class="eval-scale">' +
     '<div class="eval-scale-label">Escala de evaluación</div>' +
     '<div class="eval-scale-items">' +
-    '<div class="eval-scale-item lo"><span class="eval-scale-range">0 – 3</span><span class="eval-scale-name">Deficiente</span></div>' +
-    '<div class="eval-scale-item mid"><span class="eval-scale-range">4 – 5</span><span class="eval-scale-name">Regular</span></div>' +
-    '<div class="eval-scale-item hi"><span class="eval-scale-range">6 – 7</span><span class="eval-scale-name">Bueno</span></div>' +
-    '<div class="eval-scale-item ex"><span class="eval-scale-range">8 – 10</span><span class="eval-scale-name">Excelente</span></div>' +
+    '<div class="eval-scale-item lo"><span class="eval-scale-range">1 – 2</span><span class="eval-scale-name">Deficiente</span></div>' +
+    '<div class="eval-scale-item mid"><span class="eval-scale-range">3</span><span class="eval-scale-name">Aceptable</span></div>' +
+    '<div class="eval-scale-item hi"><span class="eval-scale-range">4 – 5</span><span class="eval-scale-name">Destacado</span></div>' +
     '</div></div>';
 
   html += '<div class="eval-table-wrap"><table class="eval-table"><thead><tr><th class="dim-col">Dimensión</th>';
@@ -337,7 +338,7 @@ function renderEval() {
       var cls = stored !== '' ? scoreInputClass(stored) : 'score-input';
       html += '<td class="score-cell">' +
         '<input type="number" id="score-' + d.id + '-' + p.id + '" class="' + cls + '"' +
-        ' min="0" max="10" value="' + (stored !== '' ? stored : '') + '" placeholder="—"' +
+        ' min="1" max="5" value="' + (stored !== '' ? stored : '') + '" placeholder="—"' +
         ' oninput="onScoreInput(this)" aria-label="' + escapeHTML(d.nombre) + ' — ' + escapeHTML(p.nombre) + '">' +
         '</td>';
     });
@@ -351,7 +352,7 @@ function renderEval() {
 function onScoreInput(inp) {
   var val = parseInt(inp.value, 10);
   if (!isNaN(val)) {
-    val = Math.min(10, Math.max(0, val));
+    val = Math.min(5, Math.max(1, val));
     inp.value = val;
     inp.className = scoreInputClass(val);
   } else {
@@ -385,7 +386,7 @@ function renderResults() {
 
   var maxTotal = Math.max.apply(null, productos.map(function(p) { return totales[p.id]; }));
   var winner   = productos.find(function(p) { return totales[p.id] === maxTotal; }) || productos[0];
-  var maxScore = DIMENSIONES.length * 10;
+  var maxScore = DIMENSIONES.length * 5;
   var bmNombre = STATE.config.nombre || 'UX Benchmark';
   var fecha    = fechaHoy();
 
@@ -482,7 +483,7 @@ function exportarResultados() {
   collectFormValues();
   var productos = STATE.productos.filter(function(p) { return p.nombre.trim(); });
   var bmNombre  = STATE.config.nombre || 'UX Benchmark';
-  var maxScore  = DIMENSIONES.length * 10;
+  var maxScore  = DIMENSIONES.length * 5;
   var lines     = [];
 
   lines.push('UX BENCHMARK EXPORT');
@@ -507,7 +508,7 @@ function exportarResultados() {
     productos.forEach(function(p) {
       var s = (STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined)
         ? STATE.scores[d.id][p.id] : 0;
-      row += (s + '/10').padEnd(COL);
+      row += (s + '/5').padEnd(COL);
     });
     lines.push(row);
   });
