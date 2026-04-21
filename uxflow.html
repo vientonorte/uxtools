@@ -17,18 +17,19 @@
 <!-- NAV -->
 <nav aria-label="Navegación principal">
   <a class="nav-brand" href="index.html" aria-label="UXFLOW — Inicio">
-    <div class="nav-logo">UX</div>
+    <div class="nav-logo" aria-hidden="true">UXF</div>
     <span class="nav-title">UXFLOW</span>
     <span class="nav-badge">v1.0</span>
   </a>
   <div class="nav-actions">
+    <span class="nav-save-status" id="save-status" title="Estado del guardado" style="display:none">● Guardado</span>
     <a class="nav-link" href="index.html">← uxtools</a>
     <a class="btn-nav" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">GitHub</a>
   </div>
 </nav>
 
 <!-- HERO -->
-<div class="hero">
+<header class="hero">
   <div class="hero-eyebrow">UX Auto-Doc Engine · SURA Investments · 2026</div>
   <h1>Documentación UX<br><span class="accent">automatizada.</span></h1>
   <p class="hero-sub">Genera criterios de aceptación, flujos de interacción, tablas de integridad y assets listos para Figma en segundos.</p>
@@ -36,9 +37,7 @@
     <button class="btn-primary" onclick="scrollToApp()">Abrir editor →</button>
     <a class="btn-ghost" href="#historial">Ver historial</a>
   </div>
-</div>
-
-<!-- APP SHELL -->
+</header>
 <div class="app-shell" id="editor">
   <!-- PANEL LATERAL -->
   <aside class="panel">
@@ -223,7 +222,7 @@
 </div><!-- /app-shell -->
 
 <!-- TOAST -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/utils.js"></script>
 <script src="js/uxflow.js"></script>
