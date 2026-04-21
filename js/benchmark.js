@@ -1,13 +1,85 @@
 /* ─── DIMENSIONES PREDEFINIDAS ──────────────────────────────── */
 var DIMENSIONES = [
-  { id: 'd1', nombre: 'Primera Impresión',    desc: 'Onboarding, hero y percepción inicial' },
-  { id: 'd2', nombre: 'Navegación',           desc: 'Arquitectura de información y menús' },
-  { id: 'd3', nombre: 'Usabilidad',           desc: 'Facilidad de uso y eficiencia en tareas' },
-  { id: 'd4', nombre: 'Diseño Visual',        desc: 'Jerarquía, tipografía y consistencia' },
-  { id: 'd5', nombre: 'Accesibilidad',        desc: 'Contraste, foco y compatibilidad WCAG' },
-  { id: 'd6', nombre: 'Performance',          desc: 'Velocidad y respuesta de la interfaz' },
-  { id: 'd7', nombre: 'Experiencia Mobile',   desc: 'Adaptación responsiva y gestos táctiles' },
-  { id: 'd8', nombre: 'Conversión',           desc: 'CTA, formularios y rutas clave de negocio' }
+  {
+    id: 'd1', nombre: 'Primera Impresión', desc: 'Onboarding, hero y percepción inicial',
+    criterios: [
+      'La propuesta de valor es comprensible en menos de 5 segundos',
+      'El hero o pantalla inicial es visualmente atractivo y coherente con la marca',
+      'La primera experiencia genera confianza y credibilidad',
+      'Los CTAs principales están correctamente jerarquizados y son visibles',
+      'La carga y primer render ocurren sin fricciones ni errores visibles'
+    ]
+  },
+  {
+    id: 'd2', nombre: 'Navegación', desc: 'Arquitectura de información y menús',
+    criterios: [
+      'El menú principal es claro, intuitivo y consistente en todas las pantallas',
+      'Las funciones clave se alcanzan en 3 clics o menos',
+      'Existen indicadores de posición (breadcrumbs, tabs activos u otros)',
+      'La navegación mobile es accesible y funcional con gestos táctiles',
+      'Las etiquetas y denominaciones son consistentes y sin ambigüedad'
+    ]
+  },
+  {
+    id: 'd3', nombre: 'Usabilidad', desc: 'Facilidad de uso y eficiencia en tareas',
+    criterios: [
+      'Las tareas primarias se completan sin errores ni confusión',
+      'Los mensajes de error son claros, específicos y orientados a la solución',
+      'El sistema provee feedback adecuado para cada acción del usuario',
+      'Los formularios son fáciles de completar y validan en tiempo real',
+      'La curva de aprendizaje es baja para usuarios nuevos'
+    ]
+  },
+  {
+    id: 'd4', nombre: 'Diseño Visual', desc: 'Jerarquía, tipografía y consistencia',
+    criterios: [
+      'La jerarquía visual guía correctamente la atención del usuario',
+      'La tipografía es legible y consistente en tamaño, peso y línea base',
+      'Los colores y espaciados se aplican de forma consistente en todo el producto',
+      'Los componentes (botones, inputs, tarjetas) son visualmente homogéneos',
+      'El sistema de diseño está bien aplicado y no presenta inconsistencias'
+    ]
+  },
+  {
+    id: 'd5', nombre: 'Accesibilidad', desc: 'Contraste, foco y compatibilidad WCAG',
+    criterios: [
+      'El contraste de texto sobre fondo cumple WCAG 2.1 AA (mínimo 4.5:1)',
+      'Todos los elementos interactivos tienen indicadores de foco visibles',
+      'Las imágenes informativas incluyen texto alternativo (alt text) descriptivo',
+      'El flujo de tabulado con teclado es lógico y completo',
+      'Los componentes son compatibles con lectores de pantalla'
+    ]
+  },
+  {
+    id: 'd6', nombre: 'Performance', desc: 'Velocidad y respuesta de la interfaz',
+    criterios: [
+      'El tiempo de carga inicial de la página es inferior a 3 segundos',
+      'Las transiciones y animaciones son fluidas y no afectan la interacción',
+      'Las imágenes y recursos están optimizados (WebP, lazy loading, etc.)',
+      'Las respuestas a acciones del usuario son inmediatas (< 100 ms)',
+      'No se observan cuellos de botella ni bloqueos en el hilo principal'
+    ]
+  },
+  {
+    id: 'd7', nombre: 'Experiencia Mobile', desc: 'Adaptación responsiva y gestos táctiles',
+    criterios: [
+      'El layout se adapta correctamente a pantallas pequeñas (< 390 px)',
+      'Los targets táctiles tienen un tamaño mínimo de 44×44 pt',
+      'Los gestos nativos (deslizar, pellizcar) están implementados donde corresponde',
+      'El contenido no requiere zoom horizontal para ser leído',
+      'Los formularios activan el teclado correcto según el tipo de campo'
+    ]
+  },
+  {
+    id: 'd8', nombre: 'Conversión', desc: 'CTA, formularios y rutas clave de negocio',
+    criterios: [
+      'Los CTAs principales son visibles, descriptivos y generan urgencia adecuada',
+      'El flujo de conversión principal tiene el menor número de pasos posible',
+      'Los formularios de conversión son cortos y solo piden datos esenciales',
+      'Existe claridad sobre qué ocurrirá tras completar la acción principal',
+      'Las métricas de conversión (abandonos, errores) son trazables en el diseño'
+    ]
+  }
 ];
 
 var COLORES = ['#00B5E2', '#0033A0', '#3DBA6F', '#FF8C00', '#9B59B6'];
@@ -21,6 +93,8 @@ var STATE = {
     { id: 2, nombre: '', imagen: null }
   ],
   scores:    {},
+  notas:     {},
+  fotos:     {},
   historial: []
 };
 
@@ -35,6 +109,9 @@ function loadState() {
     if (raw) {
       var parsed = JSON.parse(raw);
       STATE = parsed;
+      /* Ensure new fields exist for sessions saved before this version */
+      if (!STATE.notas) STATE.notas = {};
+      if (!STATE.fotos) STATE.fotos = {};
       if (STATE.productos && STATE.productos.length) {
         _nextId = Math.max.apply(null, STATE.productos.map(function(p) { return p.id; })) + 1;
       }
@@ -85,6 +162,7 @@ function collectFormValues() {
 
   DIMENSIONES.forEach(function(d) {
     if (!STATE.scores[d.id]) STATE.scores[d.id] = {};
+    if (!STATE.notas[d.id])  STATE.notas[d.id]  = {};
     STATE.productos.forEach(function(p) {
       var inp = document.getElementById('score-' + d.id + '-' + p.id);
       if (inp) {
@@ -93,6 +171,8 @@ function collectFormValues() {
           STATE.scores[d.id][p.id] = Math.min(5, Math.max(1, val));
         }
       }
+      var nota = document.getElementById('nota-' + d.id + '-' + p.id);
+      if (nota) STATE.notas[d.id][p.id] = nota.value;
     });
   });
 }
@@ -299,6 +379,33 @@ function eliminarProducto(id) {
   autoSave();
 }
 
+/* ─── FOTOGRAFÍAS DE EVALUACIÓN ──────────────────────────────── */
+function onEvalFotoUpload(dimId, prodId, input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('⚠ Solo se aceptan imágenes');
+    input.value = '';
+    return;
+  }
+  resizeImageToBase64(file, 600, 0.80, function(dataUrl) {
+    if (!STATE.fotos[dimId]) STATE.fotos[dimId] = {};
+    STATE.fotos[dimId][prodId] = dataUrl;
+    saveState();
+    renderEval();
+    showToast('📷 Foto de evidencia cargada');
+  });
+}
+
+function eliminarEvalFoto(dimId, prodId) {
+  if (STATE.fotos[dimId]) {
+    delete STATE.fotos[dimId][prodId];
+    saveState();
+    renderEval();
+    showToast('🗑 Foto eliminada');
+  }
+}
+
 /* ─── PASO 2: EVALUACIÓN ─────────────────────────────────────── */
 function renderEval() {
   collectFormValues();
@@ -319,33 +426,92 @@ function renderEval() {
     '<div class="eval-scale-item hi"><span class="eval-scale-range">4 – 5</span><span class="eval-scale-name">Destacado</span></div>' +
     '</div></div>';
 
-  html += '<div class="eval-table-wrap"><table class="eval-table"><thead><tr><th class="dim-col">Dimensión</th>';
-  productos.forEach(function(p) {
-    var imgTag = p.imagen
-      ? '<div class="eval-prod-thumb"><img src="' + p.imagen + '" alt="' + escapeHTML(p.nombre) + '"></div>'
-      : '';
-    html += '<th class="prod-col">' + imgTag + escapeHTML(p.nombre) + '</th>';
-  });
-  html += '</tr></thead><tbody>';
+  DIMENSIONES.forEach(function(d, dIdx) {
+    var criteriosHtml = d.criterios.map(function(c, i) {
+      return '<li class="criterio-item"><span class="criterio-num">' + (i + 1) + '</span>' + escapeHTML(c) + '</li>';
+    }).join('');
 
-  DIMENSIONES.forEach(function(d) {
-    html += '<tr><td><div class="dim-cell-name">' + escapeHTML(d.nombre) + '</div>' +
-            '<div class="dim-cell-desc">' + escapeHTML(d.desc) + '</div></td>';
+    html += '<div class="eval-dim-card">';
+
+    /* Dimension header */
+    html += '<div class="eval-dim-header">';
+    html += '<div class="eval-dim-index">' + (dIdx + 1).toString().padStart(2, '0') + '</div>';
+    html += '<div class="eval-dim-info">';
+    html += '<div class="eval-dim-name">' + escapeHTML(d.nombre) + '</div>';
+    html += '<div class="eval-dim-desc">' + escapeHTML(d.desc) + '</div>';
+    html += '</div></div>';
+
+    /* Criteria */
+    html += '<div class="eval-criterios">';
+    html += '<div class="eval-criterios-label">Criterios de evaluación</div>';
+    html += '<ul class="criterios-list">' + criteriosHtml + '</ul>';
+    html += '</div>';
+
+    /* Per-product evaluations */
+    html += '<div class="eval-prods-grid">';
+
     productos.forEach(function(p) {
       var stored = STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined
-        ? STATE.scores[d.id][p.id]
-        : '';
+        ? STATE.scores[d.id][p.id] : '';
       var cls = stored !== '' ? scoreInputClass(stored) : 'score-input';
-      html += '<td class="score-cell">' +
-        '<input type="number" id="score-' + d.id + '-' + p.id + '" class="' + cls + '"' +
+      var nota = (STATE.notas[d.id] && STATE.notas[d.id][p.id]) || '';
+      var foto = (STATE.fotos[d.id] && STATE.fotos[d.id][p.id]) || null;
+
+      var imgTag = p.imagen
+        ? '<img class="eval-prod-mini-thumb" src="' + p.imagen + '" alt="' + escapeHTML(p.nombre) + '">'
+        : '';
+
+      var fotoArea;
+      if (foto) {
+        fotoArea = '<div class="eval-foto-preview">' +
+          '<img class="eval-foto-thumb" src="' + foto + '" alt="Evidencia ' + escapeHTML(d.nombre) + '">' +
+          '<div class="eval-foto-actions">' +
+          '<label class="btn-eval-foto-change" for="efoto-' + d.id + '-' + p.id + '" title="Cambiar foto">🔄 Cambiar</label>' +
+          '<button class="btn-eval-foto-remove" onclick="eliminarEvalFoto(\'' + d.id + '\',' + p.id + ')" title="Quitar foto" aria-label="Quitar foto de evidencia">✕</button>' +
+          '</div>' +
+          '<input type="file" id="efoto-' + d.id + '-' + p.id + '" accept="image/*" class="img-input-hidden" onchange="onEvalFotoUpload(\'' + d.id + '\',' + p.id + ',this)">' +
+          '</div>';
+      } else {
+        fotoArea = '<div class="eval-foto-empty">' +
+          '<label class="btn-eval-foto-upload" for="efoto-' + d.id + '-' + p.id + '" title="Subir foto de evidencia">📷 Subir evidencia</label>' +
+          '<input type="file" id="efoto-' + d.id + '-' + p.id + '" accept="image/*" class="img-input-hidden" onchange="onEvalFotoUpload(\'' + d.id + '\',' + p.id + ',this)">' +
+          '</div>';
+      }
+
+      html += '<div class="eval-prod-block">';
+      html += '<div class="eval-prod-block-header">' + imgTag + '<span class="eval-prod-block-name">' + escapeHTML(p.nombre) + '</span></div>';
+
+      /* Quantitative score */
+      html += '<div class="eval-quant-row">';
+      html += '<label class="eval-field-label">Puntuación cuantitativa</label>';
+      html += '<div class="eval-score-wrap">';
+      html += '<input type="number" id="score-' + d.id + '-' + p.id + '" class="' + cls + '"' +
         ' min="1" max="5" value="' + (stored !== '' ? stored : '') + '" placeholder="—"' +
-        ' oninput="onScoreInput(this)" aria-label="' + escapeHTML(d.nombre) + ' — ' + escapeHTML(p.nombre) + '">' +
-        '</td>';
+        ' oninput="onScoreInput(this)" aria-label="' + escapeHTML(d.nombre) + ' — ' + escapeHTML(p.nombre) + '">';
+      html += '<div class="eval-score-guide"><span class="sg lo">1–2 Deficiente</span><span class="sg mid">3 Aceptable</span><span class="sg hi">4–5 Destacado</span></div>';
+      html += '</div></div>';
+
+      /* Qualitative notes */
+      html += '<div class="eval-qual-row">';
+      html += '<label class="eval-field-label" for="nota-' + d.id + '-' + p.id + '">Observaciones cualitativas</label>';
+      html += '<textarea id="nota-' + d.id + '-' + p.id + '" class="eval-nota-textarea"' +
+        ' placeholder="Describe hallazgos, patrones observados, citas del usuario o recomendaciones…"' +
+        ' oninput="autoSave()" rows="3">' + escapeHTML(nota) + '</textarea>';
+      html += '</div>';
+
+      /* Photo evidence */
+      html += '<div class="eval-foto-row">';
+      html += '<label class="eval-field-label">Evidencia fotográfica</label>';
+      html += fotoArea;
+      html += '</div>';
+
+      html += '</div>'; /* /eval-prod-block */
     });
-    html += '</tr>';
+
+    html += '</div>'; /* /eval-prods-grid */
+    html += '</div>'; /* /eval-dim-card */
   });
 
-  html += '</tbody></table></div>';
   body.innerHTML = html;
 }
 
@@ -390,6 +556,40 @@ function renderResults() {
   var bmNombre = STATE.config.nombre || 'UX Benchmark';
   var fecha    = fechaHoy();
 
+  /* ── Derived analytics ──────────────────────────────── */
+  var FAILURE_THRESHOLD = 2; /* score <= this is "failed" */
+
+  /* Dimensions with average score <= threshold across all products */
+  var dimsFailed = DIMENSIONES.filter(function(d) {
+    var scored = productos.filter(function(p) {
+      return STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined;
+    });
+    if (!scored.length) return false;
+    var avg = scored.reduce(function(acc, p) {
+      return acc + STATE.scores[d.id][p.id];
+    }, 0) / scored.length;
+    return avg <= FAILURE_THRESHOLD;
+  });
+
+  /* Products with total score below 40 % of maximum */
+  var productosFailed = productos.filter(function(p) {
+    return totales[p.id] < maxScore * 0.4;
+  });
+
+  /* Best and worst single dimension (by average across products) */
+  var dimAvgs = DIMENSIONES.map(function(d) {
+    var scored = productos.filter(function(p) {
+      return STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined;
+    });
+    var avg = scored.length
+      ? scored.reduce(function(acc, p) { return acc + STATE.scores[d.id][p.id]; }, 0) / scored.length
+      : 0;
+    return { d: d, avg: avg };
+  }).filter(function(x) { return x.avg > 0; });
+  var bestDim  = dimAvgs.length ? dimAvgs.slice().sort(function(a, b) { return b.avg - a.avg; })[0] : null;
+  var worstDim = dimAvgs.length ? dimAvgs.slice().sort(function(a, b) { return a.avg - b.avg; })[0] : null;
+  var winnerPct = Math.round((totales[winner.id] / maxScore) * 100);
+
   var html = '<div class="result-card">';
 
   /* Header */
@@ -429,12 +629,14 @@ function renderResults() {
   html += '</tr></thead><tbody>';
 
   DIMENSIONES.forEach(function(d) {
-    html += '<tr><td class="dim-n">' + escapeHTML(d.nombre) + '</td>';
+    var isFailed = dimsFailed.indexOf(d) !== -1;
+    html += '<tr' + (isFailed ? ' class="dim-failed-row"' : '') + '>';
+    html += '<td class="dim-n">' + (isFailed ? '<span class="failed-badge" title="Dimensión en zona de fracaso">✕</span> ' : '') + escapeHTML(d.nombre) + '</td>';
     productos.forEach(function(p) {
       var s  = (STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined) ? STATE.scores[d.id][p.id] : 0;
       var isBest = totales[p.id] === maxTotal;
-      var badgeCls = isBest ? 'score-badge best' : 'score-badge ' + scoreClass(s);
-      html += '<td><span class="' + badgeCls + '">' + s + '</span></td>';
+      var badgeCls = s <= FAILURE_THRESHOLD ? 'score-badge fail' : (isBest ? 'score-badge best' : 'score-badge ' + scoreClass(s));
+      html += '<td><span class="' + badgeCls + '">' + (s || '—') + '</span></td>';
     });
     html += '</tr>';
   });
@@ -443,7 +645,8 @@ function renderResults() {
   html += '<tr class="total-row"><td class="dim-n">Total</td>';
   productos.forEach(function(p) {
     var isBest   = totales[p.id] === maxTotal;
-    var badgeCls = isBest ? 'score-badge best' : 'score-badge ' + scoreClass(totales[p.id] / DIMENSIONES.length);
+    var isFailed = productosFailed.indexOf(p) !== -1;
+    var badgeCls = isFailed ? 'score-badge fail' : (isBest ? 'score-badge best' : 'score-badge ' + scoreClass(totales[p.id] / DIMENSIONES.length));
     html += '<td><span class="' + badgeCls + '">' + totales[p.id] + '</span></td>';
   });
   html += '</tr></tbody></table>';
@@ -463,6 +666,97 @@ function renderResults() {
     html += '</div>';
   });
   html += '</div>';
+
+  /* ── RESUMEN EJECUTIVO ─────────────────────────────── */
+  html += '<div class="summary-section">';
+  html += '<div class="summary-label">📊 Resumen ejecutivo</div>';
+  html += '<div class="summary-insights">';
+
+  html += '<div class="summary-insight highlight">';
+  html += '<div class="si-icon">🏆</div>';
+  html += '<div class="si-body"><div class="si-title">Producto mejor evaluado</div>';
+  html += '<div class="si-text"><strong>' + escapeHTML(winner.nombre) + '</strong> lidera con ' +
+    totales[winner.id] + '/' + maxScore + ' puntos (' + winnerPct + '% del máximo posible).</div></div>';
+  html += '</div>';
+
+  if (bestDim) {
+    html += '<div class="summary-insight positive">';
+    html += '<div class="si-icon">✅</div>';
+    html += '<div class="si-body"><div class="si-title">Dimensión más fortalecida</div>';
+    html += '<div class="si-text"><strong>' + escapeHTML(bestDim.d.nombre) + '</strong> es el área con mejor desempeño (promedio ' + bestDim.avg.toFixed(1) + '/5). ' + escapeHTML(bestDim.d.desc) + '.</div></div>';
+    html += '</div>';
+  }
+
+  if (worstDim && (!bestDim || worstDim.d.id !== bestDim.d.id)) {
+    var worstLevel = worstDim.avg <= FAILURE_THRESHOLD ? 'critical' : 'warning';
+    html += '<div class="summary-insight ' + worstLevel + '">';
+    html += '<div class="si-icon">' + (worstLevel === 'critical' ? '🔴' : '⚠️') + '</div>';
+    html += '<div class="si-body"><div class="si-title">Dimensión con mayor oportunidad de mejora</div>';
+    html += '<div class="si-text"><strong>' + escapeHTML(worstDim.d.nombre) + '</strong> muestra el menor promedio (' + worstDim.avg.toFixed(1) + '/5). Priorizar mejoras en: ' + escapeHTML(worstDim.d.desc.toLowerCase()) + '.</div></div>';
+    html += '</div>';
+  }
+
+  if (dimsFailed.length > 0) {
+    html += '<div class="summary-insight critical">';
+    html += '<div class="si-icon">🔴</div>';
+    html += '<div class="si-body"><div class="si-title">Dimensiones en zona de fracaso</div>';
+    html += '<div class="si-text">' + dimsFailed.length + ' dimensión' + (dimsFailed.length > 1 ? 'es' : '') + ' ' +
+      'con puntuación media ≤ ' + FAILURE_THRESHOLD + ': <strong>' +
+      dimsFailed.map(function(d) { return escapeHTML(d.nombre); }).join(', ') + '</strong>. ' +
+      'Requieren atención inmediata antes de continuar el ciclo de diseño.</div></div>';
+    html += '</div>';
+  }
+
+  if (productosFailed.length > 0) {
+    html += '<div class="summary-insight critical">';
+    html += '<div class="si-icon">❌</div>';
+    html += '<div class="si-body"><div class="si-title">Productos en zona de fracaso</div>';
+    html += '<div class="si-text"><strong>' + productosFailed.map(function(p) { return escapeHTML(p.nombre); }).join(', ') + '</strong> ' +
+      (productosFailed.length === 1 ? 'obtiene' : 'obtienen') + ' menos del 40 % del puntaje máximo posible, indicando experiencias deficientes que necesitan rediseño prioritario.</div></div>';
+    html += '</div>';
+  }
+
+  if (dimsFailed.length === 0 && productosFailed.length === 0) {
+    html += '<div class="summary-insight positive">';
+    html += '<div class="si-icon">✅</div>';
+    html += '<div class="si-body"><div class="si-title">Sin dimensiones en fracaso</div>';
+    html += '<div class="si-text">Todos los productos superan el umbral mínimo de calidad (> ' + FAILURE_THRESHOLD + '/5 en todas las dimensiones). Continúa iterando para alcanzar la excelencia.</div></div>';
+    html += '</div>';
+  }
+
+  html += '</div>'; /* /summary-insights */
+  html += '</div>'; /* /summary-section */
+
+  /* ── ZONA DE FRACASO ───────────────────────────────── */
+  if (dimsFailed.length > 0 || productosFailed.length > 0) {
+    html += '<div class="failure-zone">';
+    html += '<div class="failure-zone-header">';
+    html += '<div class="failure-zone-icon">⚠</div>';
+    html += '<div><div class="failure-zone-title">Zona de Fracaso — Requiere acción inmediata</div>';
+    html += '<div class="failure-zone-sub">Elementos con puntuación media ≤ ' + FAILURE_THRESHOLD + '/5</div></div>';
+    html += '</div>';
+    html += '<div class="failure-items">';
+
+    dimsFailed.forEach(function(d) {
+      html += '<div class="failure-item">';
+      html += '<div class="fi-dim-name">' + escapeHTML(d.nombre) + '</div>';
+      html += '<div class="fi-products">';
+      productos.forEach(function(p) {
+        var s = (STATE.scores[d.id] && STATE.scores[d.id][p.id]) ? STATE.scores[d.id][p.id] : 0;
+        if (s <= FAILURE_THRESHOLD) {
+          var nota = (STATE.notas[d.id] && STATE.notas[d.id][p.id]) ? STATE.notas[d.id][p.id] : '';
+          html += '<div class="fi-product-row">';
+          html += '<span class="fi-prod-name">' + escapeHTML(p.nombre) + '</span>';
+          html += '<span class="score-badge fail">' + s + '</span>';
+          if (nota) html += '<span class="fi-nota">' + escapeHTML(nota) + '</span>';
+          html += '</div>';
+        }
+      });
+      html += '</div></div>';
+    });
+
+    html += '</div></div>'; /* /failure-items /failure-zone */
+  }
 
   /* Export row */
   html += '<div class="export-row">';
@@ -494,6 +788,7 @@ function exportarResultados() {
   lines.push('Productos: ' + productos.map(function(p) { return p.nombre; }).join(', '));
   lines.push('');
 
+  /* Quantitative scores table */
   var COL = 14;
   var ROW = 24;
   var header = 'Dimensión'.padEnd(ROW);
@@ -522,6 +817,30 @@ function exportarResultados() {
     totalRow += (sum + '/' + maxScore).padEnd(COL);
   });
   lines.push(totalRow);
+
+  /* Qualitative notes */
+  var hasNotas = DIMENSIONES.some(function(d) {
+    return productos.some(function(p) {
+      return STATE.notas[d.id] && STATE.notas[d.id][p.id];
+    });
+  });
+  if (hasNotas) {
+    lines.push('');
+    lines.push('OBSERVACIONES CUALITATIVAS');
+    lines.push('─'.repeat(ROW + COL * productos.length));
+    DIMENSIONES.forEach(function(d) {
+      var dimHasNota = productos.some(function(p) {
+        return STATE.notas[d.id] && STATE.notas[d.id][p.id];
+      });
+      if (!dimHasNota) return;
+      lines.push(d.nombre + ':');
+      productos.forEach(function(p) {
+        var nota = STATE.notas[d.id] && STATE.notas[d.id][p.id];
+        if (nota) lines.push('  [' + p.nombre + '] ' + nota);
+      });
+    });
+  }
+
   lines.push('');
   lines.push('Generado con vientonorte/uxtools · UX Benchmark');
 
@@ -545,6 +864,8 @@ function guardarSesion() {
     analista:    STATE.config.analista,
     productos:   JSON.parse(JSON.stringify(STATE.productos)),
     scores:      JSON.parse(JSON.stringify(STATE.scores)),
+    notas:       JSON.parse(JSON.stringify(STATE.notas)),
+    fotos:       JSON.parse(JSON.stringify(STATE.fotos)),
     config:      JSON.parse(JSON.stringify(STATE.config)),
     dimensiones: JSON.parse(JSON.stringify(DIMENSIONES))
   };
@@ -561,6 +882,8 @@ function cargarSesion(id) {
   STATE.config    = sesion.config || { nombre: sesion.nombre, analista: sesion.analista || '' };
   STATE.productos = JSON.parse(JSON.stringify(sesion.productos));
   STATE.scores    = JSON.parse(JSON.stringify(sesion.scores));
+  STATE.notas     = sesion.notas ? JSON.parse(JSON.stringify(sesion.notas)) : {};
+  STATE.fotos     = sesion.fotos ? JSON.parse(JSON.stringify(sesion.fotos)) : {};
   _nextId = Math.max.apply(null, STATE.productos.map(function(p) { return p.id; })) + 1;
   irAPaso(1);
   renderConfig();
@@ -572,6 +895,8 @@ function nuevoBenchmark() {
   STATE.config    = { nombre: '', analista: '' };
   STATE.productos = [{ id: 1, nombre: '', imagen: null }, { id: 2, nombre: '', imagen: null }];
   STATE.scores    = {};
+  STATE.notas     = {};
+  STATE.fotos     = {};
   _nextId         = 3;
   saveState();
   irAPaso(1);
