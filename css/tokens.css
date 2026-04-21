@@ -61,6 +61,20 @@
   --font-mono:    'DM Mono', monospace;
   --font-body:    'Inter', sans-serif;
 
+  /* ── Light Surfaces (white-card interiors) ─── */
+  --surface-form:      #F6F9FF;
+  --surface-form-focus: #EEF8FF;
+  --border-form:       #E0E8FF;
+  --border-card:       #E8EFFF;
+  --border-form-focus: var(--cyan);
+  --text-on-light-muted: #8E99B0;
+  --text-on-light-hint:  #B0BDD8;
+
+  /* ── Semantic score colors ─── */
+  --score-lo:  #CC4444;
+  --score-mid: #D09000;
+  --score-hi:  #2A9A5A;
+
   /* ── Legacy Aliases (backward compat) ─── */
   --radius: var(--radius-lg);
   --shadow: var(--shadow-md);

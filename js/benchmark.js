@@ -83,18 +83,7 @@ function collectFormValues() {
     if (inp) p.nombre = inp.value;
   });
 
-  DIMENSIONES.forEach(function(d) {
-    if (!STATE.scores[d.id]) STATE.scores[d.id] = {};
-    STATE.productos.forEach(function(p) {
-      var inp = document.getElementById('score-' + d.id + '-' + p.id);
-      if (inp) {
-        var val = parseInt(inp.value, 10);
-        if (!isNaN(val)) {
-          STATE.scores[d.id][p.id] = Math.min(5, Math.max(1, val));
-        }
-      }
-    });
-  });
+  /* Scores are stored directly via onScoreSelect() — no DOM reading needed here */
 }
 
 /* ─── UTILIDADES ─── ver js/utils.js ─────────────────────────── */
@@ -318,12 +307,7 @@ function renderEval() {
       var stored = STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined
         ? STATE.scores[d.id][p.id]
         : '';
-      var cls = stored !== '' ? scoreInputClass(stored) : 'score-input';
-      html += '<td class="score-cell">' +
-        '<input type="number" id="score-' + d.id + '-' + p.id + '" class="' + cls + '"' +
-        ' min="1" max="5" value="' + (stored !== '' ? stored : '') + '" placeholder="—"' +
-        ' oninput="onScoreInput(this)" aria-label="' + escapeHTML(d.nombre) + ' — ' + escapeHTML(p.nombre) + '">' +
-        '</td>';
+      html += '<td class="score-cell">' + buildScoreSelector(d.id, p.id, stored, d.nombre, p.nombre) + '</td>';
     });
     html += '</tr>';
   });
@@ -342,6 +326,148 @@ function onScoreInput(inp) {
     inp.className = 'score-input';
   }
   autoSave();
+}
+
+/* ─── SCORE SELECTOR (visual 1-5 buttons) ───────────────────── */
+function onScoreSelect(dimId, prodId, val) {
+  if (!STATE.scores[dimId]) STATE.scores[dimId] = {};
+  STATE.scores[dimId][prodId] = val;
+
+  var container = document.getElementById('score-sel-' + dimId + '-' + prodId);
+  if (container) {
+    container.setAttribute('data-val', val);
+    container.classList.remove('val-lo', 'val-mid', 'val-hi');
+    if (val <= 2) container.classList.add('val-lo');
+    else if (val === 3) container.classList.add('val-mid');
+    else container.classList.add('val-hi');
+
+    container.querySelectorAll('.score-btn').forEach(function(btn) {
+      var btnVal = parseInt(btn.getAttribute('data-val'), 10);
+      btn.classList.toggle('active', btnVal <= val);
+    });
+  }
+  autoSave();
+}
+
+function buildScoreSelector(dimId, prodId, currentVal, dimName, prodName) {
+  var valClass = '';
+  if (currentVal !== '') {
+    if (currentVal <= 2) valClass = ' val-lo';
+    else if (currentVal === 3) valClass = ' val-mid';
+    else valClass = ' val-hi';
+  }
+  var selectorId = 'score-sel-' + dimId + '-' + prodId;
+  var html = '<div class="score-selector' + valClass + '" id="' + selectorId + '"' +
+    ' data-val="' + (currentVal !== '' ? currentVal : '') + '"' +
+    ' role="group" aria-label="' + escapeHTML(dimName) + ' — ' + escapeHTML(prodName) + '">';
+  for (var v = 1; v <= 5; v++) {
+    var isActive = currentVal !== '' && v <= currentVal;
+    var cls = 'score-btn' + (isActive ? ' active' : '');
+    html += '<button class="' + cls + '" data-val="' + v + '"' +
+      ' onclick="onScoreSelect(\'' + dimId + '\', \'' + prodId + '\', ' + v + ')"' +
+      ' aria-label="Puntuación ' + v + ' de 5">' + v + '</button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+/* ─── RADAR CHART ────────────────────────────────────────────── */
+var RADAR_LABEL_MAX   = 11;
+var RADAR_GRID_STROKE = 'rgba(0,26,114,0.1)';
+var RADAR_AXIS_STROKE = 'rgba(0,26,114,0.08)';
+var RADAR_LABEL_FILL  = '#8E99B0';
+
+function svgLabel(cx, cy, text) {
+  var ta    = 'text-anchor="middle"';
+  var style = 'font-family="Inter,sans-serif" font-size="8" fill="' + RADAR_LABEL_FILL + '"';
+  if (text.length <= RADAR_LABEL_MAX) {
+    return '<text x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" ' + ta + ' dominant-baseline="middle" ' + style + '>' + escapeHTML(text) + '</text>';
+  }
+  var words = text.split(' ');
+  if (words.length > 1) {
+    var line1 = words[0];
+    var line2 = words.slice(1).join(' ');
+    if (line2.length > RADAR_LABEL_MAX) line2 = line2.substring(0, RADAR_LABEL_MAX - 1) + '\u2026';
+    return '<text x="' + cx.toFixed(1) + '" y="' + (cy - 5).toFixed(1) + '" ' + ta + ' ' + style + '>' +
+      '<tspan x="' + cx.toFixed(1) + '" dy="0">' + escapeHTML(line1) + '</tspan>' +
+      '<tspan x="' + cx.toFixed(1) + '" dy="10">' + escapeHTML(line2) + '</tspan>' +
+      '</text>';
+  }
+  return '<text x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" ' + ta + ' dominant-baseline="middle" ' + style + '>' + escapeHTML(text.substring(0, RADAR_LABEL_MAX - 1) + '\u2026') + '</text>';
+}
+
+function buildRadarChart(productos) {
+  if (!productos || !productos.length) return '';
+  var N  = DIMENSIONES.length;
+  var cx = 150, cy = 150, r = 100;
+
+  function pt(level, i) {
+    var angle = (2 * Math.PI * i / N) - Math.PI / 2;
+    return {
+      x: cx + level * r * Math.cos(angle),
+      y: cy + level * r * Math.sin(angle)
+    };
+  }
+
+  var svg = '<svg class="radar-svg" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">';
+
+  /* Grid rings */
+  [0.25, 0.5, 0.75, 1.0].forEach(function(level) {
+    var pts = [];
+    for (var i = 0; i < N; i++) {
+      var p = pt(level, i);
+      pts.push(p.x.toFixed(1) + ',' + p.y.toFixed(1));
+    }
+    svg += '<polygon points="' + pts.join(' ') + '" fill="none" stroke="' + RADAR_GRID_STROKE + '" stroke-width="1"/>';
+  });
+
+  /* Axis lines */
+  for (var i = 0; i < N; i++) {
+    var outer = pt(1.0, i);
+    svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + outer.x.toFixed(1) + '" y2="' + outer.y.toFixed(1) + '" stroke="' + RADAR_AXIS_STROKE + '" stroke-width="1"/>';
+  }
+
+  /* Axis labels */
+  for (var j = 0; j < N; j++) {
+    var lp = pt(1.22, j);
+    svg += svgLabel(lp.x, lp.y, DIMENSIONES[j].nombre);
+  }
+
+  /* Product polygons */
+  productos.forEach(function(p, pi) {
+    var color = COLORES[pi % COLORES.length];
+    var pts2 = [];
+    DIMENSIONES.forEach(function(d, di) {
+      var score = (STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined) ? STATE.scores[d.id][p.id] : 0;
+      var point = pt(score / 5, di);
+      pts2.push(point.x.toFixed(1) + ',' + point.y.toFixed(1));
+    });
+    svg += '<polygon points="' + pts2.join(' ') + '" fill="' + color + '" fill-opacity="0.15" stroke="' + color + '" stroke-width="2" stroke-linejoin="round"/>';
+    DIMENSIONES.forEach(function(d, di) {
+      var score = (STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined) ? STATE.scores[d.id][p.id] : 0;
+      if (score > 0) {
+        var dot = pt(score / 5, di);
+        svg += '<circle cx="' + dot.x.toFixed(1) + '" cy="' + dot.y.toFixed(1) + '" r="3" fill="' + color + '"/>';
+      }
+    });
+  });
+
+  svg += '</svg>';
+
+  var legend = '<div class="radar-legend">';
+  productos.forEach(function(p, pi) {
+    var color = COLORES[pi % COLORES.length];
+    legend += '<div class="radar-legend-item">' +
+      '<span class="radar-legend-dot" style="background:' + color + '"></span>' +
+      '<span class="radar-legend-name">' + escapeHTML(p.nombre) + '</span>' +
+      '</div>';
+  });
+  legend += '</div>';
+
+  return '<div class="radar-section">' +
+    '<div class="bars-label">Comparativa multidimensional</div>' +
+    '<div class="radar-wrap">' + svg + legend + '</div>' +
+    '</div>';
 }
 
 /* ─── PASO 3: RESULTADOS ─────────────────────────────────────── */
@@ -401,6 +527,9 @@ function renderResults() {
     '<span style="font-size:14px;font-weight:400;color:#8E99B0;">/' + maxScore + '</span></div>';
   html += '</div>';
 
+  /* Radar chart */
+  html += buildRadarChart(productos);
+
   /* Table */
   html += '<table class="result-table"><thead><tr><th class="dim-h">Dimensión</th>';
   productos.forEach(function(p) {
@@ -442,7 +571,7 @@ function renderResults() {
     html += '<div class="bar-row">';
     html += '<div class="bar-row-label">' + imgTag + escapeHTML(p.nombre) + '</div>';
     html += '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>';
-    html += '<div class="bar-value">' + totales[p.id] + '</div>';
+    html += '<div class="bar-value">' + totales[p.id] + '<span class="bar-pct">(' + pct + '%)</span></div>';
     html += '</div>';
   });
   html += '</div>';
