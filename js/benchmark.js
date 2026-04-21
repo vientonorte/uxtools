@@ -17,8 +17,8 @@ var STATE = {
   paso:      1,
   config:    { nombre: '', analista: '' },
   productos: [
-    { id: 1, nombre: 'SURA Investments' },
-    { id: 2, nombre: '' }
+    { id: 1, nombre: 'SURA Investments', imagen: null },
+    { id: 2, nombre: '', imagen: null }
   ],
   scores:    {},
   historial: []
@@ -126,6 +126,56 @@ function scoreInputClass(s) {
   return 'score-input score-low';
 }
 
+/* ─── IMÁGENES ───────────────────────────────────────────────── */
+function resizeImageToBase64(file, maxDim, quality, callback) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = new Image();
+    img.onload = function() {
+      var w = img.width;
+      var h = img.height;
+      var scale = Math.min(1, maxDim / Math.max(w, h));
+      var canvas = document.createElement('canvas');
+      canvas.width  = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      callback(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function onImagenUpload(id, input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('⚠ Solo se aceptan imágenes');
+    input.value = '';
+    return;
+  }
+  resizeImageToBase64(file, 240, 0.75, function(dataUrl) {
+    var p = STATE.productos.find(function(prod) { return prod.id === id; });
+    if (p) {
+      p.imagen = dataUrl;
+      saveState();
+      renderProductos();
+      showToast('🖼 Imagen cargada');
+    }
+  });
+}
+
+function eliminarImagen(id) {
+  var p = STATE.productos.find(function(prod) { return prod.id === id; });
+  if (p) {
+    p.imagen = null;
+    saveState();
+    renderProductos();
+    showToast('🗑 Imagen eliminada');
+  }
+}
+
 /* ─── NAVEGACIÓN DE PASOS ────────────────────────────────────── */
 function irAPaso(n) {
   collectFormValues();
@@ -198,9 +248,28 @@ function renderProductos() {
     var removeBtn = STATE.productos.length > 2
       ? '<button class="btn-remove-product" onclick="eliminarProducto(' + p.id + ')" title="Eliminar producto" aria-label="Eliminar producto">×</button>'
       : '';
+
+    var imgArea;
+    if (p.imagen) {
+      imgArea = '<div class="producto-img-area">' +
+        '<img class="prod-thumb" src="' + p.imagen + '" alt="Imagen de ' + escapeHTML(p.nombre || 'producto') + '">' +
+        '<label class="btn-img-upload" for="img-' + p.id + '" title="Cambiar imagen">🖼 Cambiar</label>' +
+        '<button class="btn-img-remove" onclick="eliminarImagen(' + p.id + ')" title="Quitar imagen" aria-label="Quitar imagen">✕</button>' +
+        '<input type="file" id="img-' + p.id + '" accept="image/*" class="img-input-hidden" onchange="onImagenUpload(' + p.id + ', this)">' +
+        '</div>';
+    } else {
+      imgArea = '<div class="producto-img-area">' +
+        '<label class="btn-img-upload" for="img-' + p.id + '" title="Subir imagen del producto">📷 Imagen</label>' +
+        '<input type="file" id="img-' + p.id + '" accept="image/*" class="img-input-hidden" onchange="onImagenUpload(' + p.id + ', this)">' +
+        '</div>';
+    }
+
     return '<div class="producto-row">' +
       '<span class="producto-num">' + (i + 1) + '</span>' +
-      '<input type="text" id="prod-' + p.id + '" placeholder="Nombre del producto" value="' + escapeHTML(p.nombre) + '" autocomplete="off">' +
+      '<div class="producto-fields">' +
+        '<input type="text" id="prod-' + p.id + '" placeholder="Nombre del producto" value="' + escapeHTML(p.nombre) + '" autocomplete="off">' +
+        imgArea +
+      '</div>' +
       removeBtn +
       '</div>';
   }).join('');
@@ -216,7 +285,7 @@ function renderProductos() {
 
 function agregarProducto() {
   if (STATE.productos.length >= 5) return;
-  STATE.productos.push({ id: _nextId++, nombre: '' });
+  STATE.productos.push({ id: _nextId++, nombre: '', imagen: null });
   renderProductos();
   autoSave();
 }
@@ -242,7 +311,10 @@ function renderEval() {
 
   var html = '<div class="eval-table-wrap"><table class="eval-table"><thead><tr><th class="dim-col">Dimensión</th>';
   productos.forEach(function(p) {
-    html += '<th class="prod-col">' + escapeHTML(p.nombre) + '</th>';
+    var imgTag = p.imagen
+      ? '<div class="eval-prod-thumb"><img src="' + p.imagen + '" alt="' + escapeHTML(p.nombre) + '"></div>'
+      : '';
+    html += '<th class="prod-col">' + imgTag + escapeHTML(p.nombre) + '</th>';
   });
   html += '</tr></thead><tbody>';
 
@@ -324,8 +396,12 @@ function renderResults() {
   html += '<div class="result-body">';
 
   /* Winner banner */
+  var winnerImg = winner.imagen
+    ? '<img class="winner-thumb" src="' + winner.imagen + '" alt="' + escapeHTML(winner.nombre) + '">'
+    : '';
   html += '<div class="winner-banner">';
   html += '<div class="winner-icon">🏆</div>';
+  html += winnerImg;
   html += '<div><div class="winner-label">Mejor puntuación</div>';
   html += '<div class="winner-name">' + escapeHTML(winner.nombre) + '</div></div>';
   html += '<div class="winner-score">' + totales[winner.id] +
@@ -335,7 +411,10 @@ function renderResults() {
   /* Table */
   html += '<table class="result-table"><thead><tr><th class="dim-h">Dimensión</th>';
   productos.forEach(function(p) {
-    html += '<th>' + escapeHTML(p.nombre) + '</th>';
+    var imgTag = p.imagen
+      ? '<div class="result-prod-thumb"><img src="' + p.imagen + '" alt="' + escapeHTML(p.nombre) + '"></div>'
+      : '';
+    html += '<th>' + imgTag + escapeHTML(p.nombre) + '</th>';
   });
   html += '</tr></thead><tbody>';
 
@@ -364,8 +443,11 @@ function renderResults() {
   productos.forEach(function(p, i) {
     var pct   = Math.round((totales[p.id] / maxScore) * 100);
     var color = COLORES[i % COLORES.length];
+    var imgTag = p.imagen
+      ? '<img class="bar-prod-thumb" src="' + p.imagen + '" alt="' + escapeHTML(p.nombre) + '">'
+      : '';
     html += '<div class="bar-row">';
-    html += '<div class="bar-row-label">' + escapeHTML(p.nombre) + '</div>';
+    html += '<div class="bar-row-label">' + imgTag + escapeHTML(p.nombre) + '</div>';
     html += '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>';
     html += '<div class="bar-value">' + totales[p.id] + '</div>';
     html += '</div>';
@@ -442,20 +524,23 @@ function exportarResultados() {
 function guardarSesion() {
   collectFormValues();
   var nombre = STATE.config.nombre || 'Benchmark sin título';
+  var version = STATE.historial.filter(function(h) { return h.nombre === nombre; }).length + 1;
   var sesion = {
-    id:        Date.now(),
-    nombre:    nombre,
-    fecha:     fechaHoy(),
-    analista:  STATE.config.analista,
-    productos: JSON.parse(JSON.stringify(STATE.productos)),
-    scores:    JSON.parse(JSON.stringify(STATE.scores)),
-    config:    JSON.parse(JSON.stringify(STATE.config))
+    id:          Date.now(),
+    nombre:      nombre,
+    version:     version,
+    fecha:       fechaHoy(),
+    analista:    STATE.config.analista,
+    productos:   JSON.parse(JSON.stringify(STATE.productos)),
+    scores:      JSON.parse(JSON.stringify(STATE.scores)),
+    config:      JSON.parse(JSON.stringify(STATE.config)),
+    dimensiones: JSON.parse(JSON.stringify(DIMENSIONES))
   };
   STATE.historial.unshift(sesion);
   if (STATE.historial.length > 10) STATE.historial = STATE.historial.slice(0, 10);
   saveState();
   renderSavedList();
-  showToast('💾 Sesión guardada: ' + nombre);
+  showToast('💾 Sesión guardada: ' + nombre + ' v' + version);
 }
 
 function cargarSesion(id) {
@@ -473,7 +558,7 @@ function cargarSesion(id) {
 function nuevoBenchmark() {
   STATE.paso      = 1;
   STATE.config    = { nombre: '', analista: '' };
-  STATE.productos = [{ id: 1, nombre: '' }, { id: 2, nombre: '' }];
+  STATE.productos = [{ id: 1, nombre: '', imagen: null }, { id: 2, nombre: '', imagen: null }];
   STATE.scores    = {};
   _nextId         = 3;
   saveState();
@@ -490,10 +575,11 @@ function renderSavedList() {
     return;
   }
   container.innerHTML = STATE.historial.map(function(h) {
+    var versionTag = h.version ? '<span class="saved-item-version">v' + h.version + '</span>' : '';
     return '<div class="saved-item" onclick="cargarSesion(' + h.id + ')" role="button" tabindex="0"' +
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \')cargarSesion(' + h.id + ')"' +
       ' title="Cargar sesión: ' + escapeHTML(h.nombre) + '">' +
-      '<div class="saved-item-name">' + escapeHTML(h.nombre) + '</div>' +
+      '<div class="saved-item-name">' + escapeHTML(h.nombre) + versionTag + '</div>' +
       '<div class="saved-item-date">' + escapeHTML(h.fecha) +
         (h.analista ? ' · ' + escapeHTML(h.analista) : '') + '</div>' +
       '</div>';
