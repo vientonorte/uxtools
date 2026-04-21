@@ -364,7 +364,7 @@ function buildScoreSelector(dimId, prodId, currentVal, dimName, prodName) {
     var isActive = currentVal !== '' && v <= currentVal;
     var cls = 'score-btn' + (isActive ? ' active' : '');
     html += '<button class="' + cls + '" data-val="' + v + '"' +
-      ' onclick="onScoreSelect(\'' + dimId + '\', ' + prodId + ', ' + v + ')"' +
+      ' onclick="onScoreSelect(\'' + dimId + '\', \'' + prodId + '\', ' + v + ')"' +
       ' aria-label="Puntuación ' + v + ' de 5">' + v + '</button>';
   }
   html += '</div>';
@@ -372,24 +372,28 @@ function buildScoreSelector(dimId, prodId, currentVal, dimName, prodName) {
 }
 
 /* ─── RADAR CHART ────────────────────────────────────────────── */
+var RADAR_LABEL_MAX   = 11;
+var RADAR_GRID_STROKE = 'rgba(0,26,114,0.1)';
+var RADAR_AXIS_STROKE = 'rgba(0,26,114,0.08)';
+var RADAR_LABEL_FILL  = '#8E99B0';
+
 function svgLabel(cx, cy, text) {
-  var maxLen = 11;
-  var ta = 'text-anchor="middle"';
-  var style = 'font-family="Inter,sans-serif" font-size="8" fill="#8E99B0"';
-  if (text.length <= maxLen) {
+  var ta    = 'text-anchor="middle"';
+  var style = 'font-family="Inter,sans-serif" font-size="8" fill="' + RADAR_LABEL_FILL + '"';
+  if (text.length <= RADAR_LABEL_MAX) {
     return '<text x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" ' + ta + ' dominant-baseline="middle" ' + style + '>' + escapeHTML(text) + '</text>';
   }
   var words = text.split(' ');
   if (words.length > 1) {
     var line1 = words[0];
     var line2 = words.slice(1).join(' ');
-    if (line2.length > maxLen) line2 = line2.substring(0, maxLen - 1) + '\u2026';
+    if (line2.length > RADAR_LABEL_MAX) line2 = line2.substring(0, RADAR_LABEL_MAX - 1) + '\u2026';
     return '<text x="' + cx.toFixed(1) + '" y="' + (cy - 5).toFixed(1) + '" ' + ta + ' ' + style + '>' +
       '<tspan x="' + cx.toFixed(1) + '" dy="0">' + escapeHTML(line1) + '</tspan>' +
       '<tspan x="' + cx.toFixed(1) + '" dy="10">' + escapeHTML(line2) + '</tspan>' +
       '</text>';
   }
-  return '<text x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" ' + ta + ' dominant-baseline="middle" ' + style + '>' + escapeHTML(text.substring(0, maxLen - 1) + '\u2026') + '</text>';
+  return '<text x="' + cx.toFixed(1) + '" y="' + cy.toFixed(1) + '" ' + ta + ' dominant-baseline="middle" ' + style + '>' + escapeHTML(text.substring(0, RADAR_LABEL_MAX - 1) + '\u2026') + '</text>';
 }
 
 function buildRadarChart(productos) {
@@ -414,13 +418,13 @@ function buildRadarChart(productos) {
       var p = pt(level, i);
       pts.push(p.x.toFixed(1) + ',' + p.y.toFixed(1));
     }
-    svg += '<polygon points="' + pts.join(' ') + '" fill="none" stroke="rgba(0,26,114,0.1)" stroke-width="1"/>';
+    svg += '<polygon points="' + pts.join(' ') + '" fill="none" stroke="' + RADAR_GRID_STROKE + '" stroke-width="1"/>';
   });
 
   /* Axis lines */
   for (var i = 0; i < N; i++) {
     var outer = pt(1.0, i);
-    svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + outer.x.toFixed(1) + '" y2="' + outer.y.toFixed(1) + '" stroke="rgba(0,26,114,0.08)" stroke-width="1"/>';
+    svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + outer.x.toFixed(1) + '" y2="' + outer.y.toFixed(1) + '" stroke="' + RADAR_AXIS_STROKE + '" stroke-width="1"/>';
   }
 
   /* Axis labels */
@@ -567,7 +571,7 @@ function renderResults() {
     html += '<div class="bar-row">';
     html += '<div class="bar-row-label">' + imgTag + escapeHTML(p.nombre) + '</div>';
     html += '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div>';
-    html += '<div class="bar-value">' + totales[p.id] + '<span style="font-size:9px;color:#8E99B0;margin-left:3px">(' + pct + '%)</span></div>';
+    html += '<div class="bar-value">' + totales[p.id] + '<span class="bar-pct">(' + pct + '%)</span></div>';
     html += '</div>';
   });
   html += '</div>';

@@ -796,6 +796,11 @@ input::placeholder { color: var(--text-on-light-hint); }
   text-align: right;
   flex-shrink: 0;
 }
+.bar-pct {
+  font-size: 9px;
+  color: var(--text-on-light-muted);
+  margin-left: 3px;
+}
 
 /* Export actions */
 .export-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
