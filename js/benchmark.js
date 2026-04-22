@@ -1,5 +1,6 @@
 /* ─── DIMENSIONES PREDEFINIDAS ──────────────────────────────── */
-var DIMENSIONES = [
+/* Load custom dimensions from admin (localStorage), fall back to defaults */
+var DIMENSIONES_DEFAULT = [
   { id: 'd1', nombre: 'Primera Impresión',    desc: 'Onboarding, hero y percepción inicial' },
   { id: 'd2', nombre: 'Navegación',           desc: 'Arquitectura de información y menús' },
   { id: 'd3', nombre: 'Usabilidad',           desc: 'Facilidad de uso y eficiencia en tareas' },
@@ -9,6 +10,21 @@ var DIMENSIONES = [
   { id: 'd7', nombre: 'Experiencia Mobile',   desc: 'Adaptación responsiva y gestos táctiles' },
   { id: 'd8', nombre: 'Conversión',           desc: 'CTA, formularios y rutas clave de negocio' }
 ];
+
+var DIMENSIONES;
+try {
+  var _dimRaw = localStorage.getItem('uxbenchmark-dimensiones');
+  if (_dimRaw) {
+    var _dimParsed = JSON.parse(_dimRaw);
+    DIMENSIONES = Array.isArray(_dimParsed) && _dimParsed.length
+      ? _dimParsed.filter(function (d) { return d.activa !== false; })
+      : DIMENSIONES_DEFAULT;
+  } else {
+    DIMENSIONES = DIMENSIONES_DEFAULT;
+  }
+} catch (e) {
+  DIMENSIONES = DIMENSIONES_DEFAULT;
+}
 
 var COLORES = ['#00B5E2', '#0033A0', '#3DBA6F', '#FF8C00', '#9B59B6'];
 
@@ -20,7 +36,7 @@ var STATE = {
     { id: 1, nombre: 'SURA Investments', imagen: null },
     { id: 2, nombre: '', imagen: null }
   ],
-  scores:    {},
+  scores:    {},   /* scores[dimId][prodId] = { val: 1-5, screenshot: dataUrl|null } */
   historial: []
 };
 
@@ -84,6 +100,31 @@ function collectFormValues() {
   });
 
   /* Scores are stored directly via onScoreSelect() — no DOM reading needed here */
+}
+
+/* ─── SCORE VALUE HELPERS ─────────────────────────────────────── */
+/* scores[dimId][prodId] can be a plain number (legacy) or { val, screenshot } */
+function getScoreVal(dimId, prodId) {
+  var entry = STATE.scores[dimId] && STATE.scores[dimId][prodId];
+  if (entry === undefined || entry === null) return 0;
+  if (typeof entry === 'object') return entry.val || 0;
+  return entry;
+}
+
+function getScoreScreenshot(dimId, prodId) {
+  var entry = STATE.scores[dimId] && STATE.scores[dimId][prodId];
+  if (entry && typeof entry === 'object') return entry.screenshot || null;
+  return null;
+}
+
+function setScoreEntry(dimId, prodId, val, screenshot) {
+  if (!STATE.scores[dimId]) STATE.scores[dimId] = {};
+  var existing = STATE.scores[dimId][prodId];
+  var existingScreenshot = (existing && typeof existing === 'object') ? existing.screenshot : null;
+  STATE.scores[dimId][prodId] = {
+    val:        val,
+    screenshot: screenshot !== undefined ? screenshot : existingScreenshot
+  };
 }
 
 /* ─── UTILIDADES ─── ver js/utils.js ─────────────────────────── */
@@ -304,10 +345,9 @@ function renderEval() {
     html += '<tr><td><div class="dim-cell-name">' + escapeHTML(d.nombre) + '</div>' +
             '<div class="dim-cell-desc">' + escapeHTML(d.desc) + '</div></td>';
     productos.forEach(function(p) {
-      var stored = STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined
-        ? STATE.scores[d.id][p.id]
-        : '';
-      html += '<td class="score-cell">' + buildScoreSelector(d.id, p.id, stored, d.nombre, p.nombre) + '</td>';
+      var storedVal = getScoreVal(d.id, p.id);
+      var currentVal = storedVal > 0 ? storedVal : '';
+      html += '<td class="score-cell">' + buildScoreSelector(d.id, p.id, currentVal, d.nombre, p.nombre) + '</td>';
     });
     html += '</tr>';
   });
@@ -330,8 +370,7 @@ function onScoreInput(inp) {
 
 /* ─── SCORE SELECTOR (visual 1-5 buttons) ───────────────────── */
 function onScoreSelect(dimId, prodId, val) {
-  if (!STATE.scores[dimId]) STATE.scores[dimId] = {};
-  STATE.scores[dimId][prodId] = val;
+  setScoreEntry(dimId, prodId, val, undefined);
 
   var container = document.getElementById('score-sel-' + dimId + '-' + prodId);
   if (container) {
@@ -350,26 +389,123 @@ function onScoreSelect(dimId, prodId, val) {
 }
 
 function buildScoreSelector(dimId, prodId, currentVal, dimName, prodName) {
+  var numVal = (currentVal !== '' && currentVal !== null && currentVal !== undefined) ? Number(currentVal) : 0;
   var valClass = '';
-  if (currentVal !== '') {
-    if (currentVal <= 2) valClass = ' val-lo';
-    else if (currentVal === 3) valClass = ' val-mid';
+  if (numVal > 0) {
+    if (numVal <= 2) valClass = ' val-lo';
+    else if (numVal === 3) valClass = ' val-mid';
     else valClass = ' val-hi';
   }
   var selectorId = 'score-sel-' + dimId + '-' + prodId;
-  var html = '<div class="score-selector' + valClass + '" id="' + selectorId + '"' +
-    ' data-val="' + (currentVal !== '' ? currentVal : '') + '"' +
+  var existingScreenshot = getScoreScreenshot(dimId, prodId);
+  var inputId = 'ss-input-' + dimId + '-' + prodId;
+
+  var html = '<div class="score-cell-wrap">' +
+    '<div class="score-selector' + valClass + '" id="' + selectorId + '"' +
+    ' data-val="' + (numVal || '') + '"' +
     ' role="group" aria-label="' + escapeHTML(dimName) + ' — ' + escapeHTML(prodName) + '">';
   for (var v = 1; v <= 5; v++) {
-    var isActive = currentVal !== '' && v <= currentVal;
+    var isActive = numVal > 0 && v <= numVal;
     var cls = 'score-btn' + (isActive ? ' active' : '');
     html += '<button class="' + cls + '" data-val="' + v + '"' +
       ' onclick="onScoreSelect(\'' + dimId + '\', \'' + prodId + '\', ' + v + ')"' +
       ' aria-label="Puntuación ' + v + ' de 5">' + v + '</button>';
   }
   html += '</div>';
+
+  /* Screenshot area */
+  html += '<input type="file" id="' + inputId + '" class="score-screenshot-input" accept="image/*"' +
+    ' onchange="onScoreScreenshot(\'' + dimId + '\', \'' + prodId + '\', this)">';
+
+  if (existingScreenshot) {
+    html += '<div style="display:flex;align-items:center;gap:4px;">' +
+      '<img class="score-screenshot-thumb" src="' + existingScreenshot + '"' +
+      ' alt="Captura ' + escapeHTML(dimName) + '"' +
+      ' onclick="openLightbox(\'' + dimId + '-' + prodId + '\')"' +
+      ' title="Ver captura">' +
+      '<button class="score-screenshot-remove" onclick="removeScoreScreenshot(\'' + dimId + '\', \'' + prodId + '\')"' +
+      ' aria-label="Quitar captura" title="Quitar">✕</button>' +
+      '</div>';
+  } else {
+    html += '<label class="score-screenshot-btn" for="' + inputId + '" title="Adjuntar captura">📷</label>';
+  }
+
+  html += '</div>';
   return html;
 }
+
+/* ─── SCREENSHOT HANDLERS ────────────────────────────────────── */
+function onScoreScreenshot(dimId, prodId, input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('⚠ Solo se aceptan imágenes');
+    input.value = '';
+    return;
+  }
+  resizeImageToBase64(file, 800, 0.8, function(dataUrl) {
+    var val = getScoreVal(dimId, prodId);
+    setScoreEntry(dimId, prodId, val || 0, dataUrl);
+    saveState();
+    renderEval();
+    showToast('📷 Captura adjuntada');
+  });
+}
+
+function removeScoreScreenshot(dimId, prodId) {
+  var val = getScoreVal(dimId, prodId);
+  setScoreEntry(dimId, prodId, val || 0, null);
+  saveState();
+  renderEval();
+  showToast('🗑 Captura eliminada');
+}
+
+/* ─── LIGHTBOX ───────────────────────────────────────────────── */
+function openLightbox(key) {
+  var src;
+  /* key is "dimId-prodId" */
+  var parts = key.split('-');
+  if (parts.length >= 2) {
+    var dimId = parts[0];
+    var prodId = parts[1];
+    src = getScoreScreenshot(dimId, prodId);
+  }
+  if (!src) return;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'screenshot-lightbox';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-label', 'Ver captura de pantalla');
+
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'screenshot-lightbox-close';
+  closeBtn.textContent = '×';
+  closeBtn.setAttribute('aria-label', 'Cerrar');
+
+  var img = document.createElement('img');
+  img.src = src;
+  img.alt = 'Captura de pantalla adjunta';
+
+  overlay.appendChild(closeBtn);
+  overlay.appendChild(img);
+  document.body.appendChild(overlay);
+
+  function closeLightbox() { document.body.removeChild(overlay); }
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay || e.target === closeBtn) closeLightbox();
+  });
+  document.addEventListener('keydown', function handler(e) {
+    if (e.key === 'Escape') { closeLightbox(); document.removeEventListener('keydown', handler); }
+  });
+}
+
+/* ─── PDF EXPORT ─────────────────────────────────────────────── */
+function exportarPDF() {
+  window.print();
+}
+
+
 
 /* ─── RADAR CHART ────────────────────────────────────────────── */
 var RADAR_LABEL_MAX   = 11;
@@ -438,13 +574,13 @@ function buildRadarChart(productos) {
     var color = COLORES[pi % COLORES.length];
     var pts2 = [];
     DIMENSIONES.forEach(function(d, di) {
-      var score = (STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined) ? STATE.scores[d.id][p.id] : 0;
+      var score = getScoreVal(d.id, p.id);
       var point = pt(score / 5, di);
       pts2.push(point.x.toFixed(1) + ',' + point.y.toFixed(1));
     });
     svg += '<polygon points="' + pts2.join(' ') + '" fill="' + color + '" fill-opacity="0.15" stroke="' + color + '" stroke-width="2" stroke-linejoin="round"/>';
     DIMENSIONES.forEach(function(d, di) {
-      var score = (STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined) ? STATE.scores[d.id][p.id] : 0;
+      var score = getScoreVal(d.id, p.id);
       if (score > 0) {
         var dot = pt(score / 5, di);
         svg += '<circle cx="' + dot.x.toFixed(1) + '" cy="' + dot.y.toFixed(1) + '" r="3" fill="' + color + '"/>';
@@ -488,7 +624,7 @@ function renderResults() {
   productos.forEach(function(p) {
     var sum = 0;
     DIMENSIONES.forEach(function(d) {
-      sum += (STATE.scores[d.id] && STATE.scores[d.id][p.id]) ? STATE.scores[d.id][p.id] : 0;
+      sum += getScoreVal(d.id, p.id);
     });
     totales[p.id] = sum;
   });
@@ -543,10 +679,17 @@ function renderResults() {
   DIMENSIONES.forEach(function(d) {
     html += '<tr><td class="dim-n">' + escapeHTML(d.nombre) + '</td>';
     productos.forEach(function(p) {
-      var s  = (STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined) ? STATE.scores[d.id][p.id] : 0;
+      var s  = getScoreVal(d.id, p.id);
       var isBest = totales[p.id] === maxTotal;
       var badgeCls = isBest ? 'score-badge best' : 'score-badge ' + scoreClass(s);
-      html += '<td><span class="' + badgeCls + '">' + s + '</span></td>';
+      var screenshot = getScoreScreenshot(d.id, p.id);
+      var ssTag = screenshot
+        ? '<img class="result-screenshot-thumb" src="' + screenshot + '"' +
+          ' alt="Captura ' + escapeHTML(d.nombre) + ' — ' + escapeHTML(p.nombre) + '"' +
+          ' onclick="openLightbox(\'' + d.id + '-' + p.id + '\')"' +
+          ' title="Ver captura">'
+        : '';
+      html += '<td><span class="' + badgeCls + '">' + s + '</span>' + ssTag + '</td>';
     });
     html += '</tr>';
   });
@@ -578,7 +721,8 @@ function renderResults() {
 
   /* Export row */
   html += '<div class="export-row">';
-  html += '<button class="btn-result-action primary" onclick="exportarResultados()">📋 Exportar resultados</button>';
+  html += '<button class="btn-result-action primary" onclick="exportarPDF()">📄 Exportar PDF</button>';
+  html += '<button class="btn-result-action ghost" onclick="exportarResultados()">📋 Copiar texto</button>';
   html += '<button class="btn-result-action ghost" onclick="guardarSesion()">💾 Guardar sesión</button>';
   html += '<button class="btn-result-action ghost" onclick="irAPaso(2)">← Volver a evaluar</button>';
   html += '</div>';
@@ -618,8 +762,7 @@ function exportarResultados() {
   DIMENSIONES.forEach(function(d) {
     var row = d.nombre.padEnd(ROW);
     productos.forEach(function(p) {
-      var s = (STATE.scores[d.id] && STATE.scores[d.id][p.id] !== undefined)
-        ? STATE.scores[d.id][p.id] : 0;
+      var s = getScoreVal(d.id, p.id);
       row += (s + '/5').padEnd(COL);
     });
     lines.push(row);

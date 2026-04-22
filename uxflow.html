@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/nav.css">
   <link rel="stylesheet" href="css/uxflow.css">
+  <link rel="stylesheet" href="css/print.css">
 </head>
 <body>
 
@@ -74,9 +75,18 @@
     <button class="btn-export" onclick="copiarFigma()">
       📋 Copiar asset para Figma
     </button>
+    <button class="btn-export" onclick="exportarPDF()" style="margin-top:6px">
+      📄 Exportar PDF
+    </button>
     <button class="btn-export" onclick="guardarHistorial()" style="margin-top:6px">
       💾 Guardar en historial
     </button>
+
+    <div class="form-group uxflow-screenshot-row" style="margin-top:16px;">
+      <label for="uxflow-screenshot">📷 Captura de pantalla del flujo</label>
+      <input type="file" id="uxflow-screenshot" accept="image/*" onchange="onUxflowScreenshot(this)">
+      <div id="uxflow-screenshot-preview" style="margin-top:8px;"></div>
+    </div>
   </aside>
 
   <!-- CANVAS PRINCIPAL -->
@@ -206,6 +216,8 @@
 
         </div><!-- /doc-grid row 2 -->
       </div><!-- /doc-body -->
+
+      <div id="uxflow-doc-screenshot" class="uxflow-screenshot-display" style="display:none;padding:0 32px 16px;"></div>
 
       <div class="doc-footer">SURA Investments · UX Architecture Framework · 2026</div>
     </div><!-- /doc-card -->

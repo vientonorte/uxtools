@@ -6,6 +6,9 @@ try {
   historial = [];
 }
 
+/* Current screenshot dataUrl (not persisted until "Guardar") */
+var _uxflowScreenshot = null;
+
 /* ─── UTILIDADES ─── ver js/utils.js ─────────────────────────── */
 
 function scrollToApp() {
@@ -108,7 +111,7 @@ function guardarHistorial() {
   var linea     = document.getElementById('linea').value;
   var criterios = document.getElementById('criterios').value;
   var paises    = document.getElementById('paises').value;
-  var item = { titulo: titulo, linea: linea, criterios: criterios, paises: paises, fecha: fechaHoy(), id: Date.now() };
+  var item = { titulo: titulo, linea: linea, criterios: criterios, paises: paises, fecha: fechaHoy(), id: Date.now(), screenshot: _uxflowScreenshot || null };
   historial.unshift(item);
   if (historial.length > 20) historial = historial.slice(0, 20);
   try {
@@ -128,7 +131,10 @@ function cargarDesdeHistorial(id) {
   document.getElementById('linea').value     = item.linea;
   document.getElementById('criterios').value = item.criterios;
   document.getElementById('paises').value    = item.paises;
+  _uxflowScreenshot = item.screenshot || null;
   generarDoc();
+  renderDocScreenshot(_uxflowScreenshot);
+  renderUxflowScreenshotPreview(_uxflowScreenshot);
   document.getElementById('editor').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -144,6 +150,79 @@ function renderHistorial() {
       '<div class="history-card-date">' + escapeHTML(h.linea) + ' · ' + escapeHTML(h.fecha) + '</div>' +
       '</div>';
   }).join('');
+}
+
+/* ─── SCREENSHOT (adjunta al documento) ──────────────────── */
+function onUxflowScreenshot(input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('⚠ Solo se aceptan imágenes');
+    input.value = '';
+    return;
+  }
+  /* Reuse resizeImageToBase64 from benchmark.js if available, else use FileReader directly */
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    var img = new Image();
+    img.onload = function () {
+      var maxDim = 1200;
+      var w = img.width, h = img.height;
+      var scale = Math.min(1, maxDim / Math.max(w, h));
+      var canvas = document.createElement('canvas');
+      canvas.width  = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      _uxflowScreenshot = canvas.toDataURL('image/jpeg', 0.82);
+      renderUxflowScreenshotPreview(_uxflowScreenshot);
+      renderDocScreenshot(_uxflowScreenshot);
+      showToast('📷 Captura adjuntada al documento');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderUxflowScreenshotPreview(dataUrl) {
+  var preview = document.getElementById('uxflow-screenshot-preview');
+  if (!preview) return;
+  if (!dataUrl) {
+    preview.innerHTML = '';
+    return;
+  }
+  preview.innerHTML = '<img src="' + dataUrl + '" alt="Vista previa de la captura"' +
+    ' style="max-width:100%;max-height:80px;border-radius:6px;border:1px solid rgba(0,181,226,0.4);display:block;margin-top:4px;">';
+}
+
+function renderDocScreenshot(dataUrl) {
+  var display = document.getElementById('uxflow-doc-screenshot');
+  if (!display) return;
+  if (!dataUrl) {
+    display.style.display = 'none';
+    display.innerHTML = '';
+    return;
+  }
+  display.style.display = 'block';
+  display.innerHTML =
+    '<div class="uxflow-ss-header">' +
+      '<span>📷 Captura de pantalla del flujo</span>' +
+      '<button class="uxflow-ss-remove" onclick="removeUxflowScreenshot()" aria-label="Quitar captura" title="Quitar">✕</button>' +
+    '</div>' +
+    '<img class="uxflow-screenshot-img" src="' + dataUrl + '" alt="Captura de pantalla del flujo UX">';
+}
+
+function removeUxflowScreenshot() {
+  _uxflowScreenshot = null;
+  renderDocScreenshot(null);
+  renderUxflowScreenshotPreview(null);
+  var input = document.getElementById('uxflow-screenshot');
+  if (input) input.value = '';
+  showToast('🗑 Captura eliminada');
+}
+
+/* ─── PDF EXPORT ─────────────────────────────────────────── */
+function exportarPDF() {
+  window.print();
 }
 
 /* ─── INICIALIZACIÓN ──────────────────────────────────────── */
