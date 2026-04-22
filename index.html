@@ -107,7 +107,7 @@
           <span class="badge badge-live module-badge">LIVE</span>
         </div>
         <h2 class="module-title">UXFLOW — Auto-Doc Engine</h2>
-        <p class="module-desc">Motor de documentación técnica UX automatizada: genera flujos de interacción, criterios de aceptación, tablas de integridad y assets listos para Figma en segundos.</p>
+        <p class="module-desc">Motor de documentación técnica UX asistida: interpreta prompts, propone pasos, decisiones, criterios de aceptación y deja un artefacto editable listo para QA, Figma y exportación.</p>
         <div class="module-meta" id="meta-uxflow">
           <span class="module-meta-item"><span class="module-meta-icon">💾</span><span id="meta-ux-docs">0 documentos</span></span>
           <span class="module-meta-sep" aria-hidden="true">·</span>
@@ -151,8 +151,39 @@
 
   </div><!-- /modules-grid -->
 
+  <section class="workspace-section fade-up delay-2" aria-label="Workspace operativo">
+    <div class="dash-section-label">Workspace operativo</div>
+    <div class="workspace-grid">
+      <article class="workspace-card workspace-card-primary">
+        <div class="workspace-card-top">
+          <div class="workspace-icon" aria-hidden="true">⌘</div>
+          <span class="workspace-badge">FOCO</span>
+        </div>
+        <h3 class="workspace-title">Atajos del sprint</h3>
+        <p class="workspace-desc">Abre el flujo de trabajo principal sin perder tiempo entre módulos. Pensado como un panel operativo para benchmark, flujo y administración.</p>
+        <div class="workspace-actions">
+          <a class="workspace-action primary" href="benchmark.html">Nuevo benchmark</a>
+          <a class="workspace-action ghost" href="uxflow.html">Nuevo UXFlow</a>
+          <a class="workspace-action ghost" href="admin.html">Abrir admin</a>
+        </div>
+      </article>
+
+      <article class="workspace-card">
+        <div class="workspace-card-top">
+          <div class="workspace-icon" aria-hidden="true">◉</div>
+          <span class="workspace-badge">LIVE</span>
+        </div>
+        <h3 class="workspace-title">Artefactos recientes</h3>
+        <p class="workspace-desc">Sesiones y documentos más recientes, mezclados en una sola vista para retomar trabajo, revisar contexto o continuar edición.</p>
+        <div class="recent-artifacts" id="workspace-recent-list" aria-live="polite">
+          <div class="activity-empty">Sin artefactos recientes aún.</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
   <!-- ACTIVITY FEED -->
-  <section class="activity-section fade-up delay-2" aria-label="Actividad reciente">
+  <section class="activity-section fade-up delay-3" aria-label="Actividad reciente">
     <div class="dash-section-label">Actividad reciente</div>
     <div class="activity-list" id="activity-list" role="log" aria-live="polite">
       <div class="activity-empty">Sin actividad registrada aún.</div>

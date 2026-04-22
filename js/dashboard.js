@@ -1,5 +1,71 @@
 /* ── DASHBOARD JS ─────────────────────────────────────────── */
 
+function readJSONStorage(key, fallback) {
+  try {
+    var raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function getBenchmarkSessions() {
+  var bmState = readJSONStorage('uxbenchmark-state', {});
+  return Array.isArray(bmState.historial) ? bmState.historial : [];
+}
+
+function getUxflowSessions() {
+  var uxList = readJSONStorage('uxflow-historial', []);
+  return Array.isArray(uxList) ? uxList : [];
+}
+
+function summarizeBenchmarkSession(session) {
+  var dims = Array.isArray(session.dimensiones) && session.dimensiones.length ? session.dimensiones : [];
+  var productos = Array.isArray(session.productos) ? session.productos.filter(function (p) { return p && p.nombre; }) : [];
+  var maxScore = dims.length * 5;
+  var leaderName = 'Sin datos';
+  var leaderTotal = 0;
+
+  productos.forEach(function (p) {
+    var total = dims.reduce(function (acc, dim) {
+      var entry = session.scores && session.scores[dim.id] && session.scores[dim.id][p.id];
+      if (typeof entry === 'object' && entry) return acc + (entry.val || 0);
+      return acc + (entry || 0);
+    }, 0);
+    if (total >= leaderTotal) {
+      leaderTotal = total;
+      leaderName = p.nombre;
+    }
+  });
+
+  return {
+    title: session.nombre || 'Benchmark sin título',
+    subtitle: session.analista ? 'Analista: ' + session.analista : 'Benchmark',
+    date: session.fecha || '',
+    ts: session.id || 0,
+    score: leaderTotal && maxScore ? leaderTotal + '/' + maxScore : productos.length + ' productos',
+    href: 'benchmark.html',
+    type: 'bm',
+    meta: leaderName
+  };
+}
+
+function summarizeUxflowSession(session) {
+  var flow = session.flow || {};
+  var steps = Array.isArray(flow.steps) ? flow.steps.length : 0;
+  var edgeCases = Array.isArray(flow.edgeCases) ? flow.edgeCases.length : 0;
+  return {
+    title: session.titulo || 'Documento UXFlow',
+    subtitle: session.linea || 'UXFlow',
+    date: session.fecha || '',
+    ts: session.id || 0,
+    score: steps ? steps + ' pasos' : 'Documento',
+    href: 'uxflow.html',
+    type: 'uxf',
+    meta: edgeCases ? edgeCases + ' casos borde' : 'Sin casos borde'
+  };
+}
+
 /* ── GREETING ─── */
 (function () {
   var el = document.getElementById('dash-greeting');
@@ -18,28 +84,18 @@
 (function () {
   var bmSessions = 0;
   var lastAnalista = '—';
-  try {
-    var bmRaw = localStorage.getItem('uxbenchmark-state');
-    if (bmRaw) {
-      var bmState = JSON.parse(bmRaw);
-      bmSessions = (bmState.historial && bmState.historial.length) || 0;
-      if (bmState.config && bmState.config.analista) {
-        lastAnalista = bmState.config.analista;
-      } else if (bmState.historial && bmState.historial.length) {
-        var last = bmState.historial[0];
-        if (last.analista) lastAnalista = last.analista;
-      }
-    }
-  } catch (e) { /* pass */ }
+  var bmState = readJSONStorage('uxbenchmark-state', {});
+  bmSessions = (bmState.historial && bmState.historial.length) || 0;
+  if (bmState.config && bmState.config.analista) {
+    lastAnalista = bmState.config.analista;
+  } else if (bmState.historial && bmState.historial.length) {
+    var last = bmState.historial[0];
+    if (last.analista) lastAnalista = last.analista;
+  }
 
   var uxDocs = 0;
-  try {
-    var uxRaw = localStorage.getItem('uxflow-historial');
-    if (uxRaw) {
-      var uxList = JSON.parse(uxRaw);
-      uxDocs = Array.isArray(uxList) ? uxList.length : 0;
-    }
-  } catch (e) { /* pass */ }
+  var uxList = getUxflowSessions();
+  uxDocs = uxList.length;
 
   var getEl = function (id) { return document.getElementById(id); };
   if (getEl('kpi-benchmarks')) getEl('kpi-benchmarks').textContent = bmSessions;
@@ -50,29 +106,17 @@
 
   if (getEl('meta-bm-sessions'))
     getEl('meta-bm-sessions').textContent = bmSessions + ' ' + (bmSessions === 1 ? 'sesión' : 'sesiones');
-  try {
-    var bmRaw2 = localStorage.getItem('uxbenchmark-state');
-    if (bmRaw2) {
-      var bmState2 = JSON.parse(bmRaw2);
-      if (bmState2.historial && bmState2.historial.length) {
-        if (getEl('meta-bm-last'))
-          getEl('meta-bm-last').textContent = 'Último: ' + bmState2.historial[0].fecha;
-      }
-    }
-  } catch (e) { /* pass */ }
+  if (bmState.historial && bmState.historial.length) {
+    if (getEl('meta-bm-last'))
+      getEl('meta-bm-last').textContent = 'Último: ' + bmState.historial[0].fecha;
+  }
 
   if (getEl('meta-ux-docs'))
     getEl('meta-ux-docs').textContent = uxDocs + ' ' + (uxDocs === 1 ? 'documento' : 'documentos');
-  try {
-    var uxRaw2 = localStorage.getItem('uxflow-historial');
-    if (uxRaw2) {
-      var uxList2 = JSON.parse(uxRaw2);
-      if (Array.isArray(uxList2) && uxList2.length) {
-        if (getEl('meta-ux-last'))
-          getEl('meta-ux-last').textContent = 'Último: ' + uxList2[0].fecha;
-      }
-    }
-  } catch (e) { /* pass */ }
+  if (uxList.length) {
+    if (getEl('meta-ux-last'))
+      getEl('meta-ux-last').textContent = 'Último: ' + uxList[0].fecha;
+  }
 })();
 
 /* ── ACTIVITY FEED ─── */
@@ -88,41 +132,25 @@
     return d.innerHTML;
   }
 
-  try {
-    var bmRaw = localStorage.getItem('uxbenchmark-state');
-    if (bmRaw) {
-      var bmState = JSON.parse(bmRaw);
-      if (bmState.historial && bmState.historial.length) {
-        bmState.historial.forEach(function (h) {
-          items.push({
-            type:  'bm',
-            title: h.nombre || 'Benchmark sin título',
-            sub:   h.analista ? 'Analista: ' + h.analista : 'Benchmark',
-            date:  h.fecha || '',
-            ts:    h.id || 0
-          });
-        });
-      }
-    }
-  } catch (e) { /* pass */ }
+  getBenchmarkSessions().forEach(function (h) {
+    items.push({
+      type:  'bm',
+      title: h.nombre || 'Benchmark sin título',
+      sub:   h.analista ? 'Analista: ' + h.analista : 'Benchmark',
+      date:  h.fecha || '',
+      ts:    h.id || 0
+    });
+  });
 
-  try {
-    var uxRaw = localStorage.getItem('uxflow-historial');
-    if (uxRaw) {
-      var uxList = JSON.parse(uxRaw);
-      if (Array.isArray(uxList)) {
-        uxList.forEach(function (h) {
-          items.push({
-            type:  'uxf',
-            title: h.titulo || 'Documento UXFlow',
-            sub:   h.linea || 'UXFlow',
-            date:  h.fecha || '',
-            ts:    h.id || 0
-          });
-        });
-      }
-    }
-  } catch (e) { /* pass */ }
+  getUxflowSessions().forEach(function (h) {
+    items.push({
+      type:  'uxf',
+      title: h.titulo || 'Documento UXFlow',
+      sub:   h.linea || 'UXFlow',
+      date:  h.fecha || '',
+      ts:    h.id || 0
+    });
+  });
 
   if (!items.length) return;
 
@@ -144,6 +172,30 @@
   container.innerHTML = html;
 })();
 
+/* ── WORKSPACE RECENT ─── */
+(function () {
+  var container = document.getElementById('workspace-recent-list');
+  if (!container) return;
+
+  var artifacts = getBenchmarkSessions().map(summarizeBenchmarkSession)
+    .concat(getUxflowSessions().map(summarizeUxflowSession))
+    .sort(function (a, b) { return b.ts - a.ts; });
+
+  if (!artifacts.length) return;
+
+  container.innerHTML = artifacts.slice(0, 5).map(function (item) {
+    var icon = item.type === 'bm' ? '📊' : '⚡';
+    return '<a class="recent-artifact" href="' + item.href + '">' +
+      '<div class="recent-artifact-icon" aria-hidden="true">' + icon + '</div>' +
+      '<div class="recent-artifact-body">' +
+        '<div class="recent-artifact-title">' + item.title + '</div>' +
+        '<div class="recent-artifact-meta">' + item.subtitle + ' · ' + item.date + ' · ' + item.meta + '</div>' +
+      '</div>' +
+      '<div class="recent-artifact-score">' + item.score + '</div>' +
+      '</a>';
+  }).join('');
+})();
+
 /* ── SEARCH ─── */
 (function () {
   var input = document.getElementById('dash-search');
@@ -154,6 +206,11 @@
     cards.forEach(function (card) {
       var text = card.textContent.toLowerCase();
       card.style.opacity = (!q || text.indexOf(q) !== -1) ? '' : '0.3';
+    });
+    var recents = document.querySelectorAll('.recent-artifact');
+    recents.forEach(function (item) {
+      var text = item.textContent.toLowerCase();
+      item.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
     });
     var acts = document.querySelectorAll('.activity-item');
     acts.forEach(function (act) {

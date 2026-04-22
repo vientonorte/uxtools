@@ -63,6 +63,7 @@
     <div class="form-group">
       <label for="criterios">Criterios de aceptación (prompt)</label>
       <textarea id="criterios" rows="7" placeholder="Describe el flujo, los criterios o el componente a documentar...">Yo como negocio quiero actualizar la presentación que tiene el contacto del sitio global, filtrando por línea de negocio y país, con manejo de datos nulos.</textarea>
+      <div class="field-hint">Usa prompts del tipo: actor, objetivo, filtros, decisiones, errores y casos borde.</div>
     </div>
 
     <div class="form-group">
@@ -79,7 +80,7 @@
     <button class="btn-export" onclick="exportarPDF()" style="margin-top:6px">
       📄 Exportar PDF
     </button>
-    <button class="btn-export" onclick="guardarHistorial()" style="margin-top:6px">
+      <button class="btn-export" onclick="guardarHistorial()" style="margin-top:6px">
       💾 Guardar en historial
     </button>
 
@@ -115,6 +116,7 @@
       </div>
 
       <div class="doc-body">
+        <div class="doc-overview" id="doc-overview"></div>
         <div class="doc-grid">
 
           <!-- FLUJO -->
@@ -137,6 +139,13 @@
 
           <!-- DERECHA -->
           <div style="display:flex; flex-direction:column; gap:16px;">
+
+            <div class="doc-section">
+              <div class="doc-section-title"><span class="icon">✓</span> Criterios de aceptación</div>
+              <div class="criteria-list" id="criteria-list">
+                <div class="criteria-item">El sistema respeta línea de negocio, país y manejo de nulos.</div>
+              </div>
+            </div>
 
             <!-- TABS -->
             <div class="doc-section">
