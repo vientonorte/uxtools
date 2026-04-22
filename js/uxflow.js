@@ -1,6 +1,7 @@
 /* ─── CONSTANTES ─────────────────────────────────────────────── */
 var UXFLOW_SCREENSHOT_MAX_DIM = 1200;
 var UXFLOW_STORAGE_KEY = 'uxflow-historial';
+var MAX_PROMPT_ACTION_CLAUSES = 3;
 
 var historial = readHistory();
 var _uxflowScreenshot = null;
@@ -94,7 +95,7 @@ function setSaveStatus(status) {
 function normalizePrompt(text) {
   return String(text || '')
     .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/<[^>]*>/g, ' ')
+    .replace(/<\/?[a-zA-Z][^>]*>/g, ' ')
     .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
     .replace(/\[([^\]]+)]\([^)]*\)/g, '$1')
     .replace(/^\s*[-*+]\s+/gm, ' ')
@@ -209,7 +210,7 @@ function detectSteps(prompt, actor, goal, linea, countries, edgeCases) {
     var key = String(item.detail || '').toLowerCase().trim();
     if (key) knownDetails[key] = true;
   });
-  splitPromptClauses(prompt).slice(0, 3).forEach(function (clause) {
+  splitPromptClauses(prompt).slice(0, MAX_PROMPT_ACTION_CLAUSES).forEach(function (clause) {
     var action = slugToSentence(
       clause
         .replace(/^yo como\s+[^,.]+?\s+quiero\s+/i, '')
