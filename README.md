@@ -21,6 +21,11 @@ Suite de herramientas UX en producción para SURA Investments.
 index.html          → Dashboard / hub con tabs de productos
 benchmark.html      → App: UX Benchmark (embed Figma)
 uxflow.html         → App: UXFLOW Auto-Doc Engine
+.github/workflows/
+  ci.yml            → Validación automática para PRs y main
+  deploy.yml        → Deploy formal a GitHub Pages mediante artifact
+scripts/
+  validate-static.js → Smoke check de HTML, assets y sintaxis JS
 css/
   tokens.css        → Design tokens (variables, colores, tipografía)
   base.css          → Reset, grain overlay, scrollbar
@@ -29,12 +34,17 @@ css/
   benchmark.css     → Estilos de Benchmark (benchmark.html)
   uxflow.css        → Estilos de UXFLOW (uxflow.html)
 js/
-  dashboard.js      → Lógica de tabs del dashboard
+  dashboard.js      → KPIs, actividad y búsqueda del dashboard
+  benchmark.js      → App benchmark: evaluación, notas, resultados, screenshots
+  admin.js          → Content manager: dimensiones, sesiones y export
   uxflow.js         → Motor de generación, clipboard, historial
 ```
 
 ## Deploy
 
-El sitio se publica automáticamente con GitHub Pages desde la rama `main`:
+El sitio se publica automáticamente con GitHub Pages desde `main` mediante GitHub Actions:
+
+- `CI` valida referencias HTML y sintaxis JS en cada PR y push
+- `Deploy to GitHub Pages` genera un artifact y publica solo si la validación pasa
 
 **https://vientonorte.github.io/uxtools/**
