@@ -40,10 +40,30 @@ function readHistory() {
   try {
     var raw = localStorage.getItem(UXFLOW_STORAGE_KEY);
     var parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    return sanitizeHistory(parsed);
   } catch (e) {
     return [];
   }
+}
+
+function sanitizeHistory(items) {
+  if (!Array.isArray(items)) return [];
+  return items.filter(function (item) {
+    return item &&
+      typeof item === 'object' &&
+      Number.isFinite(Number(item.id));
+  }).map(function (item) {
+    return {
+      id: Number(item.id),
+      titulo: String(item.titulo || 'Proyecto UX'),
+      linea: String(item.linea || 'Otro'),
+      criterios: String(item.criterios || ''),
+      paises: String(item.paises || ''),
+      fecha: String(item.fecha || fechaHoy()),
+      screenshot: typeof item.screenshot === 'string' ? item.screenshot : null,
+      flow: item.flow && typeof item.flow === 'object' ? item.flow : {}
+    };
+  });
 }
 
 function writeHistory() {
@@ -73,6 +93,14 @@ function setSaveStatus(status) {
 
 function normalizePrompt(text) {
   return String(text || '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)]\([^)]*\)/g, '$1')
+    .replace(/^\s*[-*+]\s+/gm, ' ')
+    .replace(/^\s*\d+[.)]\s+/gm, ' ')
+    .replace(/[`*_~#>|]/g, ' ')
+    .replace(/\r?\n+/g, ' ')
     .replace(/\s+/g, ' ')
     .replace(/[“”]/g, '"')
     .trim();
@@ -155,6 +183,7 @@ function detectEdgeCases(prompt) {
 
 function detectSteps(prompt, actor, goal, linea, countries, edgeCases) {
   var source = prompt.toLowerCase();
+  var knownDetails = {};
   var steps = [{
     label: 'Inicio',
     detail: actor + ' inicia la solicitud',
@@ -176,6 +205,22 @@ function detectSteps(prompt, actor, goal, linea, countries, edgeCases) {
   if (/valid|integridad|regla/.test(source)) {
     steps.push({ label: 'Validar integridad', detail: 'Se comprueban reglas y consistencia antes del publish', tone: 'light' });
   }
+  steps.forEach(function (item) {
+    var key = String(item.detail || '').toLowerCase().trim();
+    if (key) knownDetails[key] = true;
+  });
+  splitPromptClauses(prompt).slice(0, 3).forEach(function (clause) {
+    var action = slugToSentence(
+      clause
+        .replace(/^yo como\s+[^,.]+?\s+quiero\s+/i, '')
+        .replace(/^quiero\s+/i, '')
+        .trim()
+    );
+    var actionKey = action.toLowerCase();
+    if (!action || actionKey === goal.toLowerCase() || knownDetails[actionKey]) return;
+    knownDetails[actionKey] = true;
+    steps.push({ label: 'Acción', detail: action, tone: 'light' });
+  });
   if (!steps.some(function (item) { return item.label === 'Renderizar salida'; })) {
     steps.push({ label: 'Resolver flujo', detail: goal, tone: 'cyan-bg' });
   }
