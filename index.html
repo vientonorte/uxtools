@@ -19,162 +19,146 @@
   <a class="nav-brand" href="index.html" aria-label="UX Tools — Inicio">
     <div class="nav-logo" aria-hidden="true">UXT</div>
     <span class="nav-title">UX Tools</span>
-    <span class="nav-badge">2 productos</span>
+    <span class="nav-badge">Suite</span>
   </a>
   <div class="nav-actions">
+    <a class="nav-link nav-link-admin" href="admin.html">⚙ Admin</a>
     <a class="nav-link" href="https://vientonorte.github.io/" target="_blank" rel="noopener noreferrer">← vientonorte</a>
     <a class="btn-nav" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">GitHub</a>
   </div>
 </nav>
 
-<!-- HERO -->
-<header class="hero">
-  <div class="hero-eyebrow fade-up">UX Tools Suite · SURA Investments · 2026</div>
-  <h1 class="fade-up delay-1">Herramientas UX<br><span class="accent">en producción.</span></h1>
-  <p class="hero-sub fade-up delay-2">Suite de productos UX para análisis comparativo y documentación automatizada de flujos de interacción.</p>
+<!-- DASHBOARD HEADER -->
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <div class="dash-greeting-col">
+      <div class="dash-eyebrow" id="dash-eyebrow">UX Tools Suite · SURA Investments</div>
+      <h1 class="dash-title" id="dash-greeting">Bienvenido al dashboard</h1>
+      <p class="dash-sub">Hub de instrumentos UX: benchmark comparativo, documentación automatizada de flujos y gestión de contenido.</p>
+    </div>
+    <div class="dash-search-col">
+      <div class="dash-search" role="search" aria-label="Búsqueda de módulos">
+        <span class="dash-search-icon" aria-hidden="true">⌕</span>
+        <input type="text" class="dash-search-input" id="dash-search" placeholder="Buscar módulo o sesión…" autocomplete="off">
+      </div>
+    </div>
+  </div>
 
-  <div class="stats-row fade-up delay-3" role="list" aria-label="Estadísticas del proyecto">
-    <div class="stat-item" role="listitem">
-      <div class="stat-number">2</div>
-      <div class="stat-label">Productos</div>
+  <!-- KPI ROW -->
+  <div class="kpi-row" role="list" aria-label="Métricas del sistema" id="kpi-row">
+    <div class="kpi-card" role="listitem">
+      <div class="kpi-value" id="kpi-benchmarks">—</div>
+      <div class="kpi-label">Benchmarks guardados</div>
     </div>
-    <div class="stat-item" role="listitem">
-      <div class="stat-number">LIVE</div>
-      <div class="stat-label">Status</div>
+    <div class="kpi-card" role="listitem">
+      <div class="kpi-value" id="kpi-uxflow">—</div>
+      <div class="kpi-label">Documentos UXFlow</div>
     </div>
-    <div class="stat-item" role="listitem">
-      <div class="stat-number">SURA</div>
-      <div class="stat-label">Identidad</div>
+    <div class="kpi-card" role="listitem">
+      <div class="kpi-value" id="kpi-analista">—</div>
+      <div class="kpi-label">Último analista</div>
+    </div>
+    <div class="kpi-card kpi-status" role="listitem">
+      <div class="kpi-value"><span class="kpi-live-dot" aria-hidden="true"></span>LIVE</div>
+      <div class="kpi-label">Estado del sistema</div>
     </div>
   </div>
 </header>
 
-<!-- SECTION DIVIDER -->
-<div class="section-divider" aria-hidden="true"></div>
+<!-- MODULES SECTION -->
+<main class="dash-main" id="dash-main">
 
-<!-- PRODUCTS -->
-<main class="products-section">
-  <div class="section-label fade-up">Productos</div>
+  <div class="dash-section-label fade-up">Instrumentos UX</div>
 
-  <!-- TABS -->
-  <div class="product-tabs fade-up" role="tablist" aria-label="Seleccionar producto">
-    <button class="product-tab active" data-tab="benchmark" role="tab" aria-selected="true" aria-controls="panel-benchmark" id="tab-benchmark">
-      <span class="tab-icon" aria-hidden="true">📊</span> Benchmark
-    </button>
-    <button class="product-tab" data-tab="uxflow" role="tab" aria-selected="false" aria-controls="panel-uxflow" id="tab-uxflow">
-      <span class="tab-icon" aria-hidden="true">⚡</span> Automatizado de Flujos
-    </button>
-  </div>
+  <div class="modules-grid fade-up delay-1">
 
-  <!-- PANEL: BENCHMARK -->
-  <section class="product-panel active" id="panel-benchmark" role="tabpanel" aria-labelledby="tab-benchmark">
-    <article class="product-card">
-      <div class="product-header">
-        <div class="product-info">
-          <h2 class="product-name">UX Benchmark</h2>
-          <p class="product-desc">Análisis comparativo de experiencia de usuario para productos digitales. Evalúa patrones de diseño, métricas de usabilidad y buenas prácticas del mercado financiero.</p>
-          <div class="product-badges" aria-label="Etiquetas">
-            <span class="badge badge-live">LIVE</span>
-            <span class="badge badge-tag">UX Research</span>
-            <span class="badge badge-tag">Figma</span>
-            <span class="badge badge-tag">SURA</span>
-          </div>
+    <!-- MODULE: BENCHMARK -->
+    <article class="module-card" id="mod-benchmark">
+      <div class="module-card-inner">
+        <div class="module-top">
+          <div class="module-icon-wrap" aria-hidden="true">📊</div>
+          <span class="badge badge-live module-badge">LIVE</span>
         </div>
-        <div class="product-actions">
-          <a class="btn-product btn-open" href="benchmark.html">Abrir Benchmark →</a>
-          <a class="btn-product btn-code" href="https://touch-swirl-23494733.figma.site" target="_blank" rel="noopener noreferrer">Figma ↗</a>
+        <h2 class="module-title">UX Benchmark</h2>
+        <p class="module-desc">Análisis comparativo de experiencia de usuario para productos digitales. Evalúa patrones de diseño, métricas de usabilidad y buenas prácticas del mercado financiero.</p>
+        <div class="module-meta" id="meta-benchmark">
+          <span class="module-meta-item"><span class="module-meta-icon">💾</span><span id="meta-bm-sessions">0 sesiones</span></span>
+          <span class="module-meta-sep" aria-hidden="true">·</span>
+          <span class="module-meta-item"><span class="module-meta-icon">🕐</span><span id="meta-bm-last">Sin actividad</span></span>
+        </div>
+        <div class="module-tags" aria-label="Tecnologías">
+          <span class="mod-tag">UX Research</span>
+          <span class="mod-tag">Figma</span>
+          <span class="mod-tag">PDF Export</span>
+          <span class="mod-tag">Screenshots</span>
         </div>
       </div>
-
-      <div class="product-preview">
-        <div class="preview-label">Vista previa</div>
-        <div class="preview-frame">
-          <iframe
-            src="https://touch-swirl-23494733.figma.site"
-            title="UX Benchmark Preview"
-            loading="lazy"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-          ></iframe>
-        </div>
-      </div>
-
-      <div class="features-grid" aria-label="Características de UX Benchmark">
-        <div class="feature-item">
-          <div class="feature-icon" aria-hidden="true">📐</div>
-          <div class="feature-name">Análisis de patrones</div>
-          <p class="feature-desc">Comparativa de patrones UX en plataformas financieras líderes.</p>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon" aria-hidden="true">📈</div>
-          <div class="feature-name">Métricas UX</div>
-          <p class="feature-desc">Evaluación de métricas de usabilidad y accesibilidad.</p>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon" aria-hidden="true">🎯</div>
-          <div class="feature-name">Buenas prácticas</div>
-          <p class="feature-desc">Referentes del mercado aplicados a SURA Investments.</p>
-        </div>
+      <div class="module-card-footer">
+        <a class="btn-module-open" href="benchmark.html">Abrir Benchmark →</a>
+        <a class="btn-module-ghost" href="https://touch-swirl-23494733.figma.site" target="_blank" rel="noopener noreferrer">Figma ↗</a>
       </div>
     </article>
-  </section>
 
-  <!-- PANEL: UXFLOW -->
-  <section class="product-panel" id="panel-uxflow" role="tabpanel" aria-labelledby="tab-uxflow">
-    <article class="product-card">
-      <div class="product-header">
-        <div class="product-info">
-          <h2 class="product-name">UXFLOW — Auto-Doc Engine</h2>
-          <p class="product-desc">Motor de documentación técnica UX automatizada: genera flujos de interacción, criterios de aceptación, tablas de integridad y assets listos para Figma en segundos.</p>
-          <div class="product-badges" aria-label="Etiquetas">
-            <span class="badge badge-live">LIVE</span>
-            <span class="badge badge-tag">Vanilla JS</span>
-            <span class="badge badge-tag">localStorage</span>
-            <span class="badge badge-tag">Figma Export</span>
-            <span class="badge badge-tag">SURA</span>
-          </div>
+    <!-- MODULE: UXFLOW -->
+    <article class="module-card" id="mod-uxflow">
+      <div class="module-card-inner">
+        <div class="module-top">
+          <div class="module-icon-wrap" aria-hidden="true">⚡</div>
+          <span class="badge badge-live module-badge">LIVE</span>
         </div>
-        <div class="product-actions">
-          <a class="btn-product btn-open" href="uxflow.html">Abrir UXFLOW →</a>
-          <a class="btn-product btn-code" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">Código ↗</a>
+        <h2 class="module-title">UXFLOW — Auto-Doc Engine</h2>
+        <p class="module-desc">Motor de documentación técnica UX automatizada: genera flujos de interacción, criterios de aceptación, tablas de integridad y assets listos para Figma en segundos.</p>
+        <div class="module-meta" id="meta-uxflow">
+          <span class="module-meta-item"><span class="module-meta-icon">💾</span><span id="meta-ux-docs">0 documentos</span></span>
+          <span class="module-meta-sep" aria-hidden="true">·</span>
+          <span class="module-meta-item"><span class="module-meta-icon">🕐</span><span id="meta-ux-last">Sin actividad</span></span>
+        </div>
+        <div class="module-tags" aria-label="Tecnologías">
+          <span class="mod-tag">Vanilla JS</span>
+          <span class="mod-tag">localStorage</span>
+          <span class="mod-tag">PDF Export</span>
+          <span class="mod-tag">SURA</span>
         </div>
       </div>
-
-      <div class="product-preview">
-        <div class="preview-label">Vista previa</div>
-        <div class="preview-frame">
-          <iframe
-            src="uxflow.html"
-            title="UXFLOW Preview"
-            loading="lazy"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-          ></iframe>
-        </div>
-      </div>
-
-      <div class="features-grid" aria-label="Características de UXFLOW">
-        <div class="feature-item">
-          <div class="feature-icon" aria-hidden="true">⚡</div>
-          <div class="feature-name">Generación automática</div>
-          <p class="feature-desc">Criterios de aceptación y flujos de interacción en un clic.</p>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon" aria-hidden="true">📋</div>
-          <div class="feature-name">Export a Figma</div>
-          <p class="feature-desc">Copia assets formateados directamente para pegar en Figma.</p>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon" aria-hidden="true">💾</div>
-          <div class="feature-name">Historial local</div>
-          <p class="feature-desc">Guarda y recupera documentos generados con localStorage.</p>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon" aria-hidden="true">🧩</div>
-          <div class="feature-name">Tablas resilientes</div>
-          <p class="feature-desc">Estructura CSS intacta con manejo de datos nulos y fallbacks.</p>
-        </div>
+      <div class="module-card-footer">
+        <a class="btn-module-open" href="uxflow.html">Abrir UXFLOW →</a>
+        <a class="btn-module-ghost" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">Código ↗</a>
       </div>
     </article>
+
+    <!-- MODULE: ADMIN -->
+    <article class="module-card module-card-admin" id="mod-admin">
+      <div class="module-card-inner">
+        <div class="module-top">
+          <div class="module-icon-wrap" aria-hidden="true">⚙️</div>
+          <span class="badge badge-admin module-badge">ADMIN</span>
+        </div>
+        <h2 class="module-title">Content Manager</h2>
+        <p class="module-desc">Gestiona dimensiones de benchmark, templates de UXFlow, sesiones guardadas y exporta datos en CSV o JSON. Panel de administración completo.</p>
+        <div class="module-meta">
+          <span class="module-meta-item"><span class="module-meta-icon">🗂</span><span>Dimensiones · Templates · Datos</span></span>
+        </div>
+        <div class="module-tags" aria-label="Funciones">
+          <span class="mod-tag">CRUD</span>
+          <span class="mod-tag">CSV Export</span>
+          <span class="mod-tag">JSON Export</span>
+        </div>
+      </div>
+      <div class="module-card-footer">
+        <a class="btn-module-open" href="admin.html">Abrir Admin →</a>
+      </div>
+    </article>
+
+  </div><!-- /modules-grid -->
+
+  <!-- ACTIVITY FEED -->
+  <section class="activity-section fade-up delay-2" aria-label="Actividad reciente">
+    <div class="dash-section-label">Actividad reciente</div>
+    <div class="activity-list" id="activity-list" role="log" aria-live="polite">
+      <div class="activity-empty">Sin actividad registrada aún.</div>
+    </div>
   </section>
+
 </main>
 
 <!-- FOOTER -->
