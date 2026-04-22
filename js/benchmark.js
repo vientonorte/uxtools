@@ -141,7 +141,9 @@ function scoreInputClass(s) {
   return 'score-input score-low';
 }
 
-/* ─── IMÁGENES ───────────────────────────────────────────────── */
+/* ─── CONSTANTES DE IMAGEN ───────────────────────────────────── */
+var SCREENSHOT_MAX_DIM  = 800;   /* Máx. dimensión (px) para screenshots de scores */
+var SCREENSHOT_QUALITY  = 0.8;   /* Calidad JPEG para screenshots */
 function resizeImageToBase64(file, maxDim, quality, callback) {
   var reader = new FileReader();
   reader.onload = function(e) {
@@ -443,7 +445,7 @@ function onScoreScreenshot(dimId, prodId, input) {
     input.value = '';
     return;
   }
-  resizeImageToBase64(file, 800, 0.8, function(dataUrl) {
+  resizeImageToBase64(file, SCREENSHOT_MAX_DIM, SCREENSHOT_QUALITY, function(dataUrl) {
     var val = getScoreVal(dimId, prodId);
     setScoreEntry(dimId, prodId, val || 0, dataUrl);
     saveState();

@@ -4,6 +4,8 @@ var STORAGE_UX       = 'uxflow-historial';
 var STORAGE_DIM      = 'uxbenchmark-dimensiones';
 var STORAGE_TPL      = 'uxflow-templates';
 
+var MIN_DIMENSIONS = 2;   /* Mínimo de dimensiones requeridas en el Benchmark */
+
 var DIMENSIONES_DEFAULT = [
   { id: 'd1', nombre: 'Primera Impresión',    desc: 'Onboarding, hero y percepción inicial',       activa: true },
   { id: 'd2', nombre: 'Navegación',           desc: 'Arquitectura de información y menús',          activa: true },
@@ -116,7 +118,7 @@ function toggleDim(id) {
 
 function eliminarDim(id) {
   var dims = loadDimensiones();
-  if (dims.length <= 2) { showToast('⚠ Mínimo 2 dimensiones requeridas'); return; }
+  if (dims.length <= MIN_DIMENSIONS) { showToast('⚠ Mínimo ' + MIN_DIMENSIONS + ' dimensiones requeridas'); return; }
   dims = dims.filter(function (d) { return d.id !== id; });
   saveDimensiones(dims);
   renderDimensiones();
@@ -407,6 +409,7 @@ function exportBmCSV() {
   });
 
   var csv  = rows.join('\n');
+  /* UTF-8 BOM (\uFEFF) prepended for correct Excel encoding when opening CSV */
   var blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   var url  = URL.createObjectURL(blob);
   var a    = document.createElement('a');

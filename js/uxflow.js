@@ -1,3 +1,6 @@
+/* ─── CONSTANTES ─────────────────────────────────────────────── */
+var UXFLOW_SCREENSHOT_MAX_DIM = 1200;  /* Máx. dimensión (px) para screenshots de flujo */
+
 /* ─── ESTADO ─────────────────────────────────────────────── */
 var historial;
 try {
@@ -166,7 +169,7 @@ function onUxflowScreenshot(input) {
   reader.onload = function (e) {
     var img = new Image();
     img.onload = function () {
-      var maxDim = 1200;
+      var maxDim = UXFLOW_SCREENSHOT_MAX_DIM;
       var w = img.width, h = img.height;
       var scale = Math.min(1, maxDim / Math.max(w, h));
       var canvas = document.createElement('canvas');
