@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="UX Tools — Admin / Content Manager para SURA Investments">
+  <title>Admin · UX Tools</title>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=dm-mono:400,500|space-grotesk:300,400,500,600,700|inter:400,500" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav aria-label="Navegación">
+  <a class="nav-brand" href="index.html" aria-label="Volver al Dashboard">
+    <div class="nav-logo" aria-hidden="true">UXT</div>
+    <span class="nav-title">UX Tools</span>
+    <span class="nav-badge">Admin</span>
+  </a>
+  <div class="nav-actions">
+    <a class="nav-link" href="benchmark.html">Benchmark</a>
+    <a class="nav-link" href="uxflow.html">UXFlow</a>
+    <a class="btn-nav" href="index.html">← Dashboard</a>
+  </div>
+</nav>
+
+<div class="admin-shell">
+
+  <!-- HEADER -->
+  <header class="admin-header">
+    <div class="admin-eyebrow">Content Manager · SURA Investments</div>
+    <h1 class="admin-title">⚙️ Panel de Administración</h1>
+    <p class="admin-sub">Gestiona dimensiones, templates, sesiones guardadas y exporta datos del sistema.</p>
+  </header>
+
+  <!-- TABS -->
+  <div class="admin-tabs" role="tablist" aria-label="Secciones del admin">
+    <button class="admin-tab active" data-tab="dimensiones" role="tab" aria-selected="true">📐 Dimensiones</button>
+    <button class="admin-tab" data-tab="templates" role="tab" aria-selected="false">📄 Templates UXFlow</button>
+    <button class="admin-tab" data-tab="sesiones" role="tab" aria-selected="false">🗂 Sesiones</button>
+    <button class="admin-tab" data-tab="exportar" role="tab" aria-selected="false">⬇ Exportar</button>
+  </div>
+
+  <!-- PANEL: DIMENSIONES -->
+  <section class="admin-panel active" id="admin-tab-dimensiones" role="tabpanel">
+    <div class="admin-section-label">Dimensiones del Benchmark</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:var(--space-5);">
+      Edita, activa o desactiva las dimensiones usadas en el Benchmark. Los cambios se aplican al abrir el módulo.
+    </p>
+
+    <div class="dim-admin-list" id="dim-admin-list" aria-label="Lista de dimensiones">
+      <!-- rendered by JS -->
+    </div>
+
+    <div class="admin-card" id="dim-add-card">
+      <div class="admin-card-header">
+        <span class="admin-card-title">+ Nueva dimensión</span>
+      </div>
+      <div class="admin-card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;flex-wrap:wrap;">
+          <div class="admin-form-group">
+            <label class="admin-label" for="new-dim-name">Nombre</label>
+            <input type="text" id="new-dim-name" class="admin-input" placeholder="Ej. Onboarding" maxlength="40">
+          </div>
+          <div class="admin-form-group" style="grid-column:1/-1;">
+            <label class="admin-label" for="new-dim-desc">Descripción</label>
+            <input type="text" id="new-dim-desc" class="admin-input" placeholder="Descripción breve de la dimensión" maxlength="120">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn-admin-primary" onclick="agregarDimension()">+ Agregar dimensión</button>
+          <button class="btn-admin-ghost" onclick="resetearDimensiones()">↩ Restablecer predeterminadas</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL: TEMPLATES UXFLOW -->
+  <section class="admin-panel" id="admin-tab-templates" role="tabpanel">
+    <div class="admin-section-label">Templates de Criterios de Aceptación</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:var(--space-5);">
+      Guarda templates de criterios para reutilizar en UXFLOW. Aparecen como opciones de carga rápida.
+    </p>
+
+    <div class="template-list" id="template-list" aria-label="Lista de templates">
+      <!-- rendered by JS -->
+    </div>
+
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <span class="admin-card-title">+ Nuevo template</span>
+      </div>
+      <div class="admin-card-body">
+        <div class="admin-form-group">
+          <label class="admin-label" for="tpl-name">Nombre del template</label>
+          <input type="text" id="tpl-name" class="admin-input" placeholder="Ej. Onboarding Estándar" maxlength="60">
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label" for="tpl-linea">Línea de negocio</label>
+          <input type="text" id="tpl-linea" class="admin-input" placeholder="Ej. Wealth Management" maxlength="60">
+        </div>
+        <div class="admin-form-group">
+          <label class="admin-label" for="tpl-criterios">Criterios de aceptación</label>
+          <textarea id="tpl-criterios" class="admin-textarea" placeholder="Escribe los criterios de aceptación…" rows="5"></textarea>
+        </div>
+        <div class="btn-row">
+          <button class="btn-admin-primary" onclick="guardarTemplate()">+ Guardar template</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANEL: SESIONES -->
+  <section class="admin-panel" id="admin-tab-sesiones" role="tabpanel">
+
+    <!-- Benchmark sessions -->
+    <div class="admin-section-label">Sesiones de Benchmark guardadas</div>
+    <div class="admin-card" style="margin-bottom:var(--space-7);">
+      <div class="table-wrap">
+        <table class="admin-data-table" id="bm-sessions-table" aria-label="Sesiones de Benchmark">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Versión</th>
+              <th>Analista</th>
+              <th>Fecha</th>
+              <th>Productos</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="bm-sessions-tbody">
+            <!-- rendered by JS -->
+          </tbody>
+        </table>
+        <div id="bm-sessions-empty" class="table-empty">Sin sesiones de Benchmark guardadas.</div>
+      </div>
+      <div class="export-bar">
+        <button class="btn-admin-ghost" onclick="exportBmCSV()">⬇ Exportar CSV</button>
+        <button class="btn-admin-danger" onclick="borrarTodasSesionesBm()">🗑 Borrar todas</button>
+      </div>
+    </div>
+
+    <!-- UXFlow history -->
+    <div class="admin-section-label">Historial UXFlow</div>
+    <div class="admin-card">
+      <div class="table-wrap">
+        <table class="admin-data-table" id="ux-history-table" aria-label="Historial UXFlow">
+          <thead>
+            <tr>
+              <th>Título</th>
+              <th>Línea</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="ux-history-tbody">
+            <!-- rendered by JS -->
+          </tbody>
+        </table>
+        <div id="ux-history-empty" class="table-empty">Sin documentos UXFlow guardados.</div>
+      </div>
+      <div class="export-bar">
+        <button class="btn-admin-danger" onclick="borrarHistorialUxflow()">🗑 Borrar todo el historial</button>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- PANEL: EXPORTAR -->
+  <section class="admin-panel" id="admin-tab-exportar" role="tabpanel">
+    <div class="admin-section-label">Exportar datos</div>
+
+    <div class="admin-card">
+      <div class="admin-card-header">
+        <span class="admin-card-title">Exportar todo (JSON)</span>
+      </div>
+      <div class="admin-card-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:var(--space-4);">
+          Descarga un archivo <code style="font-family:var(--font-mono);color:var(--cyan);font-size:12px;">.json</code> con el dump completo de localStorage (Benchmark + UXFlow + Dimensiones + Templates).
+        </p>
+        <div class="btn-row">
+          <button class="btn-admin-primary" onclick="exportarJSON()">⬇ Descargar JSON completo</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-card" style="margin-top:var(--space-5);">
+      <div class="admin-card-header">
+        <span class="admin-card-title">Exportar sesiones Benchmark (CSV)</span>
+      </div>
+      <div class="admin-card-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:var(--space-4);">
+          Genera un CSV con todos los scores de todas las sesiones guardadas del Benchmark.
+        </p>
+        <div class="btn-row">
+          <button class="btn-admin-primary" onclick="exportBmCSV()">⬇ Descargar CSV Benchmark</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-card" style="margin-top:var(--space-5);">
+      <div class="admin-card-header">
+        <span class="admin-card-title" style="color:#FF6B6B;">Zona de peligro</span>
+      </div>
+      <div class="admin-card-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:var(--space-4);">
+          Elimina todos los datos guardados localmente. Esta acción no se puede deshacer.
+        </p>
+        <div class="btn-row">
+          <button class="btn-admin-danger" onclick="borrarTodoLocalStorage()">🗑 Borrar todo el localStorage</button>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</div><!-- /admin-shell -->
+
+<!-- TOAST -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/utils.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

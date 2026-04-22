@@ -1,0 +1,185 @@
+/* ── PRINT / PDF STYLES ─────────────────────────────────────── */
+/* Used by both benchmark.html and uxflow.html via window.print() */
+
+@media print {
+  /* ── Reset & page setup ── */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  @page {
+    size: A4 portrait;
+    margin: 16mm 14mm;
+  }
+
+  /* ── Hide everything except the print target ── */
+  nav,
+  .panel,
+  .step-list,
+  .btn-generate,
+  .btn-export,
+  .btn-result-action,
+  .export-row,
+  .canvas-header,
+  .saved-list,
+  .history-section,
+  .toast,
+  .hero,
+  .hero-cta,
+  body::before,
+  #btn-next,
+  #save-status,
+  .nav-actions,
+  .uxflow-screenshot-row label,
+  .uxflow-screenshot-row input[type="file"],
+  .score-screenshot-btn,
+  .score-screenshot-remove {
+    display: none !important;
+  }
+
+  /* ── Layout ── */
+  body {
+    background: #ffffff !important;
+    color: #001A72 !important;
+    font-family: 'Inter', sans-serif !important;
+    min-height: unset;
+    background-image: none !important;
+  }
+
+  .app-shell {
+    display: block !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .canvas-area {
+    width: 100% !important;
+  }
+
+  /* ── BENCHMARK: result-card ── */
+  .result-card {
+    background: #ffffff !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  .result-header {
+    background: #001A72 !important;
+    color: #ffffff !important;
+    padding: 20px 24px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-start !important;
+    border-radius: 8px 8px 0 0 !important;
+  }
+
+  .result-title {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+  }
+
+  .result-subtitle { color: rgba(255,255,255,0.65) !important; }
+
+  .result-meta {
+    font-size: 11px !important;
+    color: rgba(255,255,255,0.55) !important;
+    text-align: right !important;
+  }
+
+  .result-body { padding: 16px 0 !important; }
+
+  .result-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 11px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .result-table th {
+    background: #001A72 !important;
+    color: #ffffff !important;
+    padding: 8px 10px !important;
+    font-size: 10px !important;
+  }
+
+  .result-table td { padding: 7px 10px !important; border-bottom: 1px solid #E8EFFF !important; }
+
+  .score-badge {
+    display: inline-block !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+  }
+
+  .score-badge.hi, .score-badge.best { background: rgba(61,186,111,0.15) !important; color: #1a7a45 !important; }
+  .score-badge.md { background: rgba(208,144,0,0.15) !important; color: #8a5c00 !important; }
+  .score-badge.lo { background: rgba(204,68,68,0.15) !important; color: #8a1c1c !important; }
+
+  .winner-banner {
+    background: rgba(0,181,226,0.08) !important;
+    border: 1px solid rgba(0,181,226,0.3) !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 16px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .radar-section { page-break-inside: avoid; }
+
+  .radar-svg { width: 280px !important; height: 280px !important; }
+
+  .bars-section { page-break-inside: avoid; }
+
+  .result-footer {
+    text-align: center !important;
+    font-size: 9px !important;
+    color: rgba(0,26,114,0.4) !important;
+    padding: 12px !important;
+    border-top: 1px solid #E8EFFF !important;
+  }
+
+  /* Screenshot thumbnails visible in PDF */
+  .score-screenshot-thumb {
+    display: inline-block !important;
+    max-width: 120px !important;
+    max-height: 80px !important;
+    border-radius: 4px !important;
+    border: 1px solid #E8EFFF !important;
+    margin-top: 4px !important;
+  }
+
+  /* ── UXFLOW: doc-card ── */
+  .doc-card {
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+    overflow: visible !important;
+  }
+
+  .doc-card-header {
+    background: #001A72 !important;
+    padding: 20px 24px !important;
+    border-radius: 8px 8px 0 0 !important;
+  }
+
+  .step-card {
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .step-panel.hidden { display: none !important; }
+
+  /* Screenshot in uxflow doc */
+  .uxflow-screenshot-img {
+    max-width: 100% !important;
+    border-radius: 8px !important;
+    border: 1px solid #E8EFFF !important;
+    margin: 8px 0 !important;
+  }
+}

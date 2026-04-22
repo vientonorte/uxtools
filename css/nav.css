@@ -123,3 +123,10 @@ footer a:hover { text-decoration: underline; }
 @media (max-width: 480px) {
   .nav-badge { display: none; }
 }
+
+/* ── ADMIN NAV LINK ──────────────────────────────────────────── */
+.nav-link-admin {
+  color: #c09aff !important;
+  font-weight: 500;
+}
+.nav-link-admin:hover { color: #d4b8ff !important; }
