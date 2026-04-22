@@ -1,15 +1,107 @@
 /* ─── DIMENSIONES PREDEFINIDAS ──────────────────────────────── */
 /* Load custom dimensions from admin (localStorage), fall back to defaults */
 var DIMENSIONES_DEFAULT = [
-  { id: 'd1', nombre: 'Primera Impresión',    desc: 'Onboarding, hero y percepción inicial' },
-  { id: 'd2', nombre: 'Navegación',           desc: 'Arquitectura de información y menús' },
-  { id: 'd3', nombre: 'Usabilidad',           desc: 'Facilidad de uso y eficiencia en tareas' },
-  { id: 'd4', nombre: 'Diseño Visual',        desc: 'Jerarquía, tipografía y consistencia' },
-  { id: 'd5', nombre: 'Accesibilidad',        desc: 'Contraste, foco y compatibilidad WCAG' },
-  { id: 'd6', nombre: 'Performance',          desc: 'Velocidad y respuesta de la interfaz' },
-  { id: 'd7', nombre: 'Experiencia Mobile',   desc: 'Adaptación responsiva y gestos táctiles' },
-  { id: 'd8', nombre: 'Conversión',           desc: 'CTA, formularios y rutas clave de negocio' }
+  {
+    id: 'd1',
+    nombre: 'Primera Impresión',
+    desc: 'Onboarding, hero y percepción inicial',
+    criterios: [
+      'La propuesta de valor se entiende en pocos segundos',
+      'Los CTAs clave son visibles y accionables',
+      'La pantalla inicial transmite confianza y foco'
+    ]
+  },
+  {
+    id: 'd2',
+    nombre: 'Navegación',
+    desc: 'Arquitectura de información y menús',
+    criterios: [
+      'Las rutas principales se alcanzan sin fricción',
+      'La orientación del usuario se mantiene estable',
+      'La navegación móvil responde bien a scroll y toque'
+    ]
+  },
+  {
+    id: 'd3',
+    nombre: 'Usabilidad',
+    desc: 'Facilidad de uso y eficiencia en tareas',
+    criterios: [
+      'Las tareas primarias se completan con claridad',
+      'Los mensajes de error ayudan a resolver',
+      'El feedback del sistema acompaña cada acción'
+    ]
+  },
+  {
+    id: 'd4',
+    nombre: 'Diseño Visual',
+    desc: 'Jerarquía, tipografía y consistencia',
+    criterios: [
+      'La jerarquía visual guía correctamente la mirada',
+      'El sistema de diseño se siente consistente',
+      'Tipografía, color y espaciado sostienen la lectura'
+    ]
+  },
+  {
+    id: 'd5',
+    nombre: 'Accesibilidad',
+    desc: 'Contraste, foco y compatibilidad WCAG',
+    criterios: [
+      'Hay contraste suficiente y foco visible',
+      'Los componentes se entienden con teclado y lector',
+      'La interfaz evita bloqueos para distintos perfiles'
+    ]
+  },
+  {
+    id: 'd6',
+    nombre: 'Performance',
+    desc: 'Velocidad y respuesta de la interfaz',
+    criterios: [
+      'La carga inicial y los cambios de estado son ágiles',
+      'No se perciben bloqueos ni latencias innecesarias',
+      'Los recursos visuales están optimizados'
+    ]
+  },
+  {
+    id: 'd7',
+    nombre: 'Experiencia Mobile',
+    desc: 'Adaptación responsiva y gestos táctiles',
+    criterios: [
+      'El layout se adapta sin zoom horizontal',
+      'Los objetivos táctiles son cómodos de usar',
+      'El flujo mantiene claridad en pantallas pequeñas'
+    ]
+  },
+  {
+    id: 'd8',
+    nombre: 'Conversión',
+    desc: 'CTA, formularios y rutas clave de negocio',
+    criterios: [
+      'La acción principal es clara y prioritaria',
+      'El flujo de conversión evita pasos innecesarios',
+      'El usuario entiende qué pasa después de actuar'
+    ]
+  }
 ];
+
+function hydrateDimensionConfig(list) {
+  var fallbackById = {};
+  DIMENSIONES_DEFAULT.forEach(function (dim) {
+    fallbackById[dim.id] = dim;
+  });
+
+  return (list || []).map(function (dim) {
+    var fallback = fallbackById[dim.id] || {};
+    return {
+      id: dim.id,
+      nombre: dim.nombre,
+      desc: dim.desc,
+      activa: dim.activa,
+      criterios: Array.isArray(dim.criterios) && dim.criterios.length
+        ? dim.criterios
+        : (fallback.criterios || [])
+    };
+  });
+}
 
 var DIMENSIONES;
 try {
@@ -17,13 +109,13 @@ try {
   if (_dimRaw) {
     var _dimParsed = JSON.parse(_dimRaw);
     DIMENSIONES = Array.isArray(_dimParsed) && _dimParsed.length
-      ? _dimParsed.filter(function (d) { return d.activa !== false; })
-      : DIMENSIONES_DEFAULT;
+      ? hydrateDimensionConfig(_dimParsed.filter(function (d) { return d.activa !== false; }))
+      : hydrateDimensionConfig(DIMENSIONES_DEFAULT);
   } else {
-    DIMENSIONES = DIMENSIONES_DEFAULT;
+    DIMENSIONES = hydrateDimensionConfig(DIMENSIONES_DEFAULT);
   }
 } catch (e) {
-  DIMENSIONES = DIMENSIONES_DEFAULT;
+  DIMENSIONES = hydrateDimensionConfig(DIMENSIONES_DEFAULT);
 }
 
 var COLORES = ['#00B5E2', '#0033A0', '#3DBA6F', '#FF8C00', '#9B59B6'];
@@ -37,6 +129,7 @@ var STATE = {
     { id: 2, nombre: '', imagen: null }
   ],
   scores:    {},   /* scores[dimId][prodId] = { val: 1-5, screenshot: dataUrl|null } */
+  notas:     {},
   historial: []
 };
 
@@ -51,6 +144,7 @@ function loadState() {
     if (raw) {
       var parsed = JSON.parse(raw);
       STATE = parsed;
+      if (!STATE.notas) STATE.notas = {};
       if (STATE.productos && STATE.productos.length) {
         _nextId = Math.max.apply(null, STATE.productos.map(function(p) { return p.id; })) + 1;
       }
@@ -99,6 +193,14 @@ function collectFormValues() {
     if (inp) p.nombre = inp.value;
   });
 
+  DIMENSIONES.forEach(function(d) {
+    if (!STATE.notas[d.id]) STATE.notas[d.id] = {};
+    STATE.productos.forEach(function(p) {
+      var notaEl = document.getElementById('nota-' + d.id + '-' + p.id);
+      if (notaEl) STATE.notas[d.id][p.id] = notaEl.value;
+    });
+  });
+
   /* Scores are stored directly via onScoreSelect() — no DOM reading needed here */
 }
 
@@ -125,6 +227,27 @@ function setScoreEntry(dimId, prodId, val, screenshot) {
     val:        val,
     screenshot: screenshot !== undefined ? screenshot : existingScreenshot
   };
+}
+
+function getScoreNote(dimId, prodId) {
+  return (STATE.notas[dimId] && STATE.notas[dimId][prodId]) || '';
+}
+
+function countEvidenceForProduct(prodId) {
+  var total = 0;
+  DIMENSIONES.forEach(function(d) {
+    if (getScoreScreenshot(d.id, prodId)) total++;
+  });
+  return total;
+}
+
+function countLowScoresForProduct(prodId, threshold) {
+  var total = 0;
+  DIMENSIONES.forEach(function(d) {
+    var score = getScoreVal(d.id, prodId);
+    if (score > 0 && score <= threshold) total++;
+  });
+  return total;
 }
 
 /* ─── UTILIDADES ─── ver js/utils.js ─────────────────────────── */
@@ -344,12 +467,22 @@ function renderEval() {
   html += '</tr></thead><tbody>';
 
   DIMENSIONES.forEach(function(d) {
+    var criterios = Array.isArray(d.criterios) ? d.criterios : [];
+    var criteriosHtml = criterios.length
+      ? '<ul class="dim-criteria-list">' + criterios.map(function (criterio) {
+          return '<li>' + escapeHTML(criterio) + '</li>';
+        }).join('') + '</ul>'
+      : '';
+
     html += '<tr><td><div class="dim-cell-name">' + escapeHTML(d.nombre) + '</div>' +
-            '<div class="dim-cell-desc">' + escapeHTML(d.desc) + '</div></td>';
+            '<div class="dim-cell-desc">' + escapeHTML(d.desc) + '</div>' +
+            criteriosHtml + '</td>';
     productos.forEach(function(p) {
       var storedVal = getScoreVal(d.id, p.id);
       var currentVal = storedVal > 0 ? storedVal : '';
+      var nota = getScoreNote(d.id, p.id);
       html += '<td class="score-cell">' + buildScoreSelector(d.id, p.id, currentVal, d.nombre, p.nombre) + '</td>';
+      html += '';
     });
     html += '</tr>';
   });
@@ -400,7 +533,9 @@ function buildScoreSelector(dimId, prodId, currentVal, dimName, prodName) {
   }
   var selectorId = 'score-sel-' + dimId + '-' + prodId;
   var existingScreenshot = getScoreScreenshot(dimId, prodId);
+  var existingNote = getScoreNote(dimId, prodId);
   var inputId = 'ss-input-' + dimId + '-' + prodId;
+  var noteId = 'nota-' + dimId + '-' + prodId;
 
   var html = '<div class="score-cell-wrap">' +
     '<div class="score-selector' + valClass + '" id="' + selectorId + '"' +
@@ -431,6 +566,11 @@ function buildScoreSelector(dimId, prodId, currentVal, dimName, prodName) {
   } else {
     html += '<label class="score-screenshot-btn" for="' + inputId + '" title="Adjuntar captura">📷</label>';
   }
+
+  html += '<textarea id="' + noteId + '" class="score-note-input" rows="3"' +
+    ' placeholder="Observaciones cualitativas, fricciones, mejoras o citas relevantes…"' +
+    ' oninput="autoSave()" aria-label="Observaciones para ' + escapeHTML(dimName) + ' — ' + escapeHTML(prodName) + '">' +
+    escapeHTML(existingNote) + '</textarea>';
 
   html += '</div>';
   return html;
@@ -608,6 +748,8 @@ function buildRadarChart(productos) {
     '</div>';
 }
 
+var FAILURE_SCORE_MAX = 2;
+
 /* ─── PASO 3: RESULTADOS ─────────────────────────────────────── */
 function renderResults() {
   collectFormValues();
@@ -636,6 +778,9 @@ function renderResults() {
   var maxScore = DIMENSIONES.length * 5;
   var bmNombre = STATE.config.nombre || 'UX Benchmark';
   var fecha    = fechaHoy();
+  var winnerAverage = (totales[winner.id] / Math.max(DIMENSIONES.length, 1)).toFixed(1);
+  var winnerEvidence = countEvidenceForProduct(winner.id);
+  var winnerFailures = countLowScoresForProduct(winner.id, FAILURE_SCORE_MAX);
 
   var html = '<div class="result-card">';
 
@@ -663,6 +808,12 @@ function renderResults() {
   html += '<div class="winner-name">' + escapeHTML(winner.nombre) + '</div></div>';
   html += '<div class="winner-score">' + totales[winner.id] +
     '<span style="font-size:14px;font-weight:400;color:#8E99B0;">/' + maxScore + '</span></div>';
+  html += '</div>';
+
+  html += '<div class="result-summary-grid">';
+  html += '<div class="result-summary-card"><div class="result-summary-label">Promedio líder</div><div class="result-summary-value">' + winnerAverage + '/5</div></div>';
+  html += '<div class="result-summary-card"><div class="result-summary-label">Evidencias adjuntas</div><div class="result-summary-value">' + winnerEvidence + '</div></div>';
+  html += '<div class="result-summary-card"><div class="result-summary-label">Fricciones críticas</div><div class="result-summary-value">' + winnerFailures + '</div></div>';
   html += '</div>';
 
   /* Radar chart */
@@ -720,6 +871,56 @@ function renderResults() {
     html += '</div>';
   });
   html += '</div>';
+
+  var hallazgos = [];
+  DIMENSIONES.forEach(function(d) {
+    productos.forEach(function(p) {
+      var nota = getScoreNote(d.id, p.id);
+      if (!nota) return;
+      hallazgos.push({
+        dim: d.nombre,
+        prod: p.nombre,
+        text: nota
+      });
+    });
+  });
+
+  if (hallazgos.length) {
+    html += '<div class="findings-section"><div class="bars-label">Observaciones cualitativas</div><div class="findings-list">';
+    hallazgos.slice(0, 12).forEach(function(item) {
+      html += '<div class="finding-item">';
+      html += '<div class="finding-kicker">' + escapeHTML(item.dim) + ' · ' + escapeHTML(item.prod) + '</div>';
+      html += '<div class="finding-text">' + escapeHTML(item.text) + '</div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  var failureItems = [];
+  DIMENSIONES.forEach(function(d) {
+    productos.forEach(function(p) {
+      var score = getScoreVal(d.id, p.id);
+      if (!score || score > FAILURE_SCORE_MAX) return;
+      failureItems.push({
+        dim: d.nombre,
+        prod: p.nombre,
+        score: score,
+        note: getScoreNote(d.id, p.id)
+      });
+    });
+  });
+
+  if (failureItems.length) {
+    html += '<div class="failure-zone"><div class="bars-label">Zona de fricción prioritaria</div><div class="failure-list">';
+    failureItems.forEach(function(item) {
+      html += '<div class="failure-item">';
+      html += '<div class="failure-item-top"><span class="failure-dim">' + escapeHTML(item.dim) + '</span><span class="score-badge lo">' + item.score + '</span></div>';
+      html += '<div class="failure-prod">' + escapeHTML(item.prod) + '</div>';
+      if (item.note) html += '<div class="failure-note">' + escapeHTML(item.note) + '</div>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  }
 
   /* Export row */
   html += '<div class="export-row">';
@@ -779,6 +980,26 @@ function exportarResultados() {
     totalRow += (sum + '/' + maxScore).padEnd(COL);
   });
   lines.push(totalRow);
+
+  var hasNotas = DIMENSIONES.some(function(d) {
+    return productos.some(function(p) {
+      return !!getScoreNote(d.id, p.id);
+    });
+  });
+
+  if (hasNotas) {
+    lines.push('');
+    lines.push('OBSERVACIONES CUALITATIVAS');
+    lines.push('─'.repeat(ROW + COL * productos.length));
+    DIMENSIONES.forEach(function(d) {
+      productos.forEach(function(p) {
+        var nota = getScoreNote(d.id, p.id);
+        if (!nota) return;
+        lines.push('[' + d.nombre + '] ' + p.nombre + ': ' + nota);
+      });
+    });
+  }
+
   lines.push('');
   lines.push('Generado con vientonorte/uxtools · UX Benchmark');
 
@@ -802,6 +1023,7 @@ function guardarSesion() {
     analista:    STATE.config.analista,
     productos:   JSON.parse(JSON.stringify(STATE.productos)),
     scores:      JSON.parse(JSON.stringify(STATE.scores)),
+    notas:       JSON.parse(JSON.stringify(STATE.notas)),
     config:      JSON.parse(JSON.stringify(STATE.config)),
     dimensiones: JSON.parse(JSON.stringify(DIMENSIONES))
   };
@@ -818,6 +1040,7 @@ function cargarSesion(id) {
   STATE.config    = sesion.config || { nombre: sesion.nombre, analista: sesion.analista || '' };
   STATE.productos = JSON.parse(JSON.stringify(sesion.productos));
   STATE.scores    = JSON.parse(JSON.stringify(sesion.scores));
+  STATE.notas     = sesion.notas ? JSON.parse(JSON.stringify(sesion.notas)) : {};
   _nextId = Math.max.apply(null, STATE.productos.map(function(p) { return p.id; })) + 1;
   irAPaso(1);
   renderConfig();
@@ -829,6 +1052,7 @@ function nuevoBenchmark() {
   STATE.config    = { nombre: '', analista: '' };
   STATE.productos = [{ id: 1, nombre: '', imagen: null }, { id: 2, nombre: '', imagen: null }];
   STATE.scores    = {};
+  STATE.notas     = {};
   _nextId         = 3;
   saveState();
   irAPaso(1);
