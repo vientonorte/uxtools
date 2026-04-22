@@ -250,6 +250,52 @@ function countLowScoresForProduct(prodId, threshold) {
   return total;
 }
 
+function getSessionDimensions(session) {
+  return (session && Array.isArray(session.dimensiones) && session.dimensiones.length)
+    ? session.dimensiones
+    : DIMENSIONES;
+}
+
+function getSessionProducts(session) {
+  return ((session && session.productos) || []).filter(function(p) {
+    return p && p.nombre && p.nombre.trim();
+  });
+}
+
+function getSessionScoreVal(session, dimId, prodId) {
+  var entry = session && session.scores && session.scores[dimId] && session.scores[dimId][prodId];
+  if (entry === undefined || entry === null) return 0;
+  if (typeof entry === 'object') return entry.val || 0;
+  return entry;
+}
+
+function summarizeSession(session) {
+  var dims = getSessionDimensions(session);
+  var productos = getSessionProducts(session);
+  var maxScore = dims.length * 5;
+  var leader = null;
+  var leaderTotal = 0;
+
+  productos.forEach(function(p) {
+    var total = dims.reduce(function(acc, dim) {
+      return acc + getSessionScoreVal(session, dim.id, p.id);
+    }, 0);
+    if (!leader || total > leaderTotal) {
+      leader = p;
+      leaderTotal = total;
+    }
+  });
+
+  return {
+    productos: productos.length,
+    dimensiones: dims.length,
+    maxScore: maxScore,
+    leaderName: leader ? leader.nombre : 'Sin datos',
+    leaderTotal: leaderTotal,
+    leaderAverage: dims.length ? (leaderTotal / dims.length).toFixed(1) : '0.0'
+  };
+}
+
 /* ─── UTILIDADES ─── ver js/utils.js ─────────────────────────── */
 
 function scoreClass(s) {
@@ -820,7 +866,7 @@ function renderResults() {
   html += buildRadarChart(productos);
 
   /* Table */
-  html += '<table class="result-table"><thead><tr><th class="dim-h">Dimensión</th>';
+  html += '<div class="result-table-wrap"><table class="result-table"><thead><tr><th class="dim-h">Dimensión</th>';
   productos.forEach(function(p) {
     var imgTag = p.imagen
       ? '<div class="result-prod-thumb"><img src="' + p.imagen + '" alt="' + escapeHTML(p.nombre) + '"></div>'
@@ -854,7 +900,7 @@ function renderResults() {
     var badgeCls = isBest ? 'score-badge best' : 'score-badge ' + scoreClass(totales[p.id] / DIMENSIONES.length);
     html += '<td><span class="' + badgeCls + '">' + totales[p.id] + '</span></td>';
   });
-  html += '</tr></tbody></table>';
+  html += '</tr></tbody></table></div>';
 
   /* Bar chart */
   html += '<div class="bars-section"><div class="bars-label">Puntuación total por producto</div>';
@@ -1062,19 +1108,65 @@ function nuevoBenchmark() {
 
 function renderSavedList() {
   var container = document.getElementById('saved-list');
+  var summaryEl = document.getElementById('saved-history-summary');
   if (!container) return;
   if (!STATE.historial.length) {
+    if (summaryEl) summaryEl.innerHTML = '';
     container.innerHTML = '<div class="empty-saved">Sin sesiones guardadas.</div>';
     return;
   }
+
+  if (summaryEl) {
+    var uniqueBenchmarks = {};
+    var bestSession = null;
+    STATE.historial.forEach(function(h) {
+      if (h.nombre) uniqueBenchmarks[h.nombre] = true;
+      var sessionSummary = summarizeSession(h);
+      if (!bestSession || sessionSummary.leaderTotal > bestSession.summary.leaderTotal) {
+        bestSession = { item: h, summary: sessionSummary };
+      }
+    });
+    var latest = STATE.historial[0];
+    summaryEl.innerHTML =
+      '<div class="saved-summary-grid">' +
+        '<div class="saved-summary-card">' +
+          '<div class="saved-summary-label">Sesiones</div>' +
+          '<div class="saved-summary-value">' + STATE.historial.length + '</div>' +
+          '<div class="saved-summary-meta">Snapshots listos para reabrir</div>' +
+        '</div>' +
+        '<div class="saved-summary-card">' +
+          '<div class="saved-summary-label">Benchmarks</div>' +
+          '<div class="saved-summary-value">' + Object.keys(uniqueBenchmarks).length + '</div>' +
+          '<div class="saved-summary-meta">Nombres distintos guardados</div>' +
+        '</div>' +
+        '<div class="saved-summary-card">' +
+          '<div class="saved-summary-label">Mejor score</div>' +
+          '<div class="saved-summary-value">' + bestSession.summary.leaderTotal + '/' + bestSession.summary.maxScore + '</div>' +
+          '<div class="saved-summary-meta">' + escapeHTML(bestSession.summary.leaderName) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="saved-summary-foot">Última sesión: ' + escapeHTML(latest.nombre || 'Benchmark') + ' · ' + escapeHTML(latest.fecha || '') + '</div>';
+  }
+
   container.innerHTML = STATE.historial.map(function(h) {
-  var versionTag = h.version != null ? '<span class="saved-item-version">v' + h.version + '</span>' : '';
+    var versionTag = h.version != null ? '<span class="saved-item-version">v' + h.version + '</span>' : '';
+    var sessionSummary = summarizeSession(h);
+    var productsLabel = sessionSummary.productos + ' ' + (sessionSummary.productos === 1 ? 'producto' : 'productos');
+    var dimsLabel = sessionSummary.dimensiones + ' dim.';
     return '<div class="saved-item" onclick="cargarSesion(' + h.id + ')" role="button" tabindex="0"' +
       ' onkeydown="if(event.key===\'Enter\'||event.key===\' \')cargarSesion(' + h.id + ')"' +
       ' title="Cargar sesión: ' + escapeHTML(h.nombre) + '">' +
+      '<div class="saved-item-top">' +
       '<div class="saved-item-name">' + escapeHTML(h.nombre) + versionTag + '</div>' +
+      '<div class="saved-item-score">' + sessionSummary.leaderTotal + '/' + sessionSummary.maxScore + '</div>' +
+      '</div>' +
       '<div class="saved-item-date">' + escapeHTML(h.fecha) +
         (h.analista ? ' · ' + escapeHTML(h.analista) : '') + '</div>' +
+      '<div class="saved-item-meta">' +
+      '<span class="saved-item-chip">' + escapeHTML(productsLabel) + '</span>' +
+      '<span class="saved-item-chip">' + escapeHTML(dimsLabel) + '</span>' +
+      '<span class="saved-item-chip">Líder: ' + escapeHTML(sessionSummary.leaderName) + '</span>' +
+      '</div>' +
       '</div>';
   }).join('');
 }
