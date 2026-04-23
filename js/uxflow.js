@@ -1,6 +1,7 @@
 /* ─── CONSTANTES ─────────────────────────────────────────────── */
 var UXFLOW_SCREENSHOT_MAX_DIM = 1200;
 var UXFLOW_STORAGE_KEY = 'uxflow-historial';
+var UXFLOW_BLOB_URL_REVOKE_DELAY_MS = 2000;
 
 var historial = readHistory();
 var _uxflowScreenshot = null;
@@ -47,9 +48,10 @@ function readHistory() {
   }
 }
 
-function writeHistory() {
+function writeHistory(nextHistory) {
   try {
-    localStorage.setItem(UXFLOW_STORAGE_KEY, JSON.stringify(historial));
+    var data = Array.isArray(nextHistory) ? nextHistory : historial;
+    localStorage.setItem(UXFLOW_STORAGE_KEY, JSON.stringify(data));
     return true;
   } catch (e) {
     return false;
@@ -103,6 +105,14 @@ function sanitizeHistoryEntry(entry) {
       edgeCases: Array.isArray(model.edgeCases) ? model.edgeCases : []
     }
   };
+}
+
+function nextHistoryId() {
+  var maxId = historial.reduce(function (acc, item) {
+    var current = Number(item.id) || 0;
+    return current > acc ? current : acc;
+  }, 0);
+  return Math.max(maxId + 1, Date.now());
 }
 
 function scrollToApp() {
@@ -455,7 +465,36 @@ function escapeXml(str) {
 function truncateText(text, maxLen) {
   var value = String(text || '');
   if (value.length <= maxLen) return value;
-  return value.slice(0, Math.max(0, maxLen - 1)) + '…';
+  return value.slice(0, maxLen - 1) + '…';
+}
+
+function sanitizeFilename(text) {
+  var sanitized = String(text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+  return sanitized || 'uxflow';
+}
+
+function buildFallbackModelFromHistory(item) {
+  var prompt = normalizePrompt(item && item.criterios);
+  var linea = inferLinea(prompt, item && item.linea);
+  var countries = inferCountries(prompt, item && item.paises);
+  var actor = extractActor(prompt);
+  var goal = extractGoal(prompt);
+  var edgeCases = detectEdgeCases(prompt);
+  return {
+    title: (item && item.titulo) || 'Proyecto UX',
+    actor: actor,
+    goal: goal,
+    linea: linea,
+    countries: countries,
+    prompt: prompt,
+    edgeCases: edgeCases,
+    steps: detectSteps(prompt, actor, goal, linea, countries, edgeCases),
+    criteria: buildCriteria(goal, linea, countries, edgeCases, prompt),
+    tabDescription: LINEA_COPY[linea] || LINEA_COPY.Otro
+  };
 }
 
 function tonePalette(tone) {
@@ -567,13 +606,13 @@ function downloadBlob(blob, filename) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+  setTimeout(function () { URL.revokeObjectURL(url); }, UXFLOW_BLOB_URL_REVOKE_DELAY_MS);
 }
 
 function copiarFigma() {
   var model = _lastDocModel || buildFlowModel();
   var asset = buildFlowSvgAsset(model);
-  var fileName = (model.title || 'uxflow').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-flow.png';
+  var fileName = sanitizeFilename(model.title) + '-flow.png';
   flowSvgToPngBlob(asset)
     .then(function (blob) {
       if (navigator.clipboard && window.ClipboardItem) {
@@ -588,7 +627,6 @@ function copiarFigma() {
       }
       downloadBlob(blob, fileName);
       showToast('⬇ PNG descargado. Sube el archivo a Figma.');
-      return null;
     })
     .catch(function () {
       showToast('⚠ No se pudo generar el PNG del flujo');
@@ -599,7 +637,7 @@ function copiarFigma() {
 function guardarHistorial() {
   var model = _lastDocModel || buildFlowModel();
   var item = {
-    id: Date.now() + Math.floor(Math.random() * 1000),
+    id: nextHistoryId(),
     titulo: model.title,
     linea: model.linea,
     criterios: model.prompt,
@@ -615,13 +653,12 @@ function guardarHistorial() {
       edgeCases: model.edgeCases
     }
   };
-  historial.unshift(item);
-  if (historial.length > 20) historial = historial.slice(0, 20);
-  if (!writeHistory()) {
-    historial.shift();
+  var updatedHistory = [item].concat(historial).slice(0, 20);
+  if (!writeHistory(updatedHistory)) {
     showToast('⚠ No se pudo guardar (revisa espacio de almacenamiento local)');
     return;
   }
+  historial = updatedHistory;
   renderHistorial();
   showToast('💾 Activo guardado en historial');
   setSaveStatus('saved');
@@ -630,7 +667,12 @@ function guardarHistorial() {
 function cargarDesdeHistorial(id) {
   var item = historial.find(function (entry) { return entry.id === id; });
   if (!item) return;
-  var model = item.model || sanitizeHistoryEntry(item).model || buildFlowModel();
+  var model = item.model || null;
+  if (!model) {
+    var normalized = sanitizeHistoryEntry(item);
+    model = normalized ? normalized.model : null;
+  }
+  if (!model) model = buildFallbackModelFromHistory(item);
   document.getElementById('titulo').value = model.title || item.titulo || 'Proyecto UX';
   document.getElementById('linea').value = model.linea || item.linea || 'Otro';
   document.getElementById('criterios').value = model.prompt || item.criterios || '';
@@ -737,7 +779,10 @@ function removeUxflowScreenshot() {
 
 /* ─── PDF EXPORT ────────────────────────────────────────────── */
 function exportarPDF() {
-  if (!_lastDocModel) renderDoc(buildFlowModel());
+  if (!_lastDocModel) {
+    showToast('⚠ Genera la documentación antes de exportar PDF');
+    return;
+  }
   window.print();
 }
 
