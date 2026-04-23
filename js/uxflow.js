@@ -40,7 +40,8 @@ function readHistory() {
   try {
     var raw = localStorage.getItem(UXFLOW_STORAGE_KEY);
     var parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map(sanitizeHistoryEntry).filter(Boolean);
   } catch (e) {
     return [];
   }
@@ -49,9 +50,59 @@ function readHistory() {
 function writeHistory() {
   try {
     localStorage.setItem(UXFLOW_STORAGE_KEY, JSON.stringify(historial));
+    return true;
   } catch (e) {
-    /* ignore storage errors */
+    return false;
   }
+}
+
+function sanitizeHistoryEntry(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  var title = String(entry.titulo || (entry.model && entry.model.title) || 'Proyecto UX').trim();
+  var prompt = normalizePrompt(entry.criterios || (entry.model && entry.model.prompt) || '');
+  var selectedLinea = entry.linea || (entry.model && entry.model.linea) || 'Otro';
+  var rawCountries = entry.paises || ((entry.model && Array.isArray(entry.model.countries))
+    ? entry.model.countries.join(', ')
+    : '');
+  var model = entry.model;
+
+  if (!model || !Array.isArray(model.steps) || !Array.isArray(model.criteria)) {
+    var countries = inferCountries(prompt, rawCountries);
+    var actor = extractActor(prompt);
+    var goal = extractGoal(prompt);
+    var linea = inferLinea(prompt, selectedLinea);
+    var edgeCases = detectEdgeCases(prompt);
+    model = {
+      title: title,
+      actor: actor,
+      goal: goal,
+      linea: linea,
+      countries: countries,
+      prompt: prompt,
+      edgeCases: edgeCases,
+      steps: detectSteps(prompt, actor, goal, linea, countries, edgeCases),
+      criteria: buildCriteria(goal, linea, countries, edgeCases, prompt),
+      tabDescription: LINEA_COPY[linea] || LINEA_COPY.Otro
+    };
+  }
+
+  return {
+    id: entry.id || Date.now(),
+    titulo: title,
+    linea: model.linea || selectedLinea || 'Otro',
+    criterios: prompt,
+    paises: Array.isArray(model.countries) ? model.countries.join(', ') : rawCountries,
+    fecha: entry.fecha || fechaHoy(),
+    screenshot: entry.screenshot || null,
+    model: model,
+    flow: {
+      actor: model.actor,
+      goal: model.goal,
+      steps: Array.isArray(model.steps) ? model.steps : [],
+      criteria: Array.isArray(model.criteria) ? model.criteria : [],
+      edgeCases: Array.isArray(model.edgeCases) ? model.edgeCases : []
+    }
+  };
 }
 
 function scrollToApp() {
@@ -392,36 +443,170 @@ function generarDoc(options) {
 }
 
 /* ─── EXPORT ────────────────────────────────────────────────── */
+function escapeXml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function truncateText(text, maxLen) {
+  var value = String(text || '');
+  if (value.length <= maxLen) return value;
+  return value.slice(0, Math.max(0, maxLen - 1)) + '…';
+}
+
+function tonePalette(tone) {
+  if (tone === 'dark') return { fill: '#001A72', stroke: '#001A72', text: '#FFFFFF' };
+  if (tone === 'warning') return { fill: '#FFF4E8', stroke: '#FF8C00', text: '#8A4A00' };
+  if (tone === 'cyan-bg') return { fill: '#E8F9FF', stroke: '#00B5E2', text: '#003B5E' };
+  return { fill: '#F4F7FF', stroke: '#C6D6FF', text: '#001A72' };
+}
+
+function buildFlowSvgAsset(model) {
+  var steps = Array.isArray(model.steps) && model.steps.length ? model.steps : [{
+    label: 'Resultado',
+    detail: model.goal || 'Documentación UX',
+    tone: 'dark'
+  }];
+  var stepHeight = 84;
+  var stepGap = 34;
+  var topOffset = 180;
+  var width = 1400;
+  var sideX = 860;
+  var flowX = 70;
+  var flowWidth = 730;
+  var headerHeight = 120;
+  var contentHeight = topOffset + (steps.length * (stepHeight + stepGap)) + 80;
+  var height = Math.max(860, contentHeight);
+  var criteria = Array.isArray(model.criteria) ? model.criteria.slice(0, 6) : [];
+  var countries = Array.isArray(model.countries) ? model.countries : [];
+  var svg = '';
+
+  svg += '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '">';
+  svg += '<rect x="0" y="0" width="' + width + '" height="' + height + '" fill="#051C77"/>';
+  svg += '<rect x="32" y="24" width="' + (width - 64) + '" height="' + (height - 48) + '" rx="20" fill="#FFFFFF"/>';
+  svg += '<rect x="32" y="24" width="' + (width - 64) + '" height="' + headerHeight + '" rx="20" fill="#001A72"/>';
+  svg += '<text x="62" y="72" fill="#FFFFFF" font-size="34" font-family="Inter, Arial, sans-serif" font-weight="700">' + escapeXml(truncateText(model.title || 'UX FLOW', 44).toUpperCase()) + '</text>';
+  svg += '<text x="62" y="102" fill="#8FD9FF" font-size="16" font-family="Inter, Arial, sans-serif">Línea: ' + escapeXml(truncateText(model.linea || 'Otro', 44)) + '</text>';
+  svg += '<text x="' + (width - 240) + '" y="102" fill="#8FD9FF" font-size="16" font-family="Inter, Arial, sans-serif">Fecha: ' + escapeXml(fechaHoy()) + '</text>';
+
+  svg += '<text x="' + flowX + '" y="160" fill="#001A72" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="700">Flujo de interacción</text>';
+  svg += '<text x="' + sideX + '" y="160" fill="#001A72" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="700">Resumen</text>';
+
+  steps.forEach(function (step, index) {
+    var y = topOffset + index * (stepHeight + stepGap);
+    var palette = tonePalette(step.tone);
+    var label = truncateText(step.label || 'Paso', 42);
+    var detail = truncateText(step.detail || '', 90);
+    svg += '<rect x="' + flowX + '" y="' + y + '" width="' + flowWidth + '" height="' + stepHeight + '" rx="14" fill="' + palette.fill + '" stroke="' + palette.stroke + '" stroke-width="2"/>';
+    svg += '<text x="' + (flowX + 20) + '" y="' + (y + 34) + '" fill="' + palette.text + '" font-size="20" font-family="Inter, Arial, sans-serif" font-weight="700">' + escapeXml(label) + '</text>';
+    if (detail) {
+      svg += '<text x="' + (flowX + 20) + '" y="' + (y + 60) + '" fill="' + palette.text + '" font-size="15" font-family="Inter, Arial, sans-serif">' + escapeXml(detail) + '</text>';
+    }
+    if (index < steps.length - 1) {
+      var cx = flowX + flowWidth / 2;
+      var lineY = y + stepHeight + 8;
+      svg += '<line x1="' + cx + '" y1="' + lineY + '" x2="' + cx + '" y2="' + (lineY + 16) + '" stroke="#001A72" stroke-width="2"/>';
+      svg += '<polygon points="' + (cx - 6) + ',' + (lineY + 16) + ' ' + (cx + 6) + ',' + (lineY + 16) + ' ' + cx + ',' + (lineY + 24) + '" fill="#001A72"/>';
+    }
+  });
+
+  svg += '<rect x="' + sideX + '" y="176" width="480" height="250" rx="14" fill="#F6F9FF" stroke="#D9E6FF"/>';
+  svg += '<text x="' + (sideX + 20) + '" y="212" fill="#001A72" font-size="16" font-family="Inter, Arial, sans-serif" font-weight="700">Actor: ' + escapeXml(truncateText(model.actor || 'Equipo UX', 40)) + '</text>';
+  svg += '<text x="' + (sideX + 20) + '" y="240" fill="#004A74" font-size="15" font-family="Inter, Arial, sans-serif">Objetivo: ' + escapeXml(truncateText(model.goal || 'Documentar flujo', 64)) + '</text>';
+  svg += '<text x="' + (sideX + 20) + '" y="268" fill="#004A74" font-size="15" font-family="Inter, Arial, sans-serif">Mercados: ' + escapeXml(truncateText(countries.join(', ') || 'Sin definir', 64)) + '</text>';
+  svg += '<text x="' + (sideX + 20) + '" y="306" fill="#001A72" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="700">Criterios clave</text>';
+  criteria.forEach(function (criterion, idx) {
+    svg += '<text x="' + (sideX + 20) + '" y="' + (332 + (idx * 24)) + '" fill="#003B5E" font-size="13" font-family="Inter, Arial, sans-serif">• ' + escapeXml(truncateText(criterion, 64)) + '</text>';
+  });
+
+  svg += '<text x="' + (width / 2) + '" y="' + (height - 30) + '" text-anchor="middle" fill="#6B83C5" font-size="12" font-family="DM Mono, monospace">Generado con UXFLOW · listo para Figma (PNG/PDF)</text>';
+  svg += '</svg>';
+
+  return { svg: svg, width: width, height: height };
+}
+
+function flowSvgToPngBlob(asset) {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    img.onload = function () {
+      var scale = 2;
+      var canvas = document.createElement('canvas');
+      canvas.width = asset.width * scale;
+      canvas.height = asset.height * scale;
+      var ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('No canvas context available'));
+        return;
+      }
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0, asset.width, asset.height);
+      canvas.toBlob(function (blob) {
+        if (!blob) {
+          reject(new Error('No se pudo generar PNG'));
+          return;
+        }
+        resolve(blob);
+      }, 'image/png');
+    };
+    img.onerror = function () {
+      reject(new Error('No se pudo renderizar SVG'));
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(asset.svg);
+  });
+}
+
+function downloadBlob(blob, filename) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+}
+
 function copiarFigma() {
   var model = _lastDocModel || buildFlowModel();
-  var lines = [
-    'UXFLOW Export',
-    '──────────────',
-    'Proyecto: ' + model.title,
-    'Línea: ' + model.linea,
-    'Actor: ' + model.actor,
-    'Objetivo: ' + model.goal,
-    'Países: ' + model.countries.join(', '),
-    'Pasos: ' + model.steps.map(function (step) { return step.label; }).join(' → '),
-    '──────────────',
-    'Generado con vientonorte/uxflow'
-  ];
-  navigator.clipboard.writeText(lines.join('\n'))
-    .then(function () { showToast('📋 Copiado. Artefacto listo para Figma o QA.'); })
-    .catch(function () { showToast('⚠ No se pudo copiar. Usa copiar manual.'); });
+  var asset = buildFlowSvgAsset(model);
+  var fileName = (model.title || 'uxflow').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-flow.png';
+  flowSvgToPngBlob(asset)
+    .then(function (blob) {
+      if (navigator.clipboard && window.ClipboardItem) {
+        return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          .then(function () {
+            showToast('🖼 PNG del flujo copiado. Pégalo directo en Figma.');
+          })
+          .catch(function () {
+            downloadBlob(blob, fileName);
+            showToast('⬇ PNG descargado. Sube el archivo a Figma.');
+          });
+      }
+      downloadBlob(blob, fileName);
+      showToast('⬇ PNG descargado. Sube el archivo a Figma.');
+      return null;
+    })
+    .catch(function () {
+      showToast('⚠ No se pudo generar el PNG del flujo');
+    });
 }
 
 /* ─── HISTORIAL ─────────────────────────────────────────────── */
 function guardarHistorial() {
   var model = _lastDocModel || buildFlowModel();
   var item = {
+    id: Date.now() + Math.floor(Math.random() * 1000),
     titulo: model.title,
     linea: model.linea,
     criterios: model.prompt,
     paises: model.countries.join(', '),
     fecha: fechaHoy(),
-    id: Date.now(),
     screenshot: _uxflowScreenshot || null,
+    model: model,
     flow: {
       actor: model.actor,
       goal: model.goal,
@@ -432,7 +617,11 @@ function guardarHistorial() {
   };
   historial.unshift(item);
   if (historial.length > 20) historial = historial.slice(0, 20);
-  writeHistory();
+  if (!writeHistory()) {
+    historial.shift();
+    showToast('⚠ No se pudo guardar (revisa espacio de almacenamiento local)');
+    return;
+  }
   renderHistorial();
   showToast('💾 Activo guardado en historial');
   setSaveStatus('saved');
@@ -441,17 +630,17 @@ function guardarHistorial() {
 function cargarDesdeHistorial(id) {
   var item = historial.find(function (entry) { return entry.id === id; });
   if (!item) return;
-  document.getElementById('titulo').value = item.titulo || 'Proyecto UX';
-  document.getElementById('linea').value = item.linea || 'Otro';
-  document.getElementById('criterios').value = item.criterios || '';
-  document.getElementById('paises').value = item.paises || '';
+  var model = item.model || sanitizeHistoryEntry(item).model || buildFlowModel();
+  document.getElementById('titulo').value = model.title || item.titulo || 'Proyecto UX';
+  document.getElementById('linea').value = model.linea || item.linea || 'Otro';
+  document.getElementById('criterios').value = model.prompt || item.criterios || '';
+  document.getElementById('paises').value = (Array.isArray(model.countries) ? model.countries.join(', ') : item.paises || '');
   _uxflowScreenshot = item.screenshot || null;
   renderDocScreenshot(_uxflowScreenshot);
   renderUxflowScreenshotPreview(_uxflowScreenshot);
-  generarDoc({
-    preserveStatus: true,
-    toastMessage: '📂 Activo restaurado desde historial'
-  });
+  renderDoc(model);
+  showToast('📂 Flujo restaurado desde historial');
+  setSaveStatus('saved');
   document.getElementById('editor').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -548,6 +737,7 @@ function removeUxflowScreenshot() {
 
 /* ─── PDF EXPORT ────────────────────────────────────────────── */
 function exportarPDF() {
+  if (!_lastDocModel) renderDoc(buildFlowModel());
   window.print();
 }
 
