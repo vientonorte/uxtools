@@ -47,7 +47,7 @@
 
     <div class="form-group">
       <label for="titulo">Título del proyecto</label>
-      <input type="text" id="titulo" placeholder="Ej: GlobalContact UX" value="GlobalContact UX">
+      <input type="text" id="titulo" placeholder="Ej: GlobalContact UX" value="GlobalContact UX" aria-label="Título del flujo UX">
     </div>
 
     <div class="form-group">
@@ -68,7 +68,7 @@
 
     <div class="form-group">
       <label for="paises">Países activos (separados por coma)</label>
-      <input type="text" id="paises" placeholder="Chile, Colombia, México" value="Chile, Colombia, México, Perú">
+      <input type="text" id="paises" placeholder="Chile, Colombia, México" value="Chile, Colombia, México, Perú" aria-label="Países del proyecto">
     </div>
 
     <button class="btn-generate" id="btn-gen" onclick="generarDoc()">
@@ -86,7 +86,7 @@
 
     <div class="form-group uxflow-screenshot-row" style="margin-top:16px;">
       <label for="uxflow-screenshot">📷 Captura de pantalla del flujo</label>
-      <input type="file" id="uxflow-screenshot" accept="image/*" onchange="onUxflowScreenshot(this)">
+      <input type="file" id="uxflow-screenshot" accept="image/*" onchange="onUxflowScreenshot(this)" aria-label="Subir captura de pantalla del flujo">
       <div id="uxflow-screenshot-preview" style="margin-top:8px;"></div>
     </div>
   </aside>
