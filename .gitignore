@@ -1,4 +1,6 @@
 node_modules/
-package.json
 package-lock.json
+dist/
+.DS_Store
+*.log
 Benchmark*Digital.zip

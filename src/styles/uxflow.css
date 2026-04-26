@@ -1,0 +1,241 @@
+/* ── UXFLOW LAYOUT ───────────────────────────────────────── */
+.uxflow-main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-8) var(--space-12);
+}
+.uxflow-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-6);
+  margin-bottom: var(--space-7);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+.uxflow-title {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-bottom: var(--space-2);
+}
+.uxflow-sub { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.5; max-width: 480px; }
+.uxflow-header-actions { display: flex; gap: var(--space-2); align-items: center; flex-shrink: 0; }
+.tab-pill {
+  font-family: var(--font-display);
+  font-size: 13px; font-weight: 600;
+  padding: var(--space-2) var(--space-5);
+  background: var(--surface-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  color: var(--muted); cursor: pointer;
+  transition: all var(--duration-fast);
+}
+.tab-pill.active { background: rgba(0,181,226,0.12); border-color: var(--border-accent); color: var(--cyan); }
+.tab-pill:hover:not(.active) { border-color: var(--border-medium); color: var(--white); }
+
+/* ── BODY SPLIT ──────────────────────────────────────────── */
+.uxflow-body {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: var(--space-7);
+  align-items: start;
+}
+.uxflow-form-col { display: flex; flex-direction: column; gap: var(--space-5); }
+.uxflow-result-col {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+.form-actions-row { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+
+/* ── FLOW EMPTY ──────────────────────────────────────────── */
+.flow-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-12);
+  background: var(--surface-glass);
+  border: 1px dashed var(--border-medium);
+  border-radius: var(--radius-xl);
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 14px;
+}
+.flow-empty-icon { font-size: 40px; opacity: 0.3; }
+
+/* ── FLOW DOCUMENT ───────────────────────────────────────── */
+.flow-doc {
+  background: var(--surface-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+.flow-doc-header {
+  padding: var(--space-5) var(--space-6);
+  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(0,181,226,0.04);
+}
+.flow-doc-title {
+  font-family: var(--font-display);
+  font-size: 18px; font-weight: 700;
+  letter-spacing: -0.3px;
+  margin-bottom: var(--space-2);
+}
+.flow-doc-meta { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.flow-linea {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 3px 10px;
+  background: rgba(0,181,226,0.12);
+  border: 1px solid rgba(0,181,226,0.2);
+  border-radius: var(--radius-pill);
+  color: var(--cyan);
+}
+.flow-country {
+  font-size: 12px; color: rgba(255,255,255,0.6);
+  padding: 3px 8px;
+  background: var(--surface-hover);
+  border-radius: var(--radius-pill);
+}
+
+/* ── FLOW TABS ───────────────────────────────────────────── */
+.flow-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+}
+.flow-tab {
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 600;
+  padding: var(--space-3) var(--space-5);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--duration-fast);
+}
+.flow-tab:hover { color: var(--white); }
+.flow-tab.active { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+/* ── FLOW OVERVIEW ───────────────────────────────────────── */
+.flow-overview { padding: var(--space-5) var(--space-6); }
+.flow-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.flow-kv { display: flex; flex-direction: column; gap: 4px; }
+.flow-kv-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.flow-kv-value { font-size: 14px; font-weight: 500; }
+.flow-alert {
+  background: rgba(255,140,0,0.1);
+  border: 1px solid rgba(255,140,0,0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-size: 13px;
+  color: var(--warning);
+}
+
+/* ── FLOW TABLE ──────────────────────────────────────────── */
+.flow-steps, .flow-criteria { overflow-x: auto; }
+.flow-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.flow-table th, .flow-table td {
+  padding: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+  vertical-align: top;
+}
+.flow-table th {
+  font-family: var(--font-mono);
+  font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); font-weight: 500;
+  background: rgba(0,0,0,0.1);
+  white-space: nowrap;
+}
+.flow-table tr:last-child td { border-bottom: none; }
+.step-num {
+  font-family: var(--font-mono); font-size: 12px;
+  background: rgba(0,181,226,0.1);
+  color: var(--cyan);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+.step-actor {
+  font-size: 12px; font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+.step-actor.user { background: rgba(0,181,226,0.12); color: var(--cyan); }
+.step-actor.sistema { background: rgba(61,186,111,0.12); color: var(--success); }
+.step-channel {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--muted); white-space: nowrap;
+}
+.step-decision { font-size: 12px; color: rgba(255,255,255,0.65); }
+.criterion-cat {
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 2px 8px;
+  background: var(--surface-hover);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+
+/* ── EDGE CASES ──────────────────────────────────────────── */
+.flow-edge-cases {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+}
+.edge-case {
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  border-left: 3px solid transparent;
+}
+.edge-case.impact-alto { background: rgba(204,68,68,0.07); border-color: var(--score-lo); }
+.edge-case.impact-medio { background: rgba(208,144,0,0.07); border-color: var(--score-mid); }
+.edge-case.impact-bajo { background: rgba(42,154,90,0.07); border-color: var(--score-hi); }
+.edge-case-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-2); }
+.impact-badge {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 600;
+  padding: 2px 8px; border-radius: var(--radius-pill);
+  letter-spacing: 0.5px; flex-shrink: 0;
+}
+.impact-badge.alto { background: rgba(204,68,68,0.2); color: var(--score-lo); }
+.impact-badge.medio { background: rgba(208,144,0,0.2); color: var(--score-mid); }
+.impact-badge.bajo { background: rgba(42,154,90,0.2); color: var(--score-hi); }
+.edge-case-mitigation { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+
+/* ── HISTORY ─────────────────────────────────────────────── */
+.uxflow-history { display: flex; flex-direction: column; gap: var(--space-3); }
+.history-item {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--surface-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+}
+.history-item-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.history-item-actions { display: flex; gap: var(--space-2); }
+
+@media (max-width: 900px) {
+  .uxflow-body { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .uxflow-main { padding: var(--space-5) var(--space-4) var(--space-10); }
+}
