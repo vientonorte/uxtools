@@ -33,8 +33,10 @@ jobs:
       - name: Validate HTML and JS assets
         run: node scripts/validate-static.js
 
+      - name: Run unit tests
+        run: node tests/unit.js
+
   deploy:
-    name: Deploy
     needs: validate
     runs-on: ubuntu-latest
     environment:
