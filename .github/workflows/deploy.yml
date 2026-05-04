@@ -36,8 +36,7 @@ jobs:
       - name: Run unit tests
         run: node tests/unit.js
 
-
-    name: Deploy
+  deploy:
     needs: validate
     runs-on: ubuntu-latest
     environment:
