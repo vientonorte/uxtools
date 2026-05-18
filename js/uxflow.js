@@ -3,6 +3,18 @@ var UXFLOW_SCREENSHOT_MAX_DIM = 1200;
 var UXFLOW_STORAGE_KEY = 'uxflow-historial';
 var UXFLOW_BLOB_URL_REVOKE_DELAY_MS = 2000;
 var MAX_PROMPT_ACTION_CLAUSES = 3;
+var BASE_IMPORTANCE_SCORE = 55;
+var IMPORTANCE_EDGE_CASE_BONUS = 6;
+var IMPORTANCE_EDGE_CASE_BONUS_CAP = 18;
+var IMPORTANCE_HIGH_IMPACT_BONUS = 22;
+var IMPORTANCE_CRITICALITY_BONUS = 10;
+var BASE_FEASIBILITY_SCORE = 72;
+var FEASIBILITY_MARKET_PENALTY = 4;
+var FEASIBILITY_MARKET_PENALTY_CAP = 16;
+var FEASIBILITY_EDGE_CASE_PENALTY = 8;
+var FEASIBILITY_EDGE_CASE_PENALTY_CAP = 24;
+var FEASIBILITY_COMPLEXITY_PENALTY = 16;
+var FEASIBILITY_QUICK_WIN_BONUS = 8;
 
 var historial = readHistory();
 var _uxflowScreenshot = null;
@@ -223,20 +235,20 @@ function clampPriority(value) {
 
 function inferImportanceScore(prompt, edgeCases, goal) {
   var source = String(prompt || '') + ' ' + String(goal || '');
-  var score = 55;
-  score += Math.min((edgeCases || []).length * 6, 18);
-  if (/cliente|usuario|negocio|impacto|riesgo|estrateg|cr[ií]tic|reput/i.test(source)) score += 22;
-  if (/bloque|ca[ií]da|error|inciden|sla|regulatori/i.test(source)) score += 10;
+  var score = BASE_IMPORTANCE_SCORE;
+  score += Math.min((edgeCases || []).length * IMPORTANCE_EDGE_CASE_BONUS, IMPORTANCE_EDGE_CASE_BONUS_CAP);
+  if (/cliente|usuario|negocio|impacto|riesgo|estrateg|cr[ií]tic|reput/i.test(source)) score += IMPORTANCE_HIGH_IMPACT_BONUS;
+  if (/bloque|ca[ií]da|error|inciden|sla|regulatori/i.test(source)) score += IMPORTANCE_CRITICALITY_BONUS;
   return clampPriority(score);
 }
 
 function inferFeasibilityScore(prompt, countries, edgeCases) {
   var source = String(prompt || '');
-  var score = 72;
-  score -= Math.min(Math.max(((countries || []).length - 1) * 4, 0), 16);
-  score -= Math.min((edgeCases || []).length * 8, 24);
-  if (/integraci|dependen|legacy|migraci|manual|multi|varios equipos/i.test(source)) score -= 16;
-  if (/ajuste|optimiza|mejora|copy|texto|ui|filtro/i.test(source)) score += 8;
+  var score = BASE_FEASIBILITY_SCORE;
+  score -= Math.min(Math.max(((countries || []).length - 1) * FEASIBILITY_MARKET_PENALTY, 0), FEASIBILITY_MARKET_PENALTY_CAP);
+  score -= Math.min((edgeCases || []).length * FEASIBILITY_EDGE_CASE_PENALTY, FEASIBILITY_EDGE_CASE_PENALTY_CAP);
+  if (/integraci|dependen|legacy|migraci|manual|multi|varios equipos/i.test(source)) score -= FEASIBILITY_COMPLEXITY_PENALTY;
+  if (/ajuste|optimiza|mejora|copy|texto|ui|filtro/i.test(source)) score += FEASIBILITY_QUICK_WIN_BONUS;
   return clampPriority(score);
 }
 
