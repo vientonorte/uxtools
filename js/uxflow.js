@@ -222,9 +222,8 @@ function buildUserStory(actor, goal, benefit) {
   var actorText = String(actor || 'usuario').trim();
   var goalText = String(goal || 'resolver una necesidad').trim();
   var benefitText = String(benefit || '').trim();
-  var story = 'Como ' + actorText + ', quiero ' + goalText.toLowerCase();
-  if (benefitText) story += ' para ' + benefitText.toLowerCase();
-  return story + '.';
+  return 'Como ' + actorText + ', quiero ' + goalText.toLowerCase() +
+    (benefitText ? ' para ' + benefitText.toLowerCase() : '') + '.';
 }
 
 function clampPriority(value) {
@@ -526,14 +525,24 @@ function updatePriorityFromControls() {
 function updatePriorityFromMatrixPointer(event) {
   var matrix = document.getElementById('priority-matrix');
   if (!matrix || !event) return;
-  var rect = matrix.getBoundingClientRect();
-  if (!rect || rect.width === 0 || rect.height === 0) return;
-  var x = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
-  var y = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
-  var fac = clampPriority(Math.round((x / rect.width) * 100));
-  var imp = clampPriority(Math.round((1 - (y / rect.height)) * 100));
+  var coords = matrixPointerToScores(matrix, event);
+  if (!coords) return;
+  var fac = coords.factibilidad;
+  var imp = coords.importancia;
   renderPriorityMatrix(imp, fac);
   syncPriorityToModel(imp, fac);
+}
+
+function matrixPointerToScores(matrix, event) {
+  if (!matrix || !event) return null;
+  var rect = matrix.getBoundingClientRect();
+  if (!rect || rect.width === 0 || rect.height === 0) return null;
+  var x = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+  var y = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
+  return {
+    factibilidad: clampPriority(Math.round((x / rect.width) * 100)),
+    importancia: clampPriority(Math.round((1 - (y / rect.height)) * 100))
+  };
 }
 
 function bindPriorityInteractions() {

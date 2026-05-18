@@ -320,7 +320,7 @@ section('uxflow.js — buildUserStory');
 
 test('builds a HU sentence with actor, goal and benefit', function () {
   var hu = ctx.buildUserStory('Analista UX', 'Validar tablas', 'Alinear equipos');
-  assert.ok(hu.indexOf('Como Analista UX') === 0);
+  assert.ok(hu.startsWith('Como Analista UX'));
   assert.ok(/quiero validar tablas/i.test(hu));
   assert.ok(/para alinear equipos/i.test(hu));
 });
