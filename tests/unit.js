@@ -300,6 +300,45 @@ test('starts with an uppercase letter when a goal clause is found', function () 
   }
 });
 
+/* ── extractBenefit ─────────────────────────────────────────── */
+
+section('uxflow.js — extractBenefit');
+
+test('extracts benefit from "para ... " clause', function () {
+  var benefit = ctx.extractBenefit('yo como analista quiero publicar cambios para reducir tiempos de respuesta');
+  assert.ok(/reducir tiempos de respuesta/i.test(benefit));
+});
+
+test('returns default fallback when prompt has no "para"', function () {
+  var benefit = ctx.extractBenefit('quiero revisar el flujo');
+  assert.ok(benefit.length > 0);
+});
+
+/* ── buildUserStory ─────────────────────────────────────────── */
+
+section('uxflow.js — buildUserStory');
+
+test('builds a HU sentence with actor, goal and benefit', function () {
+  var hu = ctx.buildUserStory('Analista UX', 'Validar tablas', 'Alinear equipos');
+  assert.ok(hu.indexOf('Como Analista UX') === 0);
+  assert.ok(/quiero validar tablas/i.test(hu));
+  assert.ok(/para alinear equipos/i.test(hu));
+});
+
+/* ── priority scoring helpers ───────────────────────────────── */
+
+section('uxflow.js — priority scoring');
+
+test('inferImportanceScore increases with high-impact keywords', function () {
+  var score = ctx.inferImportanceScore('incidente crítico para cliente', [], 'resolver riesgo');
+  assert.ok(score >= 70);
+});
+
+test('inferFeasibilityScore decreases with complexity keywords', function () {
+  var score = ctx.inferFeasibilityScore('integración legacy entre varios equipos', ['Chile', 'Colombia', 'México'], ['error']);
+  assert.ok(score <= 60);
+});
+
 /* ── inferLinea ────────────────────────────────────────────── */
 
 section('uxflow.js — inferLinea');

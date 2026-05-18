@@ -77,21 +77,30 @@ function sanitizeHistoryEntry(entry) {
     var countries = inferCountries(prompt, rawCountries);
     var actor = extractActor(prompt);
     var goal = extractGoal(prompt);
+    var benefit = extractBenefit(prompt);
     var linea = inferLinea(prompt, selectedLinea);
     var edgeCases = detectEdgeCases(prompt);
     model = {
       title: title,
       actor: actor,
       goal: goal,
+      benefit: benefit,
       linea: linea,
       countries: countries,
       prompt: prompt,
       edgeCases: edgeCases,
       steps: detectSteps(prompt, actor, goal, linea, countries, edgeCases),
       criteria: buildCriteria(goal, linea, countries, edgeCases, prompt),
-      tabDescription: LINEA_COPY[linea] || LINEA_COPY.Otro
+      tabDescription: LINEA_COPY[linea] || LINEA_COPY.Otro,
+      userStory: buildUserStory(actor, goal, benefit),
+      priorizacion: {
+        importancia: inferImportanceScore(prompt, edgeCases, goal),
+        factibilidad: inferFeasibilityScore(prompt, countries, edgeCases)
+      }
     };
   }
+
+  model = hydrateMinimalModel(model);
 
   return {
     id: entry.id || Date.now(),
@@ -187,6 +196,84 @@ function extractGoal(prompt) {
   var match = prompt.match(/quiero\s+([^,.]+?)(?:,|\.| con | para | filtrando | validando |$)/i);
   if (match) return slugToSentence(match[1]);
   return slugToSentence(prompt) || 'Documentar el flujo';
+}
+
+function extractBenefit(prompt) {
+  var match = prompt.match(/\bpara\s+([^,.]+?)(?:,|\.| con | y |$)/i);
+  if (match) return slugToSentence(match[1]);
+  if (/cliente|usuario/i.test(prompt)) return 'Mejorar la experiencia del usuario final';
+  if (/negocio|operaci/i.test(prompt)) return 'Alinear objetivos de negocio y ejecución';
+  return 'Alinear diseño, negocio y entrega';
+}
+
+function buildUserStory(actor, goal, benefit) {
+  var actorText = String(actor || 'usuario').trim();
+  var goalText = String(goal || 'resolver una necesidad').trim();
+  var benefitText = String(benefit || '').trim();
+  var story = 'Como ' + actorText + ', quiero ' + goalText.toLowerCase();
+  if (benefitText) story += ' para ' + benefitText.toLowerCase();
+  return story + '.';
+}
+
+function clampPriority(value) {
+  var num = parseInt(value, 10);
+  if (isNaN(num)) num = 50;
+  return Math.max(0, Math.min(100, num));
+}
+
+function inferImportanceScore(prompt, edgeCases, goal) {
+  var source = String(prompt || '') + ' ' + String(goal || '');
+  var score = 55;
+  score += Math.min((edgeCases || []).length * 6, 18);
+  if (/cliente|usuario|negocio|impacto|riesgo|estrat|cr[ií]tic|reput/i.test(source)) score += 22;
+  if (/bloque|ca[ií]da|error|inciden|sla|regulator/i.test(source)) score += 10;
+  return clampPriority(score);
+}
+
+function inferFeasibilityScore(prompt, countries, edgeCases) {
+  var source = String(prompt || '');
+  var score = 72;
+  score -= Math.min(Math.max(((countries || []).length - 1) * 4, 0), 16);
+  score -= Math.min((edgeCases || []).length * 8, 24);
+  if (/integraci|dependen|legacy|migraci|manual|multi|varios equipos/i.test(source)) score -= 16;
+  if (/ajuste|optimiza|mejora|copy|texto|ui|filtro/i.test(source)) score += 8;
+  return clampPriority(score);
+}
+
+function getPriorityQuadrantLabel(importancia, factibilidad) {
+  var impHigh = importancia >= 50;
+  var facHigh = factibilidad >= 50;
+  if (impHigh && facHigh) return 'Alta importancia · Alta factibilidad';
+  if (impHigh && !facHigh) return 'Alta importancia · Baja factibilidad';
+  if (!impHigh && facHigh) return 'Baja importancia · Alta factibilidad';
+  return 'Baja importancia · Baja factibilidad';
+}
+
+function hydrateMinimalModel(model) {
+  var prompt = normalizePrompt(model.prompt || '');
+  var actor = model.actor || extractActor(prompt);
+  var goal = model.goal || extractGoal(prompt);
+  var countries = Array.isArray(model.countries) ? model.countries : inferCountries(prompt, '');
+  var edgeCases = Array.isArray(model.edgeCases) ? model.edgeCases : detectEdgeCases(prompt);
+  var benefit = model.benefit || extractBenefit(prompt);
+
+  model.actor = actor;
+  model.goal = goal;
+  model.countries = countries;
+  model.edgeCases = edgeCases;
+  model.prompt = prompt;
+  model.benefit = benefit;
+  model.userStory = model.userStory || buildUserStory(actor, goal, benefit);
+
+  var inferredImportance = inferImportanceScore(prompt, edgeCases, goal);
+  var inferredFeasibility = inferFeasibilityScore(prompt, countries, edgeCases);
+  var existing = model.priorizacion || {};
+  model.priorizacion = {
+    importancia: typeof existing.importancia === 'number' ? clampPriority(existing.importancia) : inferredImportance,
+    factibilidad: typeof existing.factibilidad === 'number' ? clampPriority(existing.factibilidad) : inferredFeasibility
+  };
+
+  return model;
 }
 
 function inferCountries(prompt, rawInput) {
@@ -310,14 +397,16 @@ function buildFlowModel() {
   var linea = inferLinea(prompt, document.getElementById('linea').value);
   var actor = extractActor(prompt);
   var goal = extractGoal(prompt);
+  var benefit = extractBenefit(prompt);
   var edgeCases = detectEdgeCases(prompt);
   var steps = detectSteps(prompt, actor, goal, linea, countries, edgeCases);
   var criteria = buildCriteria(goal, linea, countries, edgeCases, prompt);
 
-  return {
+  return hydrateMinimalModel({
     title: tituloInput,
     actor: actor,
     goal: goal,
+    benefit: benefit,
     linea: linea,
     countries: countries,
     prompt: prompt,
@@ -325,7 +414,7 @@ function buildFlowModel() {
     steps: steps,
     criteria: criteria,
     tabDescription: LINEA_COPY[linea] || LINEA_COPY.Otro
-  };
+  });
 }
 
 /* ─── RENDER ─────────────────────────────────────────────────── */
@@ -375,6 +464,75 @@ function renderCriteria(model) {
   container.innerHTML = model.criteria.map(function (item) {
     return '<div class="criteria-item">' + escapeHTML(item) + '</div>';
   }).join('');
+}
+
+function renderUserStory(model) {
+  var container = document.getElementById('hu-story');
+  if (!container) return;
+  container.textContent = model.userStory;
+}
+
+function renderPriorityMatrix(importancia, factibilidad) {
+  var point = document.getElementById('priority-point');
+  var caption = document.getElementById('priority-caption');
+  var importanceValue = document.getElementById('priority-importance-value');
+  var feasibilityValue = document.getElementById('priority-feasibility-value');
+  var importanceSlider = document.getElementById('priority-importance');
+  var feasibilitySlider = document.getElementById('priority-feasibility');
+  var imp = clampPriority(importancia);
+  var fac = clampPriority(factibilidad);
+
+  if (importanceSlider) importanceSlider.value = imp;
+  if (feasibilitySlider) feasibilitySlider.value = fac;
+  if (importanceValue) importanceValue.textContent = imp + '%';
+  if (feasibilityValue) feasibilityValue.textContent = fac + '%';
+  if (caption) caption.textContent = getPriorityQuadrantLabel(imp, fac);
+  if (point) {
+    point.style.left = fac + '%';
+    point.style.bottom = imp + '%';
+  }
+}
+
+function syncPriorityToModel(importancia, factibilidad) {
+  if (!_lastDocModel) return;
+  _lastDocModel.priorizacion = {
+    importancia: clampPriority(importancia),
+    factibilidad: clampPriority(factibilidad)
+  };
+}
+
+function updatePriorityFromControls() {
+  var importanceSlider = document.getElementById('priority-importance');
+  var feasibilitySlider = document.getElementById('priority-feasibility');
+  if (!importanceSlider || !feasibilitySlider) return;
+  var imp = clampPriority(importanceSlider.value);
+  var fac = clampPriority(feasibilitySlider.value);
+  renderPriorityMatrix(imp, fac);
+  syncPriorityToModel(imp, fac);
+}
+
+function updatePriorityFromMatrixPointer(event) {
+  var matrix = document.getElementById('priority-matrix');
+  if (!matrix || !event) return;
+  var rect = matrix.getBoundingClientRect();
+  if (!rect || !rect.width || !rect.height) return;
+  var x = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+  var y = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
+  var fac = clampPriority(Math.round((x / rect.width) * 100));
+  var imp = clampPriority(Math.round((1 - (y / rect.height)) * 100));
+  renderPriorityMatrix(imp, fac);
+  syncPriorityToModel(imp, fac);
+}
+
+function bindPriorityInteractions() {
+  var importanceSlider = document.getElementById('priority-importance');
+  var feasibilitySlider = document.getElementById('priority-feasibility');
+  var matrix = document.getElementById('priority-matrix');
+  if (importanceSlider) importanceSlider.addEventListener('input', updatePriorityFromControls);
+  if (feasibilitySlider) feasibilitySlider.addEventListener('input', updatePriorityFromControls);
+  if (matrix) {
+    matrix.addEventListener('click', updatePriorityFromMatrixPointer);
+  }
 }
 
 function renderTabs(model) {
@@ -445,6 +603,7 @@ function renderAnalytics(model) {
 }
 
 function renderDoc(model) {
+  model = hydrateMinimalModel(model);
   _lastDocModel = model;
   document.getElementById('doc-titulo').textContent = model.title.toUpperCase();
   document.getElementById('doc-fecha').textContent = 'FECHA: ' + fechaHoy();
@@ -452,6 +611,8 @@ function renderDoc(model) {
   renderOverview(model);
   renderFlow(model);
   renderCriteria(model);
+  renderUserStory(model);
+  renderPriorityMatrix(model.priorizacion.importancia, model.priorizacion.factibilidad);
   renderTabs(model);
   renderTable(model);
   renderAnalytics(model);
@@ -512,11 +673,13 @@ function buildFallbackModelFromHistory(item) {
   var countries = inferCountries(prompt, item && item.paises);
   var actor = extractActor(prompt);
   var goal = extractGoal(prompt);
+  var benefit = extractBenefit(prompt);
   var edgeCases = detectEdgeCases(prompt);
-  return {
+  return hydrateMinimalModel({
     title: (item && item.titulo) || 'Proyecto UX',
     actor: actor,
     goal: goal,
+    benefit: benefit,
     linea: linea,
     countries: countries,
     prompt: prompt,
@@ -524,7 +687,7 @@ function buildFallbackModelFromHistory(item) {
     steps: detectSteps(prompt, actor, goal, linea, countries, edgeCases),
     criteria: buildCriteria(goal, linea, countries, edgeCases, prompt),
     tabDescription: LINEA_COPY[linea] || LINEA_COPY.Otro
-  };
+  });
 }
 
 function tonePalette(tone) {
@@ -829,6 +992,7 @@ function bindDirtyState() {
 document.getElementById('doc-fecha').textContent = 'FECHA: ' + fechaHoy();
 document.getElementById('canvas-date').textContent = fechaHoy();
 bindDirtyState();
+bindPriorityInteractions();
 renderHistorial();
 renderDocScreenshot(null);
 generarDoc();
