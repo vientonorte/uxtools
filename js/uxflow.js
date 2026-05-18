@@ -199,7 +199,7 @@ function extractGoal(prompt) {
 }
 
 function extractBenefit(prompt) {
-  var match = prompt.match(/\bpara\s+([^,.]+?)(?:,|\.| con | y |$)/i);
+  var match = prompt.match(/\bpara\s+([^,.]+?)(?:,|\.| con | y | o | pero | cuando |$)/i);
   if (match) return slugToSentence(match[1]);
   if (/cliente|usuario/i.test(prompt)) return 'Mejorar la experiencia del usuario final';
   if (/negocio|operaci/i.test(prompt)) return 'Alinear objetivos de negocio y ejecución';
@@ -225,8 +225,8 @@ function inferImportanceScore(prompt, edgeCases, goal) {
   var source = String(prompt || '') + ' ' + String(goal || '');
   var score = 55;
   score += Math.min((edgeCases || []).length * 6, 18);
-  if (/cliente|usuario|negocio|impacto|riesgo|estrat|cr[ií]tic|reput/i.test(source)) score += 22;
-  if (/bloque|ca[ií]da|error|inciden|sla|regulator/i.test(source)) score += 10;
+  if (/cliente|usuario|negocio|impacto|riesgo|estrateg|cr[ií]tic|reput/i.test(source)) score += 22;
+  if (/bloque|ca[ií]da|error|inciden|sla|regulatori/i.test(source)) score += 10;
   return clampPriority(score);
 }
 
@@ -515,7 +515,7 @@ function updatePriorityFromMatrixPointer(event) {
   var matrix = document.getElementById('priority-matrix');
   if (!matrix || !event) return;
   var rect = matrix.getBoundingClientRect();
-  if (!rect || !rect.width || !rect.height) return;
+  if (!rect || rect.width === 0 || rect.height === 0) return;
   var x = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
   var y = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
   var fac = clampPriority(Math.round((x / rect.width) * 100));

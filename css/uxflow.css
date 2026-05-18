@@ -404,7 +404,7 @@ select option { background: var(--navy-2); color: var(--white); }
 }
 .axis-y-high { top: 8px; left: 10px; }
 .axis-y-low { bottom: 8px; left: 10px; }
-.axis-x-low { bottom: 8px; left: 50%; transform: translateX(-100%); margin-left: -12px; }
+.axis-x-low { bottom: 8px; left: calc(50% - 12px); transform: translateX(-100%); }
 .axis-x-high { bottom: 8px; left: 50%; margin-left: 12px; }
 .priority-caption {
   margin-top: 10px;
