@@ -4,6 +4,16 @@ var frictions = [];
 var currentEditId = null;
 
 /* ── SCORING THRESHOLDS ─────────────────────────────────────── */
+function calculateUrgencia(data) {
+  return parseInt(data.severidad) + parseInt(data.frecuencia) + 
+         parseInt(data.sla) + parseInt(data.bloqueo);
+}
+
+function calculateImportancia(data) {
+  return parseInt(data.impactoCliente) + parseInt(data.impactoOperacional) + 
+         parseInt(data.alcance) + parseInt(data.riesgo);
+}
+
 function classifyUrgency(score) {
   if (score >= 10) return 'alta';
   if (score >= 7) return 'media';
@@ -31,14 +41,6 @@ function escapeHTML(str) {
   var div = document.createElement('div');
   div.appendChild(document.createTextNode(String(str || '')));
   return div.innerHTML;
-}
-
-function formatDate(timestamp) {
-  var d = new Date(timestamp);
-  var day = ('0' + d.getDate()).slice(-2);
-  var month = ('0' + (d.getMonth() + 1)).slice(-2);
-  var year = d.getFullYear();
-  return day + '/' + month + '/' + year;
 }
 
 function loadFrictions() {
@@ -71,10 +73,8 @@ function showSaveStatus() {
 
 /* ── FRICTION CRUD ───────────────────────────────────────────── */
 function createFriction(data) {
-  var urgencia = parseInt(data.severidad) + parseInt(data.frecuencia) + 
-                 parseInt(data.sla) + parseInt(data.bloqueo);
-  var importancia = parseInt(data.impactoCliente) + parseInt(data.impactoOperacional) + 
-                    parseInt(data.alcance) + parseInt(data.riesgo);
+  var urgencia = calculateUrgencia(data);
+  var importancia = calculateImportancia(data);
   
   var friction = {
     id: Date.now(),
@@ -108,10 +108,8 @@ function updateFriction(id, data) {
   var index = frictions.findIndex(function(f) { return f.id === id; });
   if (index === -1) return null;
   
-  var urgencia = parseInt(data.severidad) + parseInt(data.frecuencia) + 
-                 parseInt(data.sla) + parseInt(data.bloqueo);
-  var importancia = parseInt(data.impactoCliente) + parseInt(data.impactoOperacional) + 
-                    parseInt(data.alcance) + parseInt(data.riesgo);
+  var urgencia = calculateUrgencia(data);
+  var importancia = calculateImportancia(data);
   
   frictions[index] = {
     id: id,

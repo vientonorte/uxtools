@@ -129,14 +129,6 @@ function summarizeUxflowSession(session) {
     getEl('meta-dx-last').textContent = 'Último: ' + lastDxDate;
 })();
 
-function formatDate(timestamp) {
-  var d = new Date(timestamp);
-  var day = ('0' + d.getDate()).slice(-2);
-  var month = ('0' + (d.getMonth() + 1)).slice(-2);
-  var year = d.getFullYear();
-  return day + '/' + month + '/' + year;
-}
-
 /* ── ACTIVITY FEED ─── */
 (function () {
   var container = document.getElementById('activity-list');
