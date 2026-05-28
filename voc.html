@@ -48,6 +48,69 @@ body::before {
 
 main { position: relative; z-index: 2; }
 
+/* ===== NAVIGATION ===== */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+  padding: 16px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; color: inherit;
+}
+.nav-logo {
+  width: 40px; height: 40px;
+  background: var(--ink);
+  color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-weight: 700; font-size: 14px;
+  letter-spacing: -0.02em;
+}
+.nav-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 500; font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.nav-badge {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  background: var(--accent);
+  color: var(--paper);
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+.nav-actions {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap;
+}
+.nav-link {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 14px; font-weight: 500;
+  text-decoration: none; color: var(--ink-soft);
+}
+.nav-link:hover { color: var(--accent); }
+.btn-nav {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  text-decoration: none;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 8px 16px;
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--accent);
+}
+.btn-nav:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
 /* ===== FOCUS VISIBLE ===== */
 :focus-visible {
   outline: 3px solid var(--focus);
@@ -854,6 +917,19 @@ h1 {
 </head>
 <body>
 
+<!-- NAV -->
+<nav aria-label="Navegación principal">
+  <a class="nav-brand" href="index.html" aria-label="Vocational Explorer — Inicio">
+    <div class="nav-logo" aria-hidden="true">VOC</div>
+    <span class="nav-title">Mapa Vocacional</span>
+    <span class="nav-badge">v2</span>
+  </a>
+  <div class="nav-actions">
+    <a class="nav-link" href="index.html">← uxtools</a>
+    <a class="btn-nav" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </div>
+</nav>
+
 <!-- Onboarding overlay -->
 <div class="onboarding" id="onboarding" role="dialog" aria-modal="true" aria-labelledby="onb-titulo">
   <div class="onboarding-card">
@@ -1639,7 +1715,7 @@ function cargarEstado() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) estado = { ...estado, ...JSON.parse(raw) };
-  } catch(e) { console.warn('Sin estado previo'); }
+  } catch(e) { /* Sin estado previo */ }
   aplicarEstadoUI();
 }
 
@@ -1895,7 +1971,7 @@ async function cargarModelo() {
     setEngineStatus('motor listo ✓');
     mostrarLoadingBar(false);
   } catch (e) {
-    console.error('Error cargando modelo:', e);
+    /* Error cargando modelo: usar análisis básico */
     setEngineStatus('no se pudo cargar el motor — usando análisis básico');
     mostrarLoadingBar(false);
     extractor = null;
@@ -2058,7 +2134,7 @@ async function analizar() {
       throw new Error('no extractor');
     }
   } catch (e) {
-    console.warn('Fallback a heurística:', e);
+    /* Fallback a heurística */
     ranking = analisisHeuristico(texto);
     modo = 'heurístico';
     setEngineStatus('análisis heurístico (sin embeddings)');
