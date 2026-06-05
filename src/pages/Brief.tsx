@@ -68,6 +68,11 @@ export default function Brief() {
 
   const [generado, setGenerado] = useState(false);
 
+  const fechaError =
+    inputs.fechaInicio && inputs.fechaFin && inputs.fechaFin <= inputs.fechaInicio
+      ? 'La fecha de fin debe ser posterior al inicio'
+      : null;
+
   function set<K extends keyof BriefInputs>(key: K, val: BriefInputs[K]) {
     setInputs((prev) => ({ ...prev, [key]: val }));
     setGenerado(false);
@@ -76,6 +81,7 @@ export default function Brief() {
   const proy = calcularProyeccion(inputs);
 
   function handleCopiar() {
+    if (fechaError) return;
     const texto = generarTexto(inputs, proy);
     navigator.clipboard.writeText(texto).catch(() => {});
     setGenerado(true);
@@ -129,8 +135,15 @@ export default function Brief() {
               </div>
               <div className="brief-field">
                 <label className="brief-label" htmlFor="fechaFin">Fin campaña</label>
-                <input id="fechaFin" className="brief-input" type="date"
-                  value={inputs.fechaFin} onChange={(e) => set('fechaFin', e.target.value)} />
+                <input id="fechaFin"
+                  className={`brief-input${fechaError ? ' brief-input--error' : ''}`}
+                  type="date"
+                  value={inputs.fechaFin}
+                  onChange={(e) => set('fechaFin', e.target.value)}
+                  aria-describedby={fechaError ? 'fechaFin-error' : undefined} />
+                {fechaError && (
+                  <span id="fechaFin-error" className="brief-error" role="alert">{fechaError}</span>
+                )}
               </div>
             </div>
           </div>
@@ -151,13 +164,13 @@ export default function Brief() {
             </div>
             <div className="brief-field">
               <label className="brief-label" htmlFor="audience">Audiencia objetivo</label>
-              <input id="audience" className="brief-input" value={inputs.targetAudience}
-                onChange={(e) => set('targetAudience', e.target.value)} />
+              <textarea id="audience" className="brief-input brief-textarea" value={inputs.targetAudience}
+                onChange={(e) => set('targetAudience', e.target.value)} rows={2} />
             </div>
             <div className="brief-field">
               <label className="brief-label" htmlFor="objetivo">Objetivo de campaña</label>
-              <input id="objetivo" className="brief-input" value={inputs.objetivo}
-                onChange={(e) => set('objetivo', e.target.value)} />
+              <textarea id="objetivo" className="brief-input brief-textarea" value={inputs.objetivo}
+                onChange={(e) => set('objetivo', e.target.value)} rows={2} />
             </div>
           </div>
         </section>
@@ -202,7 +215,11 @@ export default function Brief() {
                 <div className="proy-lbl">Clientes potenciales (2% CTR)</div>
               </div>
               <div className="proy-kpi proy-kpi-roi" data-positive={proy.roiEstimado >= 0}>
-                <div className="proy-val">{proy.roiEstimado.toFixed(0)}%</div>
+                <div className="proy-val">
+                  {inputs.presupuestoIG > 0
+                    ? `${proy.roiEstimado >= 0 ? '↑' : '↓'} ${proy.roiEstimado.toFixed(0)}%`
+                    : '—'}
+                </div>
                 <div className="proy-lbl">ROI estimado</div>
               </div>
             </div>
@@ -214,8 +231,8 @@ export default function Brief() {
           <div className="brief-card">
             <h2 className="brief-card-title">Brief generado</h2>
             <pre className="brief-preview">{generarTexto(inputs, proy)}</pre>
-            <button className="btn-brief-copy" onClick={handleCopiar} aria-live="polite">
-              {generado ? '✓ Copiado' : 'Copiar brief al portapapeles'}
+            <button className="btn-brief-copy" onClick={handleCopiar} disabled={!!fechaError}>
+              <span aria-live="polite">{generado ? '✓ Copiado' : 'Copiar brief al portapapeles'}</span>
             </button>
           </div>
         </section>
