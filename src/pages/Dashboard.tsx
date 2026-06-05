@@ -328,6 +328,36 @@ export default function Dashboard() {
               <Link className="btn-module-open" to="/admin">Abrir Admin →</Link>
             </div>
           </article>
+
+          {/* VOC */}
+          <article className="module-card" id="mod-voc">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">✦</div>
+                <span className="badge badge-live module-badge">LIVE</span>
+              </div>
+              <h2 className="module-title">Mapa Vocacional</h2>
+              <p className="module-desc">
+                Exploración vocacional interactiva con inferencia semántica local. Diseñado para Martina: 8 preguntas que mapean caminos profesionales según afinidades personales.
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">🧭</span>8 preguntas · 24 áreas vocacionales
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Tecnologías">
+                <span className="mod-tag">Semántico</span>
+                <span className="mod-tag">localStorage</span>
+                <span className="mod-tag">PDF Export</span>
+                <span className="mod-tag">Offline</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <a className="btn-module-open" href="voc.html">Abrir Mapa →</a>
+              <a className="btn-module-ghost" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">Código ↗</a>
+            </div>
+          </article>
+
         </div>
 
         {/* Workspace */}
