@@ -52,3 +52,7 @@ El sitio se publica automáticamente con GitHub Pages desde `main` mediante GitH
 - `Deploy to GitHub Pages` genera un artifact y publica solo si la validación pasa
 
 **https://vientonorte.github.io/uxtools/**
+
+## Revisión técnica reciente
+
+- [Revisión por módulo (2026-05-18)](docs/revision-modulos-2026-05-18.md)

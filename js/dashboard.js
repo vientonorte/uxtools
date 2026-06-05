@@ -198,10 +198,10 @@ function summarizeUxflowSession(session) {
     return '<a class="recent-artifact" href="' + item.href + '">' +
       '<div class="recent-artifact-icon" aria-hidden="true">' + icon + '</div>' +
       '<div class="recent-artifact-body">' +
-        '<div class="recent-artifact-title">' + item.title + '</div>' +
-        '<div class="recent-artifact-meta">' + item.subtitle + ' · ' + item.date + ' · ' + item.meta + '</div>' +
+        '<div class="recent-artifact-title">' + escapeHTMLDash(item.title) + '</div>' +
+        '<div class="recent-artifact-meta">' + escapeHTMLDash(item.subtitle) + ' · ' + escapeHTMLDash(item.date) + ' · ' + escapeHTMLDash(item.meta) + '</div>' +
       '</div>' +
-      '<div class="recent-artifact-score">' + item.score + '</div>' +
+      '<div class="recent-artifact-score">' + escapeHTMLDash(item.score) + '</div>' +
       '</a>';
   }).join('');
 })();

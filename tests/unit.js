@@ -902,6 +902,37 @@ test('ts equals session.id', function () {
 });
 
 /* ══════════════════════════════════════════════════════════════ */
+/*  ADMIN.JS                                                      */
+/* ══════════════════════════════════════════════════════════════ */
+
+section('admin.js — csvCell');
+
+var adminCtx = makeSandbox();
+loadScript(adminCtx, 'js/utils.js');
+loadScript(adminCtx, 'js/admin.js');
+
+test('returns plain value unchanged when no CSV escaping is needed', function () {
+  assert.strictEqual(adminCtx.csvCell('hello'), 'hello');
+});
+
+test('wraps values containing comma in quotes', function () {
+  assert.strictEqual(adminCtx.csvCell('a,b'), '"a,b"');
+});
+
+test('escapes double quotes per CSV standard', function () {
+  assert.strictEqual(adminCtx.csvCell('a"b'), '"a""b"');
+});
+
+test('wraps multiline values in quotes', function () {
+  assert.strictEqual(adminCtx.csvCell('a\nb'), '"a\nb"');
+});
+
+test('normalizes null and undefined to empty string', function () {
+  assert.strictEqual(adminCtx.csvCell(null), '');
+  assert.strictEqual(adminCtx.csvCell(undefined), '');
+});
+
+/* ══════════════════════════════════════════════════════════════ */
 /*  RESULT SUMMARY                                               */
 /* ══════════════════════════════════════════════════════════════ */
 
