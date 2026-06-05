@@ -1,0 +1,181 @@
+/* ═══════════════════════════════════════════════════════════════
+   @vientonorte/tokens v0.1.0
+   Design tokens del colectivo vientonorte
+   ───────────────────────────────────────────────────────────────
+   Convenciones:
+   · Prefijo --vn-* → nunca colisiona con vars de proyecto
+   · Paleta WCAG 2.2 AA: contraste ≥ 4.5:1 texto normal
+   · Touch targets ≥ 44px (SC 2.5.5)
+   · Base 4px para espaciado
+   · Fuentes objetivo: DM Serif Display (display) + Inter (UI)
+   · Chillax declarado como override opcional per-proyecto
+   ───────────────────────────────────────────────────────────────
+   Autor: Rodrigo Gaete Gaona · vientonorte colectivo
+   Repo:  github.com/vientonorte/vientonorte-core
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+
+  /* ── Paleta primitiva ───────────────────────────────────────── */
+  /*    Usar siempre vía tokens semánticos, no directamente        */
+  --vn-primitive-azul-noche:  #0d1b3d;
+  --vn-primitive-marfil:      #f7f2e7;
+  --vn-primitive-pizarra:     #4a5568;
+  --vn-primitive-rojo:        #E8401C;
+  --vn-primitive-azul-evo:    #1A8FDC;
+  --vn-primitive-amarillo:    #F5B945;
+  --vn-primitive-success:     #2d9a5a;
+
+  /* ── Paleta semántica (light mode) ─────────────────────────── */
+  --vn-color-brand:           var(--vn-primitive-azul-evo);
+  --vn-color-brand-dark:      var(--vn-primitive-azul-noche);
+  --vn-color-accent:          var(--vn-primitive-rojo);
+  --vn-color-warning:         var(--vn-primitive-amarillo);
+  --vn-color-success:         var(--vn-primitive-success);
+  --vn-color-surface:         var(--vn-primitive-marfil);
+  --vn-color-on-surface:      var(--vn-primitive-azul-noche);
+  --vn-color-muted:           var(--vn-primitive-pizarra);
+
+  /* ── Bordes derivados ───────────────────────────────────────── */
+  --vn-border-subtle:   rgba(13, 27, 61, 0.08);
+  --vn-border-medium:   rgba(13, 27, 61, 0.16);
+  --vn-border-strong:   rgba(13, 27, 61, 0.32);
+
+  /* ── Tipografía ─────────────────────────────────────────────── */
+  --vn-font-display:  'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --vn-font-ui:       'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --vn-font-mono:     'DM Mono', 'Fira Code', 'Cascadia Code', monospace;
+  --vn-font-optional: 'Chillax', sans-serif;  /* override per-proyecto */
+
+  /* ── Escala de tipo ─────────────────────────────────────────── */
+  --vn-text-xs:   0.75rem;   /* 12px */
+  --vn-text-sm:   0.875rem;  /* 14px */
+  --vn-text-base: 1rem;      /* 16px */
+  --vn-text-lg:   1.125rem;  /* 18px */
+  --vn-text-xl:   1.25rem;   /* 20px */
+  --vn-text-2xl:  1.5rem;    /* 24px */
+  --vn-text-3xl:  1.875rem;  /* 30px */
+  --vn-text-4xl:  2.25rem;   /* 36px */
+  --vn-text-5xl:  3rem;      /* 48px */
+
+  /* ── Pesos tipográficos ─────────────────────────────────────── */
+  --vn-font-light:   300;
+  --vn-font-regular: 400;
+  --vn-font-medium:  500;
+  --vn-font-bold:    700;
+
+  /* ── Altura de línea ────────────────────────────────────────── */
+  --vn-leading-tight:   1.2;
+  --vn-leading-snug:    1.375;
+  --vn-leading-normal:  1.55;
+  --vn-leading-relaxed: 1.65;
+
+  /* ── Espaciado (base 4px) ───────────────────────────────────── */
+  --vn-space-1:   4px;
+  --vn-space-2:   8px;
+  --vn-space-3:   12px;
+  --vn-space-4:   16px;
+  --vn-space-5:   20px;
+  --vn-space-6:   24px;
+  --vn-space-7:   32px;
+  --vn-space-8:   40px;
+  --vn-space-9:   48px;
+  --vn-space-10:  64px;
+  --vn-space-11:  80px;
+  --vn-space-12:  96px;
+
+  /* ── Radio de borde ─────────────────────────────────────────── */
+  --vn-radius-xs:   4px;
+  --vn-radius-sm:   8px;
+  --vn-radius-md:   12px;
+  --vn-radius-lg:   16px;
+  --vn-radius-xl:   20px;
+  --vn-radius-pill: 100px;
+
+  /* ── Sombras (con tinte azul-noche) ────────────────────────── */
+  --vn-shadow-sm:
+    0 1px 2px rgba(13, 27, 61, 0.06),
+    0 1px 3px rgba(13, 27, 61, 0.10);
+  --vn-shadow-md:
+    0 4px 12px rgba(13, 27, 61, 0.10),
+    0 2px 4px  rgba(13, 27, 61, 0.06);
+  --vn-shadow-lg:
+    0 12px 40px rgba(13, 27, 61, 0.14),
+    0 4px  8px  rgba(13, 27, 61, 0.08);
+  --vn-shadow-glow:
+    0 0 32px rgba(26, 143, 220, 0.20);  /* azul-evo glow */
+
+  /* ── Motion ─────────────────────────────────────────────────── */
+  --vn-ease-out:    cubic-bezier(0.4, 0, 0.2, 1);     /* estándar Material */
+  --vn-ease-in:     cubic-bezier(0.4, 0, 1, 1);
+  --vn-ease-inout:  cubic-bezier(0.4, 0, 0.2, 1);
+  --vn-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* rebote sutil */
+  --vn-duration-fast:  150ms;
+  --vn-duration-base:  250ms;
+  --vn-duration-slow:  400ms;
+
+  /* ── Z-index (escala explícita) ─────────────────────────────── */
+  --vn-z-dropdown:  10;
+  --vn-z-sticky:    20;
+  --vn-z-overlay:   80;
+  --vn-z-drawer:    90;
+  --vn-z-nav:       100;
+  --vn-z-toast:     110;
+  --vn-z-modal:     120;
+
+  /* ── Touch targets (WCAG 2.2 SC 2.5.5) ─────────────────────── */
+  --vn-touch-min: 44px;
+  --vn-touch-comfort: 48px;
+
+  /* ── Breakpoints de referencia (mobile-first, 360px base) ───── */
+  /*    No usar en media queries nativas — CSS no soporta vars ahí  */
+  /*    Usar en JS/TS: import { breakpoints } from '@vientonorte/tokens' */
+  --vn-bp-xs:  360px;   /* base mobile */
+  --vn-bp-sm:  640px;
+  --vn-bp-md:  768px;
+  --vn-bp-lg:  1024px;
+  --vn-bp-xl:  1280px;
+  --vn-bp-2xl: 1536px;
+
+}
+
+/* ── Accesibilidad base ─────────────────────────────────────── */
+/*    Todo proyecto que consuma estos tokens hereda estas reglas   */
+
+/* Skip link — WCAG 2.4.1 */
+.vn-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: var(--vn-space-2);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: var(--vn-z-nav);
+}
+
+.vn-skip-link:focus-visible {
+  left: var(--vn-space-2);
+  width: auto;
+  height: auto;
+  padding: var(--vn-space-2) var(--vn-space-4);
+  background: var(--vn-color-brand-dark);
+  color: var(--vn-color-surface);
+  border-radius: var(--vn-radius-sm);
+  font-family: var(--vn-font-ui);
+  font-size: var(--vn-text-sm);
+  font-weight: var(--vn-font-medium);
+  text-decoration: none;
+  outline: 2px solid var(--vn-color-brand);
+  outline-offset: 2px;
+}
+
+/* Respeto a preferencias de movimiento — WCAG 2.3.3 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    --vn-duration-fast: 0.01ms;
+    --vn-duration-base: 0.01ms;
+    --vn-duration-slow: 0.01ms;
+  }
+}

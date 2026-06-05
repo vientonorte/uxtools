@@ -11,9 +11,6 @@
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
-    "@vientonorte/a11y": "^0.1.0",
-    "@vientonorte/security": "^0.1.0",
-    "@vientonorte/tokens": "^0.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^6.28.0"
