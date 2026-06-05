@@ -274,6 +274,34 @@ export default function Dashboard() {
             </div>
           </article>
 
+          {/* Brief */}
+          <article className="module-card" id="mod-brief">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">📣</div>
+                <span className="badge badge-live module-badge">NUEVO</span>
+              </div>
+              <h2 className="module-title">Brief de Campaña</h2>
+              <p className="module-desc">
+                Genera briefs para Instagram con proyección matemática de ingresos según precio, capacidad de servicio, fechas y presupuesto de pauta.
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">📊</span>Proyección · ROI · Alcance estimado
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Funciones">
+                <span className="mod-tag">Instagram Ads</span>
+                <span className="mod-tag">ROI</span>
+                <span className="mod-tag">Ingresos</span>
+                <span className="mod-tag">Export</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <Link className="btn-module-open" to="/brief">Abrir Brief →</Link>
+            </div>
+          </article>
+
           {/* Admin */}
           <article className="module-card module-card-admin" id="mod-admin">
             <div className="module-card-inner">

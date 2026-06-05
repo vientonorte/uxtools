@@ -10,6 +10,7 @@ import './styles/dashboard.css';
 import './styles/benchmark.css';
 import './styles/uxflow.css';
 import './styles/admin.css';
+import './styles/brief.css';
 import App from './App';
 
 // CSP — uxtools sólo usa localStorage, sin APIs externas
