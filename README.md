@@ -8,6 +8,7 @@ Suite de herramientas UX en producción para SURA Investments.
 |----------|-------------|-----|
 | **UX Benchmark** | Análisis comparativo de experiencia de usuario para productos digitales | [benchmark.html](https://vientonorte.github.io/uxtools/benchmark.html) |
 | **UXFLOW** | Motor de documentación técnica UX automatizada: flujos, criterios de aceptación, tablas y assets para Figma | [uxflow.html](https://vientonorte.github.io/uxtools/uxflow.html) |
+| **Operating Model DX** | Pipeline de priorización ejecutiva con Matriz Eisenhower: consolida señales desde Jira, Miro, Figma y Teams en decisiones priorizadas mediante scoring automático | [eisenhower.html](https://vientonorte.github.io/uxtools/eisenhower.html) |
 
 ## Preview
 
@@ -21,6 +22,7 @@ Suite de herramientas UX en producción para SURA Investments.
 index.html          → Dashboard / hub con tabs de productos
 benchmark.html      → App: UX Benchmark (embed Figma)
 uxflow.html         → App: UXFLOW Auto-Doc Engine
+eisenhower.html     → App: Operating Model DX (Eisenhower Matrix)
 .github/workflows/
   ci.yml            → Validación automática para PRs y main
   deploy.yml        → Deploy formal a GitHub Pages mediante artifact
@@ -33,11 +35,13 @@ css/
   dashboard.css     → Estilos del dashboard (index.html)
   benchmark.css     → Estilos de Benchmark (benchmark.html)
   uxflow.css        → Estilos de UXFLOW (uxflow.html)
+  eisenhower.css    → Estilos de Operating Model DX (eisenhower.html)
 js/
   dashboard.js      → KPIs, actividad y búsqueda del dashboard
   benchmark.js      → App benchmark: evaluación, notas, resultados, screenshots
   admin.js          → Content manager: dimensiones, sesiones y export
   uxflow.js         → Motor de generación, clipboard, historial
+  eisenhower.js     → Motor de scoring, clasificación Eisenhower y gestión de fricciones
 ```
 
 ## Deploy
@@ -48,3 +52,7 @@ El sitio se publica automáticamente con GitHub Pages desde `main` mediante GitH
 - `Deploy to GitHub Pages` genera un artifact y publica solo si la validación pasa
 
 **https://vientonorte.github.io/uxtools/**
+
+## Revisión técnica reciente
+
+- [Revisión por módulo (2026-05-18)](docs/revision-modulos-2026-05-18.md)

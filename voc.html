@@ -1,0 +1,2420 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa de Martina del futuro — V2</title>
+<meta name="description" content="Mapa interactivo de exploración vocacional con inferencia semántica local.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,700&family=Inter+Tight:wght@400;500;600;700&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F4ECD8;
+  --paper-shadow: #E8DCC0;
+  --ink: #1A2238;
+  --ink-soft: #4A556A;
+  --ink-deep: #0E1424;
+  --accent: #C84B31;
+  --accent-soft: #E07856;
+  --sage: #5E7A62;
+  --gold: #8A6E1E;
+  --line: #C9BC9C;
+  --highlight: #FFE9A8;
+  --focus: #2563EB;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter Tight', sans-serif;
+  background: var(--paper);
+  background-image:
+    radial-gradient(circle at 25% 30%, rgba(184,146,58,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 75% 70%, rgba(200,75,49,0.05) 0%, transparent 50%);
+  color: var(--ink);
+  min-height: 100vh;
+  line-height: 1.5;
+  padding-bottom: 120px;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.04 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1; opacity: 0.5;
+}
+
+main { position: relative; z-index: 2; }
+
+/* ===== NAVIGATION ===== */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+@media (min-width: 769px) {
+  nav {
+    padding: 16px 24px;
+    gap: 16px;
+  }
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; color: inherit;
+}
+.nav-logo {
+  width: 40px; height: 40px;
+  background: var(--ink);
+  color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-weight: 700; font-size: 14px;
+  letter-spacing: -0.02em;
+}
+.nav-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 500; font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.nav-badge {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  background: var(--accent);
+  color: var(--paper);
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+.nav-actions {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap;
+}
+.nav-link {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 14px; font-weight: 500;
+  text-decoration: none; color: var(--ink-soft);
+}
+.nav-link:hover { color: var(--accent); }
+.btn-nav {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  text-decoration: none;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 8px 16px;
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--accent);
+}
+.btn-nav:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+/* ===== FOCUS VISIBLE ===== */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+button:focus-visible,
+.nodo:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+/* ===== ONBOARDING OVERLAY ===== */
+.onboarding {
+  position: fixed; inset: 0;
+  background: rgba(14, 20, 36, 0.85);
+  backdrop-filter: blur(10px);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 300; padding: 20px;
+}
+.onboarding.activo { display: flex; }
+.onboarding-card {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 10px 10px 0 var(--accent);
+  max-width: 540px; width: 100%;
+  padding: 36px 32px;
+  max-height: 92vh; overflow-y: auto;
+}
+.onboarding-card h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 28px; font-weight: 500;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.onboarding-eyebrow {
+  font-family: 'Caveat', cursive;
+  font-size: 22px; color: var(--accent);
+  margin-bottom: 4px;
+}
+.onboarding-card ul {
+  list-style: none;
+  margin: 20px 0;
+}
+.onboarding-card li {
+  font-size: 15px; line-height: 1.6;
+  padding: 8px 0 8px 28px;
+  position: relative;
+  color: var(--ink-soft);
+}
+.onboarding-card li::before {
+  content: '✦';
+  position: absolute; left: 0;
+  color: var(--accent);
+  font-size: 18px;
+}
+.onboarding-card li strong { color: var(--ink); font-weight: 600; }
+.onboarding-cta {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 14px 28px;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600; font-size: 14px;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  cursor: pointer;
+  width: 100%; margin-top: 8px;
+}
+.onboarding-cta:hover { background: var(--accent); }
+
+/* ===== HEADER ===== */
+header {
+  padding: 24px 16px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  background: rgba(244, 236, 216, 0.7);
+  backdrop-filter: blur(6px);
+  position: relative;
+}
+@media (min-width: 769px) {
+  header {
+    padding: 36px 24px 18px;
+  }
+}
+.title-eyebrow {
+  font-family: 'Caveat', cursive;
+  font-size: 22px; color: var(--accent);
+  margin-bottom: 4px;
+}
+h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(26px, 5vw, 42px);
+  font-weight: 500;
+  letter-spacing: -0.02em; line-height: 1.05;
+}
+.subtitle {
+  font-size: 14px; color: var(--ink-soft);
+  margin-top: 8px;
+  max-width: 560px; margin-left: auto; margin-right: auto;
+}
+
+/* PROGRESO */
+.progreso-wrap {
+  max-width: 560px;
+  margin: 16px auto 0;
+  display: flex; align-items: center; gap: 10px;
+}
+.progreso-label {
+  font-family: 'Caveat', cursive;
+  font-size: 16px;
+  color: var(--ink-soft);
+  flex-shrink: 0;
+}
+.progreso-bar {
+  flex: 1; height: 8px;
+  background: var(--paper-shadow);
+  border: 1px solid var(--line);
+  position: relative; overflow: hidden;
+}
+.progreso-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+/* IDENTIDAD */
+.identidad {
+  max-width: 900px; margin: 24px auto 0;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+.identidad-campo label {
+  font-family: 'Caveat', cursive;
+  font-size: 20px; color: var(--accent);
+  display: block; margin-bottom: 4px;
+}
+.identidad-campo input {
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-bottom: 2px dashed var(--line);
+  background: transparent;
+  font-family: 'Fraunces', serif;
+  font-size: 20px; color: var(--ink);
+  min-height: 44px;
+}
+.identidad-campo input:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+/* ===== MAPA ===== */
+.mapa-wrapper {
+  max-width: 1100px; margin: 40px auto 0;
+  padding: 0 24px;
+}
+.mapa-titulo {
+  font-family: 'Fraunces', serif;
+  font-size: 28px; margin-bottom: 8px;
+  text-align: center;
+}
+.mapa-instruccion {
+  text-align: center;
+  font-family: 'Caveat', cursive;
+  font-size: 20px; color: var(--ink-soft);
+  margin-bottom: 24px;
+}
+.mapa {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  display: none;
+}
+@media (min-width: 769px) {
+  .mapa {
+    display: block;
+  }
+}
+.mapa svg.lineas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+.nodo {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: transform 0.25s ease;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+}
+.nodo:hover { transform: translate(-50%, -50%) scale(1.06); }
+.nodo:focus-visible { outline-offset: 6px; }
+
+.nodo-circulo {
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 10px; text-align: center;
+  box-shadow: 3px 3px 0 var(--ink);
+  position: relative;
+}
+@media (min-width: 769px) {
+  .nodo-circulo {
+    width: 130px; height: 130px;
+    padding: 12px;
+    box-shadow: 4px 4px 0 var(--ink);
+  }
+}
+.nodo.respondido .nodo-circulo {
+  background: var(--highlight);
+  border-color: var(--accent);
+  box-shadow: 4px 4px 0 var(--accent);
+}
+.nodo.respondido .nodo-circulo::after {
+  content: '✓';
+  position: absolute;
+  top: -8px; right: -8px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.nodo-icono { font-size: 28px; margin-bottom: 4px; }
+.nodo-label {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 12px; font-weight: 600;
+  line-height: 1.2; color: var(--ink);
+}
+
+.centro {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: var(--ink-deep);
+  color: var(--paper);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 16px; text-align: center;
+  box-shadow: 5px 5px 0 var(--accent);
+  z-index: 10;
+}
+@media (min-width: 769px) {
+  .centro {
+    width: 200px; height: 200px;
+    padding: 20px;
+    box-shadow: 6px 6px 0 var(--accent);
+  }
+}
+.centro .yo {
+  font-family: 'Caveat', cursive;
+  font-size: 24px; color: var(--accent-soft);
+}
+.centro .nombre-display {
+  font-family: 'Fraunces', serif;
+  font-size: 28px; font-weight: 500;
+  line-height: 1.1; margin: 4px 0;
+}
+.centro .edad-display {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; opacity: 0.9; margin-top: 4px;
+}
+
+/* ===== MOBILE ACORDEÓN ===== */
+.mapa-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 600px; margin: 0 auto;
+}
+@media (min-width: 769px) {
+  .mapa-mobile {
+    display: none;
+  }
+}
+.mapa-mobile .centro-mobile {
+  background: var(--ink-deep);
+  color: var(--paper);
+  padding: 24px;
+  border-radius: 16px;
+  text-align: center;
+  margin-bottom: 8px;
+  box-shadow: 4px 4px 0 var(--accent);
+}
+.mapa-mobile .centro-mobile .yo {
+  font-family: 'Caveat', cursive;
+  font-size: 22px; color: var(--accent-soft);
+}
+.mapa-mobile .centro-mobile .nombre-display {
+  font-family: 'Fraunces', serif;
+  font-size: 26px; font-weight: 500;
+  margin: 4px 0;
+}
+.nodo-mobile {
+  width: 100%;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  min-height: 64px;
+  box-shadow: 3px 3px 0 var(--ink);
+  transition: transform 0.2s ease;
+}
+.nodo-mobile:hover { transform: translateY(-2px); }
+.nodo-mobile.respondido {
+  background: var(--highlight);
+  border-color: var(--accent);
+  box-shadow: 3px 3px 0 var(--accent);
+}
+.nodo-mobile .nodo-mobile-icono {
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 40px; text-align: center;
+}
+.nodo-mobile .nodo-mobile-label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.nodo-mobile .nodo-mobile-chevron {
+  font-size: 22px;
+  color: var(--ink-soft);
+  flex-shrink: 0;
+}
+.nodo-mobile.respondido .nodo-mobile-chevron { color: var(--accent); }
+
+/* ===== MODAL ===== */
+.modal-bg {
+  position: fixed; inset: 0;
+  background: rgba(14, 20, 36, 0.55);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 200; padding: 20px;
+}
+.modal-bg.activo { display: flex; }
+.modal {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  box-shadow: 8px 8px 0 var(--ink);
+  max-width: 560px; width: 100%;
+  max-height: 92vh; overflow-y: auto;
+  padding: 24px 20px;
+  position: relative;
+}
+@media (min-width: 769px) {
+  .modal {
+    padding: 32px;
+  }
+}
+.modal-close {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.modal-icono { font-size: 48px; margin-bottom: 12px; }
+.modal h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px; font-weight: 500;
+  margin-bottom: 8px;
+  padding-right: 50px;
+}
+@media (min-width: 769px) {
+  .modal h2 {
+    font-size: 24px;
+  }
+}
+.modal .pregunta-principal {
+  font-family: 'Caveat', cursive;
+  font-size: 22px; color: var(--accent);
+  margin-bottom: 16px; line-height: 1.3;
+}
+.modal .sub-preguntas {
+  background: rgba(255, 233, 168, 0.4);
+  border-left: 3px solid var(--gold);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.modal .sub-preguntas strong {
+  font-family: 'Inter Tight';
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 6px;
+}
+.modal .sub-preguntas li {
+  margin: 4px 0 4px 16px;
+  line-height: 1.5;
+}
+.modal-permiso-vacio {
+  font-family: 'Caveat', cursive;
+  font-size: 17px;
+  color: var(--sage);
+  margin-bottom: 8px;
+}
+.modal textarea {
+  width: 100%;
+  min-height: 140px;
+  padding: 14px;
+  border: 2px dashed var(--line);
+  background: rgba(255,255,255,0.4);
+  font-family: 'Caveat', cursive;
+  font-size: 20px; color: var(--ink);
+  line-height: 1.4; resize: vertical;
+}
+.modal textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  border-style: solid;
+}
+.modal-guardar {
+  margin-top: 16px;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 14px 28px;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600; font-size: 14px;
+  letter-spacing: 0.04em; text-transform: uppercase;
+  cursor: pointer;
+  width: 100%;
+  min-height: 48px;
+}
+.modal-guardar:hover { background: var(--accent); }
+
+/* ===== CRONOGRAMAS ===== */
+.cronograma-section {
+  max-width: 1100px;
+  margin: 60px auto 0;
+  padding: 0 24px;
+}
+.cronograma-section h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 32px; font-weight: 500;
+  margin-bottom: 8px; text-align: center;
+}
+.cronograma-section .seccion-sub {
+  text-align: center;
+  font-family: 'Caveat', cursive;
+  font-size: 22px; color: var(--accent);
+  margin-bottom: 32px;
+}
+
+.timeline {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px; margin-bottom: 48px;
+}
+@media (min-width: 600px) {
+  .timeline {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+.bloque-horario {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 14px;
+  position: relative; min-height: 140px;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.bloque-horario .hora {
+  font-family: 'Fraunces', serif;
+  font-weight: 700; font-size: 14px;
+  color: var(--accent); margin-bottom: 4px;
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.bloque-horario .periodo {
+  font-family: 'Caveat', cursive;
+  font-size: 18px; color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.bloque-horario textarea {
+  width: 100%; border: none;
+  background: transparent;
+  font-family: 'Caveat', cursive;
+  font-size: 17px; color: var(--ink);
+  resize: none; min-height: 60px; line-height: 1.3;
+}
+.bloque-horario textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.semanal {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  gap: 6px; margin-bottom: 48px;
+  font-size: 11px;
+}
+@media (min-width: 769px) {
+  .semanal {
+    grid-template-columns: 80px repeat(7, 1fr);
+    font-size: 14px;
+  }
+}
+.semanal .dia-header,
+.semanal .momento-header {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  background: var(--ink);
+  color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  text-align: center;
+}
+.semanal .dia-header { 
+  font-size: 11px; 
+  padding: 4px 2px; 
+}
+@media (min-width: 769px) {
+  .semanal .dia-header { 
+    font-size: 14px; 
+    padding: 8px 4px; 
+  }
+}
+.semanal .momento-header { font-size: 13px; padding: 8px; }
+.semanal-celda {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  padding: 6px; min-height: 60px;
+}
+.semanal-celda textarea {
+  width: 100%; height: 100%;
+  min-height: 50px;
+  border: none; background: transparent;
+  font-family: 'Caveat', cursive;
+  font-size: 13px; color: var(--ink);
+  resize: none; line-height: 1.2;
+}
+@media (min-width: 769px) {
+  .semanal-celda textarea {
+    font-size: 15px;
+  }
+}
+.semanal-celda textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.mensual {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px; margin-bottom: 48px;
+}
+@media (min-width: 600px) {
+  .mensual {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+.semana-card {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 16px;
+  box-shadow: 4px 4px 0 var(--sage);
+}
+.semana-card h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 18px; color: var(--accent);
+  margin-bottom: 4px;
+}
+.semana-card .semana-sub {
+  font-family: 'Caveat', cursive;
+  font-size: 16px; color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+.semana-card textarea {
+  width: 100%; min-height: 100px;
+  border: 1px dashed var(--line);
+  background: rgba(255,255,255,0.3);
+  padding: 8px;
+  font-family: 'Caveat', cursive;
+  font-size: 17px; color: var(--ink);
+  resize: vertical; line-height: 1.3;
+}
+.semana-card textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-color: var(--accent);
+}
+
+/* ===== ANÁLISIS ===== */
+.analisis-section {
+  max-width: 1100px;
+  margin: 60px auto 0;
+  padding: 28px 20px;
+  background: var(--ink-deep);
+  color: var(--paper);
+  border: 3px solid var(--ink-deep);
+}
+@media (min-width: 769px) {
+  .analisis-section {
+    margin: 80px auto 0;
+    padding: 36px 28px;
+  }
+}
+.analisis-section h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 26px; font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--paper);
+}
+@media (min-width: 769px) {
+  .analisis-section h2 {
+    font-size: 32px;
+  }
+}
+.analisis-section .seccion-sub {
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  color: var(--accent-soft);
+  margin-bottom: 24px;
+}
+.analizar-btn {
+  background: var(--accent);
+  color: var(--paper);
+  border: none;
+  padding: 16px 32px;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 700; font-size: 14px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; margin-bottom: 8px;
+  min-height: 48px;
+}
+.analizar-btn:hover:not(:disabled) { background: var(--accent-soft); }
+.analizar-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.engine-status {
+  display: inline-block;
+  margin-left: 14px;
+  font-family: 'Caveat', cursive;
+  font-size: 17px;
+  color: var(--accent-soft);
+  vertical-align: middle;
+}
+
+.loading-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  margin: 16px 0;
+  overflow: hidden;
+  display: none;
+}
+.loading-bar.visible { display: block; }
+.loading-bar-fill {
+  height: 100%;
+  background: var(--accent-soft);
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.resultado-analisis {
+  display: none;
+  margin-top: 24px;
+}
+.resultado-analisis.visible { display: block; }
+
+.area-resultado {
+  background: rgba(244, 236, 216, 0.08);
+  border-left: 4px solid var(--accent-soft);
+  padding: 18px 22px;
+  margin-bottom: 12px;
+}
+.area-resultado .ranking {
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  color: var(--gold);
+  margin-bottom: 2px;
+}
+.area-resultado h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  color: var(--paper);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.area-resultado .score-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.area-resultado .score-bar-fill {
+  height: 100%;
+  background: var(--accent-soft);
+}
+.area-resultado .oficios {
+  font-size: 14px; line-height: 1.6; opacity: 0.92;
+}
+
+.combo-resultado {
+  background: rgba(224, 120, 86, 0.15);
+  border: 2px dashed var(--accent-soft);
+  padding: 20px 24px;
+  margin: 16px 0;
+}
+.combo-resultado .combo-label {
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  color: var(--accent-soft);
+  margin-bottom: 4px;
+}
+.combo-resultado h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  margin-bottom: 8px;
+  color: var(--paper);
+  font-weight: 500;
+}
+.combo-resultado .combo-oficios {
+  font-size: 14px; line-height: 1.6; opacity: 0.92;
+}
+
+.disclaimer-final {
+  margin-top: 32px;
+  padding: 20px;
+  background: rgba(255, 233, 168, 0.1);
+  border-left: 4px solid var(--gold);
+  font-size: 14px;
+  line-height: 1.7;
+  opacity: 0.95;
+}
+.disclaimer-final strong { color: var(--accent-soft); }
+
+.sin-datos {
+  font-style: italic;
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+/* ===== CONTROLES ===== */
+.controles {
+  position: fixed;
+  bottom: 12px; right: 12px;
+  display: flex; gap: 6px;
+  z-index: 80; flex-wrap: wrap;
+  max-width: calc(100vw - 24px);
+  justify-content: flex-end;
+}
+@media (min-width: 769px) {
+  .controles {
+    bottom: 24px; right: 24px;
+    gap: 8px;
+    max-width: calc(100vw - 48px);
+  }
+}
+.controles button {
+  background: var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 8px 14px;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600; font-size: 11px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--accent);
+  min-height: 44px;
+}
+@media (min-width: 769px) {
+  .controles button {
+    padding: 10px 18px;
+    font-size: 12px;
+  }
+}
+.controles button:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.toast {
+  position: fixed;
+  bottom: 140px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 12px 24px;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+  z-index: 250;
+  box-shadow: 4px 4px 0 var(--accent);
+}
+@media (min-width: 769px) {
+  .toast {
+    bottom: 100px;
+  }
+}
+.toast.visible { opacity: 1; }
+
+.autosave-indicator {
+  position: fixed;
+  bottom: 70px; left: 12px;
+  font-family: 'Caveat', cursive;
+  font-size: 14px;
+  color: var(--ink-soft);
+  opacity: 0;
+  transition: opacity 0.4s;
+  z-index: 70;
+  background: var(--paper);
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+@media (min-width: 769px) {
+  .autosave-indicator {
+    bottom: 24px; left: 24px;
+    font-size: 16px;
+  }
+}
+.autosave-indicator.visible { opacity: 1; }
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .nodo:hover { transform: translate(-50%, -50%); }
+  .nodo-mobile:hover { transform: none; }
+}
+
+/* ===== PRINT ===== */
+@media print {
+  body { background: white; }
+  body::before { display: none; }
+  .controles, .modal-bg, .onboarding, .autosave-indicator, .toast { display: none !important; }
+  header { position: static; }
+  .nodo { page-break-inside: avoid; }
+  .cronograma-section, .analisis-section { page-break-before: always; }
+  .analisis-section { background: white; color: var(--ink); border-color: var(--ink); }
+  .analisis-section h2, .analisis-section .area-resultado h4 { color: var(--ink); }
+}
+
+/* ===== SR-ONLY ===== */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav aria-label="Navegación principal">
+  <a class="nav-brand" href="index.html" aria-label="Vocational Explorer — Inicio">
+    <div class="nav-logo" aria-hidden="true">VOC</div>
+    <span class="nav-title">Mapa Vocacional</span>
+    <span class="nav-badge">v2</span>
+  </a>
+  <div class="nav-actions">
+    <a class="nav-link" href="index.html">← uxtools</a>
+  </div>
+</nav>
+
+<!-- Onboarding overlay -->
+<div class="onboarding" id="onboarding" role="dialog" aria-modal="true" aria-labelledby="onb-titulo">
+  <div class="onboarding-card">
+    <div class="onboarding-eyebrow">Antes de empezar</div>
+    <h2 id="onb-titulo">Esto no predice tu futuro.</h2>
+    <ul>
+      <li><strong>Es un mapa que cambia cada vez que tú cambias.</strong> Lo que respondas hoy puede no servir en seis meses. Eso es bueno.</li>
+      <li><strong>Puedes dejar respuestas en blanco.</strong> Si no se te ocurre nada en una pregunta, déjala vacía. No hace falta llenarlo todo.</li>
+      <li><strong>No hay respuestas correctas.</strong> Nadie va a calificar esto. No es para tus papás, ni para tu colegio, ni para tu orientadora. Es para ti.</li>
+      <li><strong>Las personas más interesantes mezclan áreas.</strong> Casi nunca una sola cosa. Si te salen tres caminos distintos, probablemente esa mezcla eres tú.</li>
+      <li><strong>Vuelve en tres meses.</strong> Vuelve a llenarlo. Compara. Mira qué cambió y qué se quedó. Ahí está la pista real.</li>
+    </ul>
+    <button class="onboarding-cta" id="onb-cerrar">Empezar mi mapa</button>
+  </div>
+</div>
+
+<main>
+
+<header>
+  <div class="title-eyebrow">Para Martina</div>
+  <h1>Mapa de la Martina del futuro</h1>
+  <p class="subtitle">Imagínate un día normal cuando tengas la edad que elijas. Llena el mapa con lo que aparezca. Sin pensarlo mucho.</p>
+
+  <div class="progreso-wrap" aria-label="Progreso del mapa">
+    <span class="progreso-label" id="progreso-label">0 de 8</span>
+    <div class="progreso-bar" role="progressbar" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0" id="progreso-bar">
+      <div class="progreso-fill" id="progreso-fill"></div>
+    </div>
+  </div>
+
+  <div class="identidad">
+    <div class="identidad-campo">
+      <label for="nombre">Mi nombre</label>
+      <input type="text" id="nombre" value="Martina" autocomplete="off" />
+    </div>
+    <div class="identidad-campo">
+      <label for="edad-actual">Hoy tengo</label>
+      <input type="text" id="edad-actual" placeholder="15 años" autocomplete="off" />
+    </div>
+    <div class="identidad-campo">
+      <label for="edad-futura">Me imagino con</label>
+      <input type="text" id="edad-futura" placeholder="30 años" autocomplete="off" />
+    </div>
+  </div>
+</header>
+
+<!-- MAPA DESKTOP -->
+<section class="mapa-wrapper" aria-label="Mapa de preguntas vocacionales">
+  <h2 class="mapa-titulo">El mapa</h2>
+  <p class="mapa-instruccion">Toca cada pregunta y respóndela como te salga ✦</p>
+
+  <div class="mapa" id="mapa" role="group" aria-label="Mapa radial">
+    <svg class="lineas" viewBox="0 0 800 800" preserveAspectRatio="none" aria-hidden="true">
+      <line x1="400" y1="400" x2="400" y2="100" stroke="#1A2238" stroke-width="2" stroke-dasharray="6,4"/>
+      <line x1="400" y1="400" x2="612" y2="188" stroke="#1A2238" stroke-width="2" stroke-dasharray="6,4"/>
+      <line x1="400" y1="400" x2="700" y2="400" stroke="#1A2238" stroke-width="2" stroke-dasharray="6,4"/>
+      <line x1="400" y1="400" x2="612" y2="612" stroke="#1A2238" stroke-width="2" stroke-dasharray="6,4"/>
+      <line x1="400" y1="400" x2="400" y2="700" stroke="#1A2238" stroke-width="2" stroke-dasharray="6,4"/>
+      <line x1="400" y1="400" x2="188" y2="612" stroke="#1A2238" stroke-width="2" stroke-dasharray="6,4"/>
+      <line x1="400" y1="400" x2="100" y2="400" stroke="#1A2238" stroke-width="2" stroke-dasharray="6,4"/>
+      <line x1="400" y1="400" x2="188" y2="188" stroke="#1A2238" stroke-width="2" stroke-dasharray="6,4"/>
+    </svg>
+
+    <button class="nodo" data-id="manana" style="top: 12%; left: 50%;" type="button" aria-label="Pregunta: Mi mañana ideal">
+      <div class="nodo-circulo">
+        <div class="nodo-icono" aria-hidden="true">🌅</div>
+        <div class="nodo-label">Mi mañana ideal</div>
+      </div>
+    </button>
+    <button class="nodo" data-id="actividades" style="top: 23%; left: 77%;" type="button" aria-label="Pregunta: Pierdo noción del tiempo cuando">
+      <div class="nodo-circulo">
+        <div class="nodo-icono" aria-hidden="true">🎯</div>
+        <div class="nodo-label">Pierdo noción del tiempo cuando…</div>
+      </div>
+    </button>
+    <button class="nodo" data-id="personas" style="top: 50%; left: 88%;" type="button" aria-label="Pregunta: Con quién paso el día">
+      <div class="nodo-circulo">
+        <div class="nodo-icono" aria-hidden="true">👥</div>
+        <div class="nodo-label">Con quién paso el día</div>
+      </div>
+    </button>
+    <button class="nodo" data-id="lugar" style="top: 77%; left: 77%;" type="button" aria-label="Pregunta: Dónde estoy">
+      <div class="nodo-circulo">
+        <div class="nodo-icono" aria-hidden="true">🏠</div>
+        <div class="nodo-label">Dónde estoy</div>
+      </div>
+    </button>
+    <button class="nodo" data-id="herramientas" style="top: 88%; left: 50%;" type="button" aria-label="Pregunta: Qué tocan mis manos">
+      <div class="nodo-circulo">
+        <div class="nodo-icono" aria-hidden="true">🛠️</div>
+        <div class="nodo-label">Qué tocan mis manos</div>
+      </div>
+    </button>
+    <button class="nodo" data-id="problemas" style="top: 77%; left: 23%;" type="button" aria-label="Pregunta: Qué problema resuelvo">
+      <div class="nodo-circulo">
+        <div class="nodo-icono" aria-hidden="true">💡</div>
+        <div class="nodo-label">Qué problema resuelvo</div>
+      </div>
+    </button>
+    <button class="nodo" data-id="aprender" style="top: 50%; left: 12%;" type="button" aria-label="Pregunta: Qué aprendo todo el rato">
+      <div class="nodo-circulo">
+        <div class="nodo-icono" aria-hidden="true">📚</div>
+        <div class="nodo-label">Qué aprendo todo el rato</div>
+      </div>
+    </button>
+    <button class="nodo" data-id="noche" style="top: 23%; left: 23%;" type="button" aria-label="Pregunta: Cómo cierro mi día">
+      <div class="nodo-circulo">
+        <div class="nodo-icono" aria-hidden="true">🌙</div>
+        <div class="nodo-label">Cómo cierro mi día</div>
+      </div>
+    </button>
+
+    <div class="centro" aria-hidden="true">
+      <div class="yo">yo</div>
+      <div class="nombre-display" id="centro-nombre">Martina</div>
+      <div class="edad-display" id="centro-edad">a los 30</div>
+    </div>
+  </div>
+
+  <!-- MAPA MOBILE -->
+  <div class="mapa-mobile" id="mapa-mobile" role="group" aria-label="Mapa de preguntas vertical">
+    <div class="centro-mobile">
+      <div class="yo">yo</div>
+      <div class="nombre-display" id="centro-nombre-mobile">Martina</div>
+      <div class="edad-display" id="centro-edad-mobile">a los 30</div>
+    </div>
+    <!-- nodos mobile generados por JS -->
+  </div>
+</section>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg" role="dialog" aria-modal="true" aria-labelledby="modal-titulo" aria-describedby="modal-pregunta">
+  <div class="modal">
+    <button class="modal-close" id="modal-close" aria-label="Cerrar diálogo">✕</button>
+    <div class="modal-icono" id="modal-icono" aria-hidden="true"></div>
+    <h2 id="modal-titulo"></h2>
+    <p class="pregunta-principal" id="modal-pregunta"></p>
+    <div class="sub-preguntas">
+      <strong>Pistas para destrabarte</strong>
+      <ul id="modal-subs"></ul>
+    </div>
+    <p class="modal-permiso-vacio">Si no se te ocurre nada, déjalo en blanco. Está bien.</p>
+    <label for="modal-respuesta" class="sr-only">Tu respuesta</label>
+    <textarea id="modal-respuesta" placeholder="Escribe lo primero que se te ocurra…" aria-describedby="modal-pregunta"></textarea>
+    <button class="modal-guardar" id="modal-guardar" type="button">Guardar y cerrar</button>
+  </div>
+</div>
+
+<!-- CRONOGRAMA DIARIO -->
+<section class="cronograma-section" aria-labelledby="h-diario">
+  <h2 id="h-diario">Mi día normal del futuro</h2>
+  <p class="seccion-sub">¿Qué pasa en cada bloque de tu día?</p>
+  <div class="timeline">
+    <div class="bloque-horario">
+      <div class="hora">06:00 – 09:00</div>
+      <div class="periodo">Madrugada / despertar</div>
+      <label for="d_06_09" class="sr-only">Madrugada</label>
+      <textarea id="d_06_09" data-id="d_06_09" placeholder="¿Cómo despiertas?"></textarea>
+    </div>
+    <div class="bloque-horario">
+      <div class="hora">09:00 – 12:00</div>
+      <div class="periodo">Mañana</div>
+      <label for="d_09_12" class="sr-only">Mañana</label>
+      <textarea id="d_09_12" data-id="d_09_12" placeholder="¿Qué haces primero?"></textarea>
+    </div>
+    <div class="bloque-horario">
+      <div class="hora">12:00 – 15:00</div>
+      <div class="periodo">Mediodía</div>
+      <label for="d_12_15" class="sr-only">Mediodía</label>
+      <textarea id="d_12_15" data-id="d_12_15" placeholder="¿Almuerzas con alguien? ¿Con quién?"></textarea>
+    </div>
+    <div class="bloque-horario">
+      <div class="hora">15:00 – 18:00</div>
+      <div class="periodo">Tarde</div>
+      <label for="d_15_18" class="sr-only">Tarde</label>
+      <textarea id="d_15_18" data-id="d_15_18" placeholder="¿Sigues trabajando? ¿En qué?"></textarea>
+    </div>
+    <div class="bloque-horario">
+      <div class="hora">18:00 – 21:00</div>
+      <div class="periodo">Atardecer</div>
+      <label for="d_18_21" class="sr-only">Atardecer</label>
+      <textarea id="d_18_21" data-id="d_18_21" placeholder="¿Te encuentras con gente, haces deporte, lees?"></textarea>
+    </div>
+    <div class="bloque-horario">
+      <div class="hora">21:00 – 24:00</div>
+      <div class="periodo">Noche</div>
+      <label for="d_21_24" class="sr-only">Noche</label>
+      <textarea id="d_21_24" data-id="d_21_24" placeholder="¿Cómo cierras el día?"></textarea>
+    </div>
+  </div>
+</section>
+
+<!-- CRONOGRAMA SEMANAL -->
+<section class="cronograma-section" aria-labelledby="h-semanal">
+  <h2 id="h-semanal">Mi semana del futuro</h2>
+  <p class="seccion-sub">¿Cómo se reparte la semana?</p>
+  <div class="semanal" id="semanal" role="grid" aria-label="Cronograma semanal">
+    <div></div>
+    <div class="dia-header" role="columnheader">Lun</div>
+    <div class="dia-header" role="columnheader">Mar</div>
+    <div class="dia-header" role="columnheader">Mié</div>
+    <div class="dia-header" role="columnheader">Jue</div>
+    <div class="dia-header" role="columnheader">Vie</div>
+    <div class="dia-header" role="columnheader">Sáb</div>
+    <div class="dia-header" role="columnheader">Dom</div>
+  </div>
+</section>
+
+<!-- CRONOGRAMA MENSUAL -->
+<section class="cronograma-section" aria-labelledby="h-mensual">
+  <h2 id="h-mensual">Mi mes del futuro</h2>
+  <p class="seccion-sub">¿Hay algo grande que pase cada mes?</p>
+  <div class="mensual">
+    <div class="semana-card">
+      <h3>Semana 1</h3>
+      <div class="semana-sub">Foco principal</div>
+      <label for="m_s1" class="sr-only">Foco de semana 1</label>
+      <textarea id="m_s1" data-id="m_s1" placeholder="¿Proyectos? ¿Viajes? ¿Reuniones grandes?"></textarea>
+    </div>
+    <div class="semana-card">
+      <h3>Semana 2</h3>
+      <div class="semana-sub">Foco principal</div>
+      <label for="m_s2" class="sr-only">Foco de semana 2</label>
+      <textarea id="m_s2" data-id="m_s2"></textarea>
+    </div>
+    <div class="semana-card">
+      <h3>Semana 3</h3>
+      <div class="semana-sub">Foco principal</div>
+      <label for="m_s3" class="sr-only">Foco de semana 3</label>
+      <textarea id="m_s3" data-id="m_s3"></textarea>
+    </div>
+    <div class="semana-card">
+      <h3>Semana 4</h3>
+      <div class="semana-sub">Foco principal</div>
+      <label for="m_s4" class="sr-only">Foco de semana 4</label>
+      <textarea id="m_s4" data-id="m_s4" placeholder="¿Cómo termina el mes? ¿Hay algo recurrente?"></textarea>
+    </div>
+  </div>
+</section>
+
+<!-- ANÁLISIS -->
+<section class="analisis-section" aria-labelledby="h-analisis">
+  <h2 id="h-analisis">Ingeniería inversa: ¿en qué trabaja alguien así?</h2>
+  <p class="seccion-sub">Mira qué caminos resuenan con lo que escribiste</p>
+  <button class="analizar-btn" id="analizar" type="button">⚡ Analizar mi mapa</button>
+  <span class="engine-status" id="engine-status" aria-live="polite"></span>
+  <div class="loading-bar" id="loading-bar" aria-hidden="true">
+    <div class="loading-bar-fill" id="loading-bar-fill"></div>
+  </div>
+  <div class="resultado-analisis" id="resultado" aria-live="polite"></div>
+</section>
+
+</main>
+
+<div class="autosave-indicator" id="autosave" aria-live="polite">Guardado ✓</div>
+
+<div class="controles" role="toolbar" aria-label="Controles del documento">
+  <button id="btn-guardar" type="button">💾 Guardar</button>
+  <button id="btn-exportar" type="button">⬇ JSON</button>
+  <button id="btn-cargar" type="button">⬆ Cargar</button>
+  <button id="btn-imprimir" type="button">🖨 Imprimir</button>
+  <button id="btn-onboarding" type="button">ℹ Ayuda</button>
+  <button id="btn-limpiar" type="button">🗑 Limpiar</button>
+  <input type="file" id="file-input" accept=".json" style="display:none" aria-hidden="true">
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+// =========================================================================
+// IMPORTS (Transformers.js desde CDN)
+// =========================================================================
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+env.allowLocalModels = false;
+env.allowRemoteModels = true;
+env.useBrowserCache = true;
+// Resolver los .wasm de onnxruntime-web desde la CDN.
+// Sin esto, onnxruntime los busca en el origen del documento y falla con "Load failed".
+env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/';
+// Single-thread: evita SharedArrayBuffer/Web Workers, que requieren headers COOP/COEP
+// y rompen en file:// y en hosts sin esos headers. Más lento pero compatible en todas partes.
+env.backends.onnx.wasm.numThreads = 1;
+// Maximiza compatibilidad: sin worker-proxy, single-thread, binarios WASM desde el CDN.
+// Necesario para que cargue bajo HTTP simple. NO funciona bajo file:// (doble clic).
+env.backends.onnx.wasm.proxy = false;
+env.backends.onnx.wasm.numThreads = 1;
+env.backends.onnx.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2/dist/';
+
+// Detecta file:// y avisa antes de intentar
+const ESCENARIO_FILE = window.location.protocol === 'file:';
+
+// =========================================================================
+// DATOS: preguntas del mapa
+// =========================================================================
+const PREGUNTAS = {
+  manana: {
+    icono: '🌅',
+    titulo: 'Mi mañana ideal',
+    pregunta: '¿Cómo es el primer momento de tu día cuando seas mayor?',
+    subs: [
+      '¿A qué hora despiertas?',
+      '¿Suena alarma, sol, alguien que te despierta?',
+      '¿Lo primero que haces es mover el cuerpo, leer, mirar el cel, prender un café?',
+      '¿Estás sola, con alguien, con un animal cerca?',
+      '¿Qué tienes ganas de hacer ese día?'
+    ]
+  },
+  actividades: {
+    icono: '🎯',
+    titulo: 'Pierdo noción del tiempo cuando…',
+    pregunta: '¿Qué actividad te absorbe tanto que se te pasan las horas?',
+    subs: [
+      'Piensa en HOY: ¿qué cosa haces y la hora pasa volando?',
+      '¿Te pasa dibujando, escribiendo, jugando, hablando, programando, leyendo, cocinando?',
+      '¿Lo haces sola o con otros?',
+      '¿Eso podría ser parte de tu trabajo del futuro?'
+    ]
+  },
+  personas: {
+    icono: '👥',
+    titulo: 'Con quién paso el día',
+    pregunta: 'En tu día del futuro, ¿con qué tipo de personas estás?',
+    subs: [
+      '¿Con muchas o pocas?',
+      '¿Niños, adolescentes, adultos, ancianos?',
+      '¿Gente que te enseña, gente a la que enseñas, clientes, equipo?',
+      '¿Hablas mucho o trabajas en silencio?',
+      '¿Las conoces o cada día son distintas?'
+    ]
+  },
+  lugar: {
+    icono: '🏠',
+    titulo: 'Dónde estoy',
+    pregunta: '¿Cómo se ve el lugar donde trabajas o haces lo que más te gusta?',
+    subs: [
+      '¿Oficina, casa, hospital, escuela, taller, calle, naturaleza, escenario, laboratorio?',
+      '¿Cambias de lugar todos los días o siempre es el mismo?',
+      '¿Viajas mucho?',
+      '¿Hay luz natural? ¿Música? ¿Silencio? ¿Ruido?'
+    ]
+  },
+  herramientas: {
+    icono: '🛠️',
+    titulo: 'Qué tocan mis manos',
+    pregunta: 'Durante el día, ¿qué objetos toman tus manos más veces?',
+    subs: [
+      '¿Computador, celular, libros, lápices, instrumentos, herramientas, plantas, telas, animales, cámara, micrófono?',
+      '¿Algo que se mueve, algo que está quieto?',
+      '¿Algo que tú creas o algo que cuidas?'
+    ]
+  },
+  problemas: {
+    icono: '💡',
+    titulo: 'Qué problema resuelvo',
+    pregunta: '¿Qué cosa del mundo te molesta tanto que querrías arreglarla?',
+    subs: [
+      '¿Algo de las personas? ¿Del medio ambiente? ¿De cómo funcionan las cosas?',
+      '¿Algo que ves todos los días y dices "esto debería ser distinto"?',
+      'No tiene que ser gigante: puede ser algo chiquito que te importa mucho.'
+    ]
+  },
+  aprender: {
+    icono: '📚',
+    titulo: 'Qué aprendo todo el rato',
+    pregunta: 'En tu vida del futuro, ¿qué cosa nueva estás aprendiendo siempre?',
+    subs: [
+      '¿Idiomas, tecnología, cuerpo humano, animales, arte, historia, finanzas, cocina, ciencias?',
+      '¿Te metes a cursos, lees, ves videos, vas a charlas?',
+      '¿Lo estudias formalmente o lo aprendes haciendo?'
+    ]
+  },
+  noche: {
+    icono: '🌙',
+    titulo: 'Cómo cierro mi día',
+    pregunta: '¿Cómo termina un día normal del futuro?',
+    subs: [
+      '¿Cocinas, comes con alguien, sales, te quedas en casa?',
+      '¿Sigues haciendo algo creativo, ves series, lees, escribes?',
+      '¿Estás cansada de buena manera o estresada?',
+      '¿Te vas a dormir contenta con cómo fue el día?'
+    ]
+  }
+};
+
+// =========================================================================
+// ÁREAS VOCACIONALES (27 áreas con prototipos semánticos)
+// =========================================================================
+const AREAS = [
+  {
+    id: 'tech',
+    nombre: 'Tecnología, software y datos',
+    oficios: 'Desarrolladora de software, ingeniera de datos, ingeniera en IA/ML, ciberseguridad, ingeniera de robótica, DevOps, arquitecta de sistemas.',
+    prototipos: [
+      'Me gusta imaginar sistemas y armar cosas en el computador',
+      'Disfruto programar, automatizar tareas, resolver problemas con código',
+      'Me interesa cómo funcionan los algoritmos y la inteligencia artificial',
+      'Quiero crear apps, sitios web o herramientas digitales'
+    ]
+  },
+  {
+    id: 'ux',
+    nombre: 'Diseño de experiencias y servicios',
+    oficios: 'Diseñadora UX/UI, investigadora UX, diseñadora de servicios, product designer, product manager, estrategista de producto.',
+    prototipos: [
+      'Me importa cómo las personas usan las cosas y por qué les cuesta o les fluye',
+      'Disfruto investigar usuarios, entrevistar, observar comportamientos',
+      'Quiero diseñar productos digitales fáciles y bonitos de usar',
+      'Me interesa la intersección entre psicología y tecnología'
+    ]
+  },
+  {
+    id: 'diseno-visual',
+    nombre: 'Diseño y comunicación visual',
+    oficios: 'Diseñadora gráfica, ilustradora, directora de arte, fotógrafa, diseñadora de marca, animadora 2D/3D, escenógrafa, diseñadora editorial.',
+    prototipos: [
+      'Me gusta dibujar, componer imágenes, jugar con color y tipografía',
+      'Quiero contar historias visuales, ilustrar, fotografiar, animar',
+      'Disfruto crear cosas que se vean: marcas, posters, ilustraciones',
+      'Tengo ojo para el detalle estético, la composición y el ritmo visual'
+    ]
+  },
+  {
+    id: 'salud',
+    nombre: 'Salud, cuidado y bienestar',
+    oficios: 'Médica, enfermera, kinesióloga, fonoaudióloga, nutricionista, terapeuta ocupacional, matrona, técnico paramédico.',
+    prototipos: [
+      'Quiero cuidar y curar a personas que lo necesitan',
+      'Me interesa el cuerpo humano, cómo funciona, cómo se sana',
+      'Disfruto acompañar a personas enfermas, ancianos, bebés, gente vulnerable',
+      'Me imagino en un hospital, clínica o consulta ayudando a otros'
+    ]
+  },
+  {
+    id: 'psico',
+    nombre: 'Psicología, salud mental y terapia',
+    oficios: 'Psicóloga clínica, psicoterapeuta, neuropsicóloga, psicóloga organizacional, coach, terapeuta familiar, mediadora.',
+    prototipos: [
+      'Me interesa cómo piensan, sienten y cambian las personas',
+      'Quiero ayudar a otros a entenderse a sí mismos y sanar',
+      'Disfruto escuchar, contener, conversar profundo sobre emociones',
+      'Me intriga la mente, los traumas, los vínculos, las relaciones'
+    ]
+  },
+  {
+    id: 'educacion',
+    nombre: 'Educación y formación',
+    oficios: 'Profesora (básica, media, universitaria), educadora de párvulos, psicopedagoga, diseñadora instruccional, tutora privada, formadora.',
+    prototipos: [
+      'Disfruto enseñar lo que sé y ver a otros aprender',
+      'Me imagino en una sala con niños, jóvenes o adultos',
+      'Quiero ayudar a que la gente entienda cosas difíciles',
+      'Me interesa la pedagogía, cómo se aprende, cómo se forma una persona'
+    ]
+  },
+  {
+    id: 'arte-musica',
+    nombre: 'Arte, música y performance',
+    oficios: 'Música, compositora, productora musical, actriz, bailarina, escritora, guionista, directora de cine, gestora cultural.',
+    prototipos: [
+      'Toco un instrumento, canto, compongo, vivo la música',
+      'Quiero actuar, bailar, estar en el escenario',
+      'Disfruto escribir poesía, cuentos, novelas, guiones',
+      'Me imagino haciendo arte como trabajo: exposiciones, conciertos, películas'
+    ]
+  },
+  {
+    id: 'naturaleza',
+    nombre: 'Naturaleza, animales y agro',
+    oficios: 'Veterinaria, agrónoma, bióloga, ingeniera forestal, agricultora, paisajista, etóloga, guardaparques.',
+    prototipos: [
+      'Me imagino al aire libre, en el campo, en el bosque, en la cordillera',
+      'Quiero trabajar con animales, cuidarlos, sanarlos, estudiarlos',
+      'Me interesan las plantas, los huertos, la agricultura, los ecosistemas',
+      'Disfruto estar lejos de la ciudad, con tierra, sol y silencio'
+    ]
+  },
+  {
+    id: 'climate',
+    nombre: 'Climate tech y transición ecológica',
+    oficios: 'Ingeniera ambiental, especialista en energías renovables, analista de carbono, estrategista de sustentabilidad, fundadora de climate tech.',
+    prototipos: [
+      'Me preocupa el cambio climático y quiero hacer algo concreto al respecto',
+      'Quiero diseñar soluciones tecnológicas que ayuden al planeta',
+      'Me interesa la energía solar, las baterías, la economía circular',
+      'Quiero trabajar en sustentabilidad con impacto medible'
+    ]
+  },
+  {
+    id: 'negocios',
+    nombre: 'Negocios, emprendimiento y estrategia',
+    oficios: 'Emprendedora, gerenta de marketing, consultora estratégica, analista financiera, project manager, fundadora de startup, inversionista.',
+    prototipos: [
+      'Quiero crear mi propia empresa, mi propio negocio, ser independiente',
+      'Disfruto liderar equipos, tomar decisiones, hacer estrategia',
+      'Me interesa cómo crecen las empresas, cómo se vende, cómo se invierte',
+      'Pienso en términos de mercado, oportunidad y rentabilidad'
+    ]
+  },
+  {
+    id: 'ciencia',
+    nombre: 'Ciencia básica e investigación',
+    oficios: 'Investigadora científica, genetista, neurocientífica, química, física, astrónoma, académica, divulgadora científica.',
+    prototipos: [
+      'Quiero descubrir cómo funciona el universo, la materia, la vida',
+      'Disfruto experimentar, formular hipótesis, validar con datos',
+      'Me imagino en un laboratorio observando, midiendo, registrando',
+      'Me apasiona una pregunta científica concreta y quiero dedicarle años'
+    ]
+  },
+  {
+    id: 'deporte',
+    nombre: 'Deporte, cuerpo y movimiento',
+    oficios: 'Profesora de educación física, entrenadora deportiva, preparadora física, nutricionista deportiva, instructora yoga/pilates, deportista profesional.',
+    prototipos: [
+      'Mi cuerpo es central en mi vida: entreno, compito, me muevo',
+      'Quiero trabajar con deporte, entrenar gente, ser parte de equipos',
+      'Disfruto el ejercicio, la disciplina física, la superación',
+      'Me imagino enseñando movimiento, yoga, baile, deporte'
+    ]
+  },
+  {
+    id: 'humanidades',
+    nombre: 'Humanidades, sociedad y derecho',
+    oficios: 'Abogada, socióloga, antropóloga, historiadora, traductora, periodista, trabajadora social, diplomática, filósofa.',
+    prototipos: [
+      'Me interesan la historia, los idiomas, las culturas, las sociedades',
+      'Quiero entender cómo funcionan las leyes, la política, las instituciones',
+      'Me gusta leer mucho, escribir, debatir, pensar sobre el mundo',
+      'Quiero defender derechos, hacer justicia, transformar lo social'
+    ]
+  },
+  {
+    id: 'civic',
+    nombre: 'Civic tech, política y bien público',
+    oficios: 'Diseñadora de servicios públicos, analista de políticas, gestora gubernamental, civic hacker, gestora de ONGs.',
+    prototipos: [
+      'Quiero arreglar cómo funciona el Estado y los servicios públicos',
+      'Me importa la transparencia, la participación ciudadana, lo común',
+      'Quiero usar tecnología para mejorar la democracia y lo público',
+      'Me interesan las políticas públicas y cómo se aplican en la vida real'
+    ]
+  },
+  {
+    id: 'comunicacion',
+    nombre: 'Comunicación, medios y storytelling',
+    oficios: 'Periodista, comunicadora audiovisual, podcaster, productora de TV/radio, relacionadora pública, community manager, documentalista.',
+    prototipos: [
+      'Me gusta contar historias, hacer entrevistas, escribir reportajes',
+      'Quiero estar en medios: radio, podcasts, video',
+      'Disfruto investigar temas y comunicarlos a una audiencia',
+      'Me imagino haciendo periodismo, documentales o producciones'
+    ]
+  },
+  {
+    id: 'creator',
+    nombre: 'Creator economy y contenido digital',
+    oficios: 'Creadora de contenido, productora digital, manager de creators, especialista en monetización, podcaster independiente.',
+    prototipos: [
+      'Quiero hacer contenido propio en redes sociales, YouTube, TikTok',
+      'Me imagino con mi propia audiencia, mi marca, mi voz pública',
+      'Disfruto editar videos, escribir, grabarme, conectar con seguidores',
+      'Quiero vivir de lo que creo en internet'
+    ]
+  },
+  {
+    id: 'gaming',
+    nombre: 'Videojuegos e industria interactiva',
+    oficios: 'Game designer, narrative designer, programadora de videojuegos, artista 3D, productora de esports, level designer.',
+    prototipos: [
+      'Amo los videojuegos y quiero hacer juegos como trabajo',
+      'Disfruto pensar mecánicas, mundos, personajes, historias interactivas',
+      'Me interesa la programación de juegos, el arte 3D, el diseño de niveles',
+      'Quiero estar en la industria gamer, esports, streaming'
+    ]
+  },
+  {
+    id: 'ia-creativa',
+    nombre: 'IA creativa y nuevas herramientas',
+    oficios: 'Artista con IA, prompt engineer, diseñadora con herramientas generativas, investigadora en arte computacional.',
+    prototipos: [
+      'Quiero usar inteligencia artificial para crear cosas que antes eran imposibles',
+      'Me interesa el arte generativo, las herramientas de imagen y texto con IA',
+      'Disfruto explorar nuevas herramientas digitales y empujar sus límites',
+      'Me imagino en la frontera entre IA y creación artística'
+    ]
+  },
+  {
+    id: 'inclusion',
+    nombre: 'Neurodivergencia, accesibilidad e inclusión',
+    oficios: 'Especialista en accesibilidad, terapeuta de neurodivergencia, diseñadora inclusiva, consultora DEI, educadora especial.',
+    prototipos: [
+      'Me importa que las personas con discapacidad tengan acceso real a todo',
+      'Quiero trabajar con personas neurodivergentes (TEA, TDAH, dislexia)',
+      'Me interesa hacer el mundo más accesible, físico y digital',
+      'Quiero diseñar pensando en quienes nadie diseñó antes'
+    ]
+  },
+  {
+    id: 'mediacion',
+    nombre: 'Mediación cultural, curaduría y patrimonio',
+    oficios: 'Curadora de arte, gestora cultural, mediadora de museos, programadora de festivales, editora cultural.',
+    prototipos: [
+      'Disfruto los museos, las exposiciones, los festivales, lo cultural',
+      'Quiero conectar a las personas con el arte, la historia, el patrimonio',
+      'Me imagino curando, programando, organizando lo cultural',
+      'Me interesa traducir entre el arte y el público: la mediación cultural'
+    ]
+  },
+  {
+    id: 'comunidades',
+    nombre: 'Diseño de comunidades y vínculos',
+    oficios: 'Community builder, facilitadora de grupos, gestora de membresías, organizadora comunitaria, host de espacios colectivos.',
+    prototipos: [
+      'Disfruto juntar personas, armar grupos, crear comunidades',
+      'Me importa cómo se conectan las personas, los rituales, los espacios',
+      'Quiero diseñar experiencias colectivas, encuentros, redes',
+      'Soy la persona que junta gente y los hace sentir parte de algo'
+    ]
+  },
+  {
+    id: 'especulativo',
+    nombre: 'Diseño especulativo y futuros',
+    oficios: 'Diseñadora especulativa, investigadora de futuros, estrategista foresight, narrativa worldbuilding.',
+    prototipos: [
+      'Me imagino futuros posibles, distopías, utopías, escenarios',
+      'Quiero usar el diseño para hacer pensar sobre el mañana, no solo resolver hoy',
+      'Disfruto la ciencia ficción, los futuros alternativos, construir mundos',
+      'Me interesa la futurología, el foresight, la prospectiva estratégica'
+    ]
+  },
+  {
+    id: 'conductual',
+    nombre: 'Economía conductual y ciencias del comportamiento',
+    oficios: 'Behavioral designer, científica conductual, investigadora de decisiones, consultora en nudge.',
+    prototipos: [
+      'Me intriga por qué las personas toman las decisiones que toman',
+      'Quiero entender los sesgos cognitivos y diseñar para corregirlos',
+      'Me interesa la psicología aplicada a economía, salud pública, finanzas',
+      'Disfruto los experimentos sociales, las pruebas A/B, los nudges'
+    ]
+  },
+  {
+    id: 'inmersivo',
+    nombre: 'Experiencia inmersiva, VR/AR y espacial',
+    oficios: 'Diseñadora XR, programadora de realidad virtual, productora de experiencias inmersivas, escenógrafa digital.',
+    prototipos: [
+      'Quiero diseñar experiencias en realidad virtual o aumentada',
+      'Me imagino creando mundos 3D, espacios inmersivos, instalaciones',
+      'Disfruto la mezcla entre físico y digital, espacio y pantalla',
+      'Me interesa el metaverso, los gemelos digitales, lo espacial'
+    ]
+  },
+  {
+    id: 'construccion',
+    nombre: 'Arquitectura, ingeniería civil y construcción',
+    oficios: 'Arquitecta, ingeniera civil, ingeniera mecánica, diseñadora industrial, urbanista, constructora.',
+    prototipos: [
+      'Quiero diseñar y construir edificios, casas, puentes, espacios físicos',
+      'Me imagino en obras, con planos, calculando estructuras',
+      'Disfruto la ingeniería, las máquinas, el mundo físico, los materiales',
+      'Me interesa el urbanismo, cómo se piensan las ciudades'
+    ]
+  },
+  {
+    id: 'gastronomia',
+    nombre: 'Gastronomía y oficios del sabor',
+    oficios: 'Chef, pastelera, panadera, sommelier, barista, food designer, dueña de restaurante, periodista gastronómica.',
+    prototipos: [
+      'Cocinar es lo mío, podría hacerlo todo el día',
+      'Quiero tener mi restaurante, panadería, café, espacio gastronómico',
+      'Disfruto los ingredientes, los sabores, las recetas, la cocina como arte',
+      'Me imagino entre fogones, hornos, vinos, sabores nuevos'
+    ]
+  },
+  {
+    id: 'finanzas',
+    nombre: 'Finanzas, inversiones y economía',
+    oficios: 'Analista financiera, gestora de fondos, trader, economista, asesora de inversiones, fintech founder.',
+    prototipos: [
+      'Me interesan los mercados, las inversiones, la economía mundial',
+      'Disfruto los números, los modelos financieros, las proyecciones',
+      'Quiero trabajar con dinero, riesgo, inversiones, finanzas',
+      'Me imagino analizando mercados, decidiendo inversiones'
+    ]
+  }
+];
+
+// =========================================================================
+// COMBINACIONES HÍBRIDAS (intersecciones disciplinares)
+// =========================================================================
+const COMBOS = {
+  'tech+arte-musica': { nombre: 'Música electrónica y arte digital', oficios: 'Productora de música electrónica, sound designer, artista digital con código.' },
+  'tech+ia-creativa': { nombre: 'IA creativa avanzada', oficios: 'Investigadora en IA creativa, builder de herramientas generativas, artista computacional.' },
+  'tech+diseno-visual': { nombre: 'Diseño generativo y motion', oficios: 'Diseñadora generativa, motion designer programático, dev creativa.' },
+  'tech+ux': { nombre: 'Product engineering', oficios: 'Design engineer, prototipadora avanzada, ingeniera de producto.' },
+  'tech+climate': { nombre: 'Climate tech', oficios: 'Ingeniera en energía limpia, dev en modelos climáticos, founder climate tech.' },
+  'tech+civic': { nombre: 'Civic tech / GovTech', oficios: 'Civic hacker, dev en herramientas de transparencia y participación.' },
+  'tech+gaming': { nombre: 'Programación de videojuegos', oficios: 'Game developer, motores 3D, tooling para juegos.' },
+  'tech+salud': { nombre: 'Health tech', oficios: 'Ingeniera biomédica, dev de telemedicina, especialista en IA diagnóstica.' },
+  'tech+inmersivo': { nombre: 'Desarrollo XR', oficios: 'Dev VR/AR, ingeniera del metaverso, programadora 3D.' },
+  'tech+finanzas': { nombre: 'Fintech y quant', oficios: 'Quant developer, dev en fintech, ingeniera de algoritmos financieros.' },
+  'arte-musica+psico': { nombre: 'Arteterapia / musicoterapia', oficios: 'Arteterapeuta, musicoterapeuta, danzaterapeuta.' },
+  'arte-musica+educacion': { nombre: 'Educación artística', oficios: 'Profesora de arte/música, talleres creativos, mediación artística para infancia.' },
+  'arte-musica+comunicacion': { nombre: 'Documentalismo y storytelling sonoro', oficios: 'Documentalista, podcast narrativo, periodismo cultural.' },
+  'diseno-visual+ux': { nombre: 'UI design y design systems', oficios: 'UI designer, brand designer digital, especialista en design systems.' },
+  'diseno-visual+ia-creativa': { nombre: 'Dirección de arte generativa', oficios: 'Art director con IA, diseñadora prompt-driven.' },
+  'diseno-visual+mediacion': { nombre: 'Diseño editorial cultural', oficios: 'Diseñadora editorial para museos, dirección de arte cultural.' },
+  'salud+naturaleza': { nombre: 'Medicina rural / salud planetaria', oficios: 'Médica rural, especialista en salud planetaria, terapias con naturaleza.' },
+  'salud+psico': { nombre: 'Salud mental clínica', oficios: 'Psiquiatra, neuróloga, psicóloga hospitalaria.' },
+  'salud+deporte': { nombre: 'Medicina deportiva', oficios: 'Médica deportiva, kinesióloga del deporte, fisióloga del ejercicio.' },
+  'psico+educacion': { nombre: 'Psicopedagogía y orientación', oficios: 'Psicopedagoga, orientadora escolar, terapeuta familiar educativa.' },
+  'psico+ux': { nombre: 'UX research conductual', oficios: 'UX researcher, diseñadora centrada en personas vulnerables.' },
+  'psico+conductual': { nombre: 'Ciencias del comportamiento', oficios: 'Behavioral designer, neuroeconomista, especialista en sesgos cognitivos.' },
+  'educacion+tech': { nombre: 'EdTech y diseño instruccional', oficios: 'Diseñadora instruccional digital, builder de plataformas educativas.' },
+  'educacion+inclusion': { nombre: 'Educación inclusiva', oficios: 'Educadora especial, diseñadora pedagógica inclusiva, especialista DUA.' },
+  'naturaleza+climate': { nombre: 'Conservación aplicada', oficios: 'Restauradora ecológica, conservacionista, especialista en biodiversidad.' },
+  'naturaleza+ciencia': { nombre: 'Biología de campo', oficios: 'Bióloga de campo, ecóloga cuantitativa, oceanógrafa.' },
+  'negocios+tech': { nombre: 'Startups y product', oficios: 'Founder de startup, product manager, venture builder.' },
+  'negocios+creator': { nombre: 'Creator-led business', oficios: 'Founder con marca personal, infoproductora, manager de creators.' },
+  'negocios+climate': { nombre: 'Climate ventures', oficios: 'Founder climate, impact investor, gerencia en B-Corp.' },
+  'humanidades+civic': { nombre: 'Política y derechos humanos', oficios: 'Diplomática, especialista en DDHH, asesora legislativa.' },
+  'humanidades+comunicacion': { nombre: 'Periodismo de investigación y ensayo', oficios: 'Periodista de investigación, ensayista, traductora literaria.' },
+  'humanidades+mediacion': { nombre: 'Curaduría y crítica cultural', oficios: 'Curadora, crítica de arte, gestora de patrimonio.' },
+  'comunicacion+creator': { nombre: 'Periodismo independiente', oficios: 'Newsletter propia, podcast monetizado, periodismo de creator.' },
+  'comunicacion+especulativo': { nombre: 'Worldbuilding y science journalism', oficios: 'Guionista para audiovisual, divulgadora de futuros, periodista de futuros.' },
+  'civic+inclusion': { nombre: 'Políticas inclusivas', oficios: 'Diseñadora de políticas accesibles, gestora de inclusión gubernamental.' },
+  'comunidades+civic': { nombre: 'Organización ciudadana', oficios: 'Organizadora comunitaria, gestora barrial, especialista en participación.' },
+  'comunidades+creator': { nombre: 'Community-led products', oficios: 'Community builder con audiencia, membership economy, host de espacios online.' },
+  'gaming+arte-musica': { nombre: 'Narrative design y arte para juegos', oficios: 'Narrative designer, escritora para juegos, concept artist.' },
+  'especulativo+ia-creativa': { nombre: 'Diseño crítico con IA', oficios: 'Diseñadora especulativa, ficción generativa, crítica del futuro.' },
+  'inmersivo+arte-musica': { nombre: 'Instalaciones inmersivas', oficios: 'Artista de instalación, escenógrafa digital, performance VR.' },
+  'conductual+negocios': { nombre: 'Behavioral economics aplicada', oficios: 'Behavioral economist, growth con base científica, especialista en retención.' },
+  'gastronomia+creator': { nombre: 'Food content', oficios: 'Food content creator, recetas digitales, food media.' },
+  'gastronomia+naturaleza': { nombre: 'Gastronomía de territorio', oficios: 'Cocinera de territorio, gastronomía sustentable, foraging.' },
+  'construccion+climate': { nombre: 'Arquitectura sustentable', oficios: 'Arquitecta bioclimática, urbanista resiliente, especialista en construcción verde.' },
+  'construccion+especulativo': { nombre: 'Arquitectura especulativa', oficios: 'Arquitecta de futuros, urbanismo experimental, diseño de vivienda emergente.' },
+  'finanzas+civic': { nombre: 'Finanzas públicas', oficios: 'Analista de hacienda, economista pública, especialista en política fiscal.' },
+  'finanzas+climate': { nombre: 'Finanzas climáticas', oficios: 'Analista de finanzas verdes, especialista en bonos sustentables, ESG.' }
+};
+
+function getCombo(idA, idB) {
+  return COMBOS[`${idA}+${idB}`] || COMBOS[`${idB}+${idA}`] || null;
+}
+
+// =========================================================================
+// ESTADO
+// =========================================================================
+const STORAGE_KEY = 'mapa-martina-futuro-v2';
+const ONBOARDING_KEY = 'mapa-martina-onboarding-v2';
+
+let estado = {
+  nombre: 'Martina',
+  edadActual: '',
+  edadFutura: '',
+  respuestas: {},
+  cronograma: {},
+  ultimaModificacion: null
+};
+
+// Embeddings cacheados de áreas
+let areaEmbeddings = null;
+let extractor = null;
+let cargandoModelo = false;
+
+// =========================================================================
+// UTILS
+// =========================================================================
+function debounce(fn, ms) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return document.querySelectorAll(sel); }
+
+// =========================================================================
+// PERSISTENCIA
+// =========================================================================
+function cargarEstado() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) estado = { ...estado, ...JSON.parse(raw) };
+  } catch(e) { /* Sin estado previo */ }
+  aplicarEstadoUI();
+}
+
+function guardarEstado(silencioso = false) {
+  try {
+    estado.ultimaModificacion = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(estado));
+    if (silencioso) {
+      mostrarAutosave();
+    } else {
+      mostrarToast('Guardado ✓');
+    }
+  } catch(e) { mostrarToast('Error al guardar'); }
+}
+
+const guardarDebounced = debounce(() => guardarEstado(true), 800);
+
+function aplicarEstadoUI() {
+  $('#nombre').value = estado.nombre || 'Martina';
+  $('#edad-actual').value = estado.edadActual || '';
+  $('#edad-futura').value = estado.edadFutura || '';
+  actualizarCentro();
+  actualizarProgreso();
+
+  // Marcar nodos respondidos (desktop + mobile)
+  $$('.nodo').forEach(n => {
+    const id = n.dataset.id;
+    const tiene = estado.respuestas[id] && estado.respuestas[id].trim();
+    n.classList.toggle('respondido', !!tiene);
+  });
+  $$('.nodo-mobile').forEach(n => {
+    const id = n.dataset.id;
+    const tiene = estado.respuestas[id] && estado.respuestas[id].trim();
+    n.classList.toggle('respondido', !!tiene);
+  });
+
+  // Llenar cronograma
+  $$('[data-id]').forEach(el => {
+    if (el.tagName === 'TEXTAREA') {
+      const id = el.dataset.id;
+      if (estado.cronograma[id]) el.value = estado.cronograma[id];
+    }
+  });
+}
+
+function actualizarCentro() {
+  const nombre = estado.nombre || 'Martina';
+  const edad = estado.edadFutura ? `a los ${estado.edadFutura}` : 'a los 30';
+  $('#centro-nombre').textContent = nombre;
+  $('#centro-edad').textContent = edad;
+  $('#centro-nombre-mobile').textContent = nombre;
+  $('#centro-edad-mobile').textContent = edad;
+}
+
+function actualizarProgreso() {
+  const total = Object.keys(PREGUNTAS).length;
+  const llenas = Object.keys(PREGUNTAS).filter(id =>
+    estado.respuestas[id] && estado.respuestas[id].trim()
+  ).length;
+  const pct = (llenas / total) * 100;
+  $('#progreso-fill').style.width = pct + '%';
+  $('#progreso-label').textContent = `${llenas} de ${total}`;
+  $('#progreso-bar').setAttribute('aria-valuenow', llenas);
+}
+
+// =========================================================================
+// MAPA MOBILE: generar dinámicamente
+// =========================================================================
+function generarMapaMobile() {
+  const cont = $('#mapa-mobile');
+  Object.entries(PREGUNTAS).forEach(([id, p]) => {
+    const btn = document.createElement('button');
+    btn.className = 'nodo-mobile';
+    btn.dataset.id = id;
+    btn.type = 'button';
+    btn.setAttribute('aria-label', `Pregunta: ${p.titulo}`);
+    btn.innerHTML = `
+      <div class="nodo-mobile-icono" aria-hidden="true">${p.icono}</div>
+      <div class="nodo-mobile-label">${p.titulo}</div>
+      <div class="nodo-mobile-chevron" aria-hidden="true">›</div>
+    `;
+    btn.addEventListener('click', () => abrirModal(id, btn));
+    cont.appendChild(btn);
+  });
+}
+
+// =========================================================================
+// SEMANAL: generar filas
+// =========================================================================
+function generarSemanal() {
+  const cont = $('#semanal');
+  const momentos = ['Mañana', 'Mediodía', 'Tarde', 'Noche'];
+  const dias = ['lun','mar','mie','jue','vie','sab','dom'];
+
+  momentos.forEach(m => {
+    const header = document.createElement('div');
+    header.className = 'momento-header';
+    header.setAttribute('role', 'rowheader');
+    header.textContent = m;
+    cont.appendChild(header);
+
+    dias.forEach(d => {
+      const celda = document.createElement('div');
+      celda.className = 'semanal-celda';
+      celda.setAttribute('role', 'gridcell');
+      const ta = document.createElement('textarea');
+      const dataId = `s_${d}_${m.toLowerCase()}`;
+      ta.dataset.id = dataId;
+      ta.id = dataId;
+      ta.setAttribute('aria-label', `${m} del ${d}`);
+      ta.addEventListener('input', onCronogramaChange);
+      celda.appendChild(ta);
+      cont.appendChild(celda);
+    });
+  });
+}
+
+function onCronogramaChange(e) {
+  const id = e.target.dataset.id;
+  estado.cronograma[id] = e.target.value;
+  guardarDebounced();
+}
+
+// =========================================================================
+// IDENTIDAD
+// =========================================================================
+$('#nombre').addEventListener('input', e => {
+  estado.nombre = e.target.value;
+  actualizarCentro();
+  guardarDebounced();
+});
+$('#edad-actual').addEventListener('input', e => {
+  estado.edadActual = e.target.value;
+  guardarDebounced();
+});
+$('#edad-futura').addEventListener('input', e => {
+  estado.edadFutura = e.target.value;
+  actualizarCentro();
+  guardarDebounced();
+});
+
+// =========================================================================
+// MODAL (con focus trap y retorno de foco)
+// =========================================================================
+let nodoActivo = null;
+let triggerElement = null;
+const modalBg = $('#modal-bg');
+
+$$('.nodo').forEach(n => {
+  n.addEventListener('click', () => abrirModal(n.dataset.id, n));
+});
+
+function abrirModal(id, trigger) {
+  nodoActivo = id;
+  triggerElement = trigger;
+  const p = PREGUNTAS[id];
+  $('#modal-icono').textContent = p.icono;
+  $('#modal-titulo').textContent = p.titulo;
+  $('#modal-pregunta').textContent = p.pregunta;
+  const subsEl = $('#modal-subs');
+  subsEl.innerHTML = '';
+  p.subs.forEach(s => {
+    const li = document.createElement('li');
+    li.textContent = s;
+    subsEl.appendChild(li);
+  });
+  $('#modal-respuesta').value = estado.respuestas[id] || '';
+  modalBg.classList.add('activo');
+  setTimeout(() => $('#modal-respuesta').focus(), 50);
+}
+
+function cerrarModal() {
+  modalBg.classList.remove('activo');
+  nodoActivo = null;
+  if (triggerElement) {
+    triggerElement.focus();
+    triggerElement = null;
+  }
+}
+
+$('#modal-close').addEventListener('click', cerrarModal);
+modalBg.addEventListener('click', e => {
+  if (e.target === modalBg) cerrarModal();
+});
+
+$('#modal-guardar').addEventListener('click', () => {
+  if (!nodoActivo) return;
+  estado.respuestas[nodoActivo] = $('#modal-respuesta').value;
+  guardarEstado(false);
+  aplicarEstadoUI();
+  cerrarModal();
+});
+
+// Focus trap dentro del modal
+modalBg.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && modalBg.classList.contains('activo')) {
+    cerrarModal();
+    return;
+  }
+  if (e.key !== 'Tab' || !modalBg.classList.contains('activo')) return;
+
+  const focusables = modalBg.querySelectorAll('button, textarea, input, [tabindex]:not([tabindex="-1"])');
+  if (focusables.length === 0) return;
+  const first = focusables[0];
+  const last = focusables[focusables.length - 1];
+
+  if (e.shiftKey && document.activeElement === first) {
+    e.preventDefault();
+    last.focus();
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault();
+    first.focus();
+  }
+});
+
+// =========================================================================
+// CRONOGRAMA INPUTS - listeners
+// =========================================================================
+$$('.timeline textarea, .mensual textarea').forEach(ta => {
+  ta.addEventListener('input', onCronogramaChange);
+});
+
+// =========================================================================
+// MOTOR SEMÁNTICO TRANSFORMERS.JS
+// =========================================================================
+async function cargarModelo() {
+  if (extractor) return extractor;
+  if (cargandoModelo) {
+    // esperar a que termine
+    while (cargandoModelo) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+    return extractor;
+  }
+
+  cargandoModelo = true;
+  setEngineStatus('cargando el motor (primera vez puede tardar 30–60s)…');
+  mostrarLoadingBar(true);
+
+  try {
+    extractor = await pipeline(
+      'feature-extraction',
+      'Xenova/paraphrase-multilingual-MiniLM-L12-v2',
+      {
+        quantized: true,
+        progress_callback: (data) => {
+          if (data.status === 'progress' && data.progress != null) {
+            $('#loading-bar-fill').style.width = data.progress + '%';
+          }
+        }
+      }
+    );
+    setEngineStatus('motor listo ✓');
+    mostrarLoadingBar(false);
+  } catch (e) {
+    /* Error cargando modelo: usar análisis básico */
+    setEngineStatus('no se pudo cargar el motor — usando análisis básico');
+    mostrarLoadingBar(false);
+    extractor = null;
+  } finally {
+    cargandoModelo = false;
+  }
+  return extractor;
+}
+
+async function embed(text) {
+  if (!extractor) return null;
+  const out = await extractor(text, { pooling: 'mean', normalize: true });
+  return out.data;
+}
+
+function cosine(a, b) {
+  let sum = 0;
+  for (let i = 0; i < a.length; i++) sum += a[i] * b[i];
+  return sum;
+}
+
+async function precalcularAreaEmbeddings() {
+  if (areaEmbeddings) return areaEmbeddings;
+  setEngineStatus('mapeando áreas vocacionales…');
+  areaEmbeddings = [];
+  for (const area of AREAS) {
+    const protoEmbs = [];
+    for (const proto of area.prototipos) {
+      const e = await embed(proto);
+      if (e) protoEmbs.push(e);
+    }
+    if (protoEmbs.length === 0) continue;
+    // Mean pooling de los prototipos
+    const dim = protoEmbs[0].length;
+    const mean = new Float32Array(dim);
+    for (const e of protoEmbs) {
+      for (let i = 0; i < dim; i++) mean[i] += e[i];
+    }
+    for (let i = 0; i < dim; i++) mean[i] /= protoEmbs.length;
+    // Re-normalizar
+    let norm = 0;
+    for (let i = 0; i < dim; i++) norm += mean[i] * mean[i];
+    norm = Math.sqrt(norm);
+    for (let i = 0; i < dim; i++) mean[i] /= norm;
+    areaEmbeddings.push({ ...area, embedding: mean });
+  }
+  setEngineStatus('motor listo ✓');
+  return areaEmbeddings;
+}
+
+// =========================================================================
+// MOTOR HEURÍSTICO (fallback si Transformers falla)
+// =========================================================================
+function analisisHeuristico(texto) {
+  // Diccionario expandido con sinónimos
+  const SINONIMOS = {
+    tech: ['computador','código','programar','programación','programadora','software','app','aplicación','web','sitio','dato','datos','algoritmo','ia','inteligencia artificial','robot','robótica','tech','tecnología','tecnológico','digital','sistema','sistemas','automatizar','desarrollo','dev'],
+    ux: ['ux','usuario','usuarios','usabilidad','experiencia','producto','investigación','investigar','entrevista','entrevistar','observar','wireframe','prototipo'],
+    'diseno-visual': ['dibujar','dibujo','diseñar','diseño','ilustrar','ilustración','ilustradora','color','colores','tipografía','marca','logo','branding','visual','pintar','pintura','fotografía','foto','fotografiar','video','cámara','animar','animación','creativa','creativo','poster','editorial'],
+    salud: ['curar','sanar','cuidar','medicina','médico','médica','doctora','enfermera','enfermería','paciente','hospital','clínica','consulta','salud','nutrición','kinesiología','kinesióloga','fonoaudiología','dentista','farmacia','matrona','cuerpo','bienestar'],
+    psico: ['psicología','psicóloga','psicólogo','terapia','terapeuta','emociones','emocional','mente','trauma','vínculo','vínculos','escuchar','contener','sanar emocional','salud mental'],
+    educacion: ['enseñar','enseñanza','profesora','profesor','maestra','niños','niñas','clase','clases','aula','escuela','colegio','universidad','educar','pedagogía','pedagoga','aprender','aprendizaje','tutora','formación','capacitar'],
+    'arte-musica': ['música','musical','instrumento','cantar','canto','tocar','banda','concierto','componer','composición','pintura','arte','artista','teatro','actuar','escenario','baile','danza','danzar','bailar','escribir','escritora','poesía','poema','cine','cineasta','actriz','novela','cuento','guión'],
+    naturaleza: ['planta','plantas','animal','animales','mar','océano','bosque','ecología','medio ambiente','naturaleza','granja','huerto','veterinaria','veterinaria','veterinario','agricultura','agro','clima natural','tierra','jardín','perro','gato','caballo','aire libre','campo','cordillera'],
+    climate: ['clima','climático','cambio climático','calentamiento','sustentabilidad','sustentable','energía renovable','solar','eólica','planeta','reciclar','reciclaje','carbono','ecológico','transición'],
+    negocios: ['empresa','negocio','vender','venta','marketing','dinero','emprender','emprendedora','líder','liderar','equipo','jefa','ceo','startup','finanzas','inversión','tienda','clientes','producto','estrategia','mercado'],
+    ciencia: ['investigar','investigación','experimento','laboratorio','química','física','biología','genética','astronomía','ciencia','científica','teoría','descubrir','observar científico','microscopio','telescopio','cosmos','universo','átomo','molécula','célula','hipótesis'],
+    deporte: ['deporte','deportista','correr','entrenar','entrenamiento','físico','atletismo','fútbol','tenis','natación','gimnasio','yoga','pilates','baile fitness','cuerpo','movimiento','competir','competencia'],
+    humanidades: ['leer','libros','escribir','historia','idiomas','idioma','viajar','viaje','gente','comunidad','social','sociología','antropología','filosofía','derecho','abogada','política','justicia','derechos','cultura','culturas'],
+    civic: ['gobierno','político','ciudadanía','ciudadano','público','participación','transparencia','política pública','democracia','ong','estado','servicio público'],
+    comunicacion: ['hablar','contar','contar historia','contar historias','periodismo','periodista','noticia','noticias','radio','podcast','video','redes sociales','presentar','presentadora','locutora','contenido','reportaje','documental'],
+    creator: ['youtube','tiktok','instagram','influencer','creadora','contenido','seguidores','audiencia','reel','viral','monetizar','redes sociales'],
+    gaming: ['videojuego','videojuegos','juego','juegos','gaming','gamer','game','jugar','nintendo','playstation','xbox','steam','esports','minecraft','roblox'],
+    'ia-creativa': ['ia','inteligencia artificial','generativa','midjourney','stable diffusion','chatgpt','claude','prompt','generar','imagen ia','arte generativo'],
+    inclusion: ['discapacidad','accesibilidad','accesible','inclusión','inclusivo','neurodivergente','tea','autismo','tdah','dislexia','sordo','ciego','silla de ruedas','diferencia'],
+    mediacion: ['museo','museos','exposición','galería','curaduría','curadora','patrimonio','festival','feria','arte público'],
+    comunidades: ['comunidad','comunidades','grupo','grupos','colectivo','colectiva','junta','reunir','red','redes','membresía','ritual','vínculo'],
+    especulativo: ['futuro','futuros','distopía','utopía','ciencia ficción','ficción','imaginar','imaginación','especulativo','especulativa','prospectiva','foresight','mundo','mundos'],
+    conductual: ['comportamiento','conductual','decisión','decisiones','sesgo','sesgos','nudge','psicología económica','experimento social'],
+    inmersivo: ['vr','ar','realidad virtual','realidad aumentada','xr','metaverso','3d','inmersivo','inmersiva','espacial'],
+    construccion: ['construir','construcción','arquitectura','arquitecta','arquitecto','ingeniería','ingeniera','herramientas','máquina','máquinas','auto','autos','mecánica','carpintería','electricidad','obra','edificio','puente','urbanismo','ciudad'],
+    gastronomia: ['cocinar','cocina','chef','comida','restaurante','panadería','pastelería','sabor','ingredientes','recetas','gastronomía','sommelier','vino','café','barista','hornear'],
+    finanzas: ['finanzas','financiera','financiero','dinero','bolsa','acciones','inversiones','invertir','economía','económico','económica','mercado financiero','banco','crédito','presupuesto']
+  };
+
+  const txt = texto.toLowerCase();
+  const puntajes = [];
+
+  for (const area of AREAS) {
+    const palabras = SINONIMOS[area.id] || [];
+    let score = 0;
+    const matches = [];
+    for (const p of palabras) {
+      const regex = new RegExp(`\\b${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+      const m = txt.match(regex);
+      if (m) {
+        score += m.length;
+        matches.push(p);
+      }
+    }
+    if (score > 0) {
+      puntajes.push({ ...area, score, matches, similitud: Math.min(score * 0.15, 1) });
+    }
+  }
+
+  return puntajes.sort((a, b) => b.score - a.score);
+}
+
+// =========================================================================
+// ANÁLISIS PRINCIPAL
+// =========================================================================
+function recolectarTexto() {
+  let total = '';
+  Object.values(estado.respuestas).forEach(r => { if (r) total += ' ' + r; });
+  Object.values(estado.cronograma).forEach(r => { if (r) total += ' ' + r; });
+  return total.trim();
+}
+
+async function analizar() {
+  const texto = recolectarTexto();
+  const resultadoEl = $('#resultado');
+  const btn = $('#analizar');
+
+  if (texto.length < 20) {
+    resultadoEl.innerHTML = '<p class="sin-datos">Aún no has escrito suficiente. Llena al menos 3 o 4 preguntas del mapa para que esto funcione bien.</p>';
+    resultadoEl.classList.add('visible');
+    return;
+  }
+
+  btn.disabled = true;
+
+  let ranking = [];
+  let modo = 'semántico';
+
+  // Bajo file:// los embeddings no cargan: vamos directo al heurístico con aviso.
+  if (ESCENARIO_FILE) {
+    setEngineStatus('modo básico (ábrelo desde un servidor para activar el motor IA)');
+    ranking = analisisHeuristico(texto);
+    modo = 'heurístico';
+    btn.disabled = false;
+    renderizarResultado(ranking, modo);
+    return;
+  }
+
+  try {
+    await cargarModelo();
+    if (extractor) {
+      await precalcularAreaEmbeddings();
+      setEngineStatus('analizando tu texto…');
+      const userEmb = await embed(texto);
+      if (userEmb && areaEmbeddings) {
+        ranking = areaEmbeddings
+          .map(a => ({ ...a, similitud: cosine(userEmb, a.embedding) }))
+          .sort((a, b) => b.similitud - a.similitud);
+        setEngineStatus('motor semántico ✓');
+      } else {
+        throw new Error('no embeddings');
+      }
+    } else {
+      throw new Error('no extractor');
+    }
+  } catch (e) {
+    /* Fallback a heurística */
+    ranking = analisisHeuristico(texto);
+    modo = 'heurístico';
+    setEngineStatus('análisis heurístico (sin embeddings)');
+  }
+
+  btn.disabled = false;
+  renderizarResultado(ranking, modo);
+}
+
+function renderizarResultado(ranking, modo) {
+  const cont = $('#resultado');
+  cont.innerHTML = '';
+
+  if (ranking.length === 0) {
+    cont.innerHTML = '<p class="sin-datos">No detecté patrones claros. Intenta describir más concretamente: ¿qué objetos, lugares, personas o actividades aparecen en tu día?</p>';
+    cont.classList.add('visible');
+    return;
+  }
+
+  const intro = document.createElement('p');
+  intro.style.cssText = 'margin-bottom: 20px; font-size: 15px; opacity: 0.92; line-height: 1.6;';
+  intro.innerHTML = `Estos son los caminos vocacionales que <strong>más resuenan</strong> con tu mapa. Es una pista, no una receta.`;
+  cont.appendChild(intro);
+
+  const topN = ranking.slice(0, 5);
+  const maxSim = topN[0].similitud || 1;
+
+  topN.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'area-resultado';
+    const pct = Math.round((a.similitud / maxSim) * 100);
+    div.innerHTML = `
+      <div class="ranking">#${i + 1}</div>
+      <h4>${a.nombre}</h4>
+      <div class="score-bar" aria-label="Afinidad ${pct} por ciento">
+        <div class="score-bar-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="oficios">${a.oficios}</div>
+    `;
+    cont.appendChild(div);
+  });
+
+  // Combinaciones híbridas (top 1 + top 2, top 1 + top 3)
+  const top1 = ranking[0];
+  if (ranking.length >= 2) {
+    const top2 = ranking[1];
+    const combo12 = getCombo(top1.id, top2.id);
+    if (combo12) {
+      const div = document.createElement('div');
+      div.className = 'combo-resultado';
+      div.innerHTML = `
+        <div class="combo-label">✦ Combinación posible (#1 + #2)</div>
+        <h4>${combo12.nombre}</h4>
+        <div class="combo-oficios">${combo12.oficios}</div>
+      `;
+      cont.appendChild(div);
+    }
+  }
+  if (ranking.length >= 3) {
+    const top3 = ranking[2];
+    const combo13 = getCombo(top1.id, top3.id);
+    if (combo13) {
+      const div = document.createElement('div');
+      div.className = 'combo-resultado';
+      div.innerHTML = `
+        <div class="combo-label">✦ Otra combinación (#1 + #3)</div>
+        <h4>${combo13.nombre}</h4>
+        <div class="combo-oficios">${combo13.oficios}</div>
+      `;
+      cont.appendChild(div);
+    }
+  }
+
+  // Disclaimer final
+  const disc = document.createElement('div');
+  disc.className = 'disclaimer-final';
+  disc.innerHTML = `
+    <strong>Esto NO es una predicción ni un diagnóstico.</strong> Es un espejo de las palabras que elegiste hoy. Si mañana respondes distinto, tu mapa será distinto, y está bien.<br><br>
+    <strong>Próximos pasos posibles:</strong><br>
+    1. Elige las 2 áreas que más te llamen la atención.<br>
+    2. Busca una persona real que se dedique a eso. Conversa con ella 30 minutos. Eso vale más que mil tests vocacionales.<br>
+    3. Vuelve a este mapa en 3 meses. Compara. Mira qué se quedó.<br><br>
+    <small style="opacity:0.7">Análisis ${modo}.</small>
+  `;
+  cont.appendChild(disc);
+
+  cont.classList.add('visible');
+  cont.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+$('#analizar').addEventListener('click', analizar);
+
+// =========================================================================
+// UI HELPERS
+// =========================================================================
+function setEngineStatus(msg) {
+  $('#engine-status').textContent = msg;
+}
+function mostrarLoadingBar(visible) {
+  $('#loading-bar').classList.toggle('visible', visible);
+  if (!visible) $('#loading-bar-fill').style.width = '0%';
+}
+function mostrarToast(msg) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('visible');
+  setTimeout(() => t.classList.remove('visible'), 2000);
+}
+function mostrarAutosave() {
+  const a = $('#autosave');
+  a.classList.add('visible');
+  clearTimeout(window._autosaveTimer);
+  window._autosaveTimer = setTimeout(() => a.classList.remove('visible'), 1500);
+}
+
+// =========================================================================
+// CONTROLES
+// =========================================================================
+$('#btn-guardar').addEventListener('click', () => guardarEstado(false));
+
+$('#btn-exportar').addEventListener('click', () => {
+  const data = JSON.stringify(estado, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mapa_${(estado.nombre || 'martina').toLowerCase()}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  mostrarToast('JSON descargado ✓');
+});
+
+$('#btn-cargar').addEventListener('click', () => $('#file-input').click());
+
+$('#file-input').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      estado = JSON.parse(ev.target.result);
+      aplicarEstadoUI();
+      guardarEstado(false);
+      mostrarToast('Cargado ✓');
+    } catch(err) {
+      mostrarToast('Archivo inválido');
+    }
+  };
+  reader.readAsText(file);
+});
+
+$('#btn-imprimir').addEventListener('click', () => window.print());
+
+$('#btn-onboarding').addEventListener('click', () => {
+  $('#onboarding').classList.add('activo');
+  setTimeout(() => $('#onb-cerrar').focus(), 50);
+});
+
+$('#btn-limpiar').addEventListener('click', () => {
+  if (!confirm('¿Borrar todo y empezar de nuevo? Esta acción no se puede deshacer.')) return;
+  estado = { nombre: 'Martina', edadActual: '', edadFutura: '', respuestas: {}, cronograma: {}, ultimaModificacion: null };
+  $$('textarea').forEach(t => t.value = '');
+  $('#resultado').classList.remove('visible');
+  guardarEstado(false);
+  aplicarEstadoUI();
+});
+
+// =========================================================================
+// ONBOARDING
+// =========================================================================
+$('#onb-cerrar').addEventListener('click', () => {
+  $('#onboarding').classList.remove('activo');
+  localStorage.setItem(ONBOARDING_KEY, '1');
+});
+
+function mostrarOnboardingSiPrimeraVez() {
+  if (!localStorage.getItem(ONBOARDING_KEY)) {
+    $('#onboarding').classList.add('activo');
+    setTimeout(() => $('#onb-cerrar').focus(), 100);
+  }
+}
+
+// =========================================================================
+// BOOT
+// =========================================================================
+generarSemanal();
+generarMapaMobile();
+cargarEstado();
+mostrarOnboardingSiPrimeraVez();
+
+// Aplicar autosave a todos los textareas dinámicos también
+$$('textarea[data-id]').forEach(ta => {
+  if (!ta.dataset.bound) {
+    ta.addEventListener('input', onCronogramaChange);
+    ta.dataset.bound = '1';
+  }
+});
+
+</script>
+</body>
+</html>

@@ -97,6 +97,11 @@ function summarizeUxflowSession(session) {
   var uxList = getUxflowSessions();
   uxDocs = uxList.length;
 
+  var dxFrictions = 0;
+  var dxList = readJSONStorage('dx-frictions', []);
+  dxFrictions = Array.isArray(dxList) ? dxList.length : 0;
+  var lastDxDate = dxList.length > 0 && dxList[0].fecha ? formatDate(dxList[0].fecha) : null;
+
   var getEl = function (id) { return document.getElementById(id); };
   if (getEl('kpi-benchmarks')) getEl('kpi-benchmarks').textContent = bmSessions;
   if (getEl('kpi-uxflow'))     getEl('kpi-uxflow').textContent     = uxDocs;
@@ -117,6 +122,11 @@ function summarizeUxflowSession(session) {
     if (getEl('meta-ux-last'))
       getEl('meta-ux-last').textContent = 'Último: ' + uxList[0].fecha;
   }
+
+  if (getEl('meta-dx-frictions'))
+    getEl('meta-dx-frictions').textContent = dxFrictions + ' ' + (dxFrictions === 1 ? 'fricción' : 'fricciones');
+  if (lastDxDate && getEl('meta-dx-last'))
+    getEl('meta-dx-last').textContent = 'Último: ' + lastDxDate;
 })();
 
 /* ── ACTIVITY FEED ─── */
@@ -188,10 +198,10 @@ function summarizeUxflowSession(session) {
     return '<a class="recent-artifact" href="' + item.href + '">' +
       '<div class="recent-artifact-icon" aria-hidden="true">' + icon + '</div>' +
       '<div class="recent-artifact-body">' +
-        '<div class="recent-artifact-title">' + item.title + '</div>' +
-        '<div class="recent-artifact-meta">' + item.subtitle + ' · ' + item.date + ' · ' + item.meta + '</div>' +
+        '<div class="recent-artifact-title">' + escapeHTMLDash(item.title) + '</div>' +
+        '<div class="recent-artifact-meta">' + escapeHTMLDash(item.subtitle) + ' · ' + escapeHTMLDash(item.date) + ' · ' + escapeHTMLDash(item.meta) + '</div>' +
       '</div>' +
-      '<div class="recent-artifact-score">' + item.score + '</div>' +
+      '<div class="recent-artifact-score">' + escapeHTMLDash(item.score) + '</div>' +
       '</a>';
   }).join('');
 })();

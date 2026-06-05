@@ -75,7 +75,7 @@
       ⚡ Generar documentación
     </button>
     <button class="btn-export" onclick="copiarFigma()">
-      📋 Copiar asset para Figma
+      🖼 Exportar PNG para Figma
     </button>
     <button class="btn-export" onclick="exportarPDF()" style="margin-top:6px">
       📄 Exportar PDF
@@ -225,6 +225,35 @@
           </div>
 
         </div><!-- /doc-grid row 2 -->
+
+        <div class="doc-grid" style="margin-top:16px;">
+          <div class="doc-section">
+            <div class="doc-section-title"><span class="icon">HU</span> Historia de Usuario (minimal)</div>
+            <div class="hu-card" id="hu-story">—</div>
+          </div>
+
+          <div class="doc-section">
+            <div class="doc-section-title"><span class="icon">⌖</span> Importancia vs Factibilidad</div>
+            <div class="priority-controls">
+              <label for="priority-importance">Importancia
+                <span id="priority-importance-value">60%</span>
+              </label>
+              <input type="range" id="priority-importance" min="0" max="100" value="60">
+              <label for="priority-feasibility">Factibilidad
+                <span id="priority-feasibility-value">60%</span>
+              </label>
+              <input type="range" id="priority-feasibility" min="0" max="100" value="60">
+            </div>
+            <div class="priority-matrix" id="priority-matrix" title="Haz click para mover el punto de prioridad">
+              <div class="axis-label axis-y-high">Alta importancia</div>
+              <div class="axis-label axis-y-low">Baja importancia</div>
+              <div class="axis-label axis-x-low">Baja factibilidad</div>
+              <div class="axis-label axis-x-high">Alta factibilidad</div>
+              <div class="priority-point" id="priority-point"></div>
+            </div>
+            <div class="priority-caption" id="priority-caption">Alta importancia · Alta factibilidad</div>
+          </div>
+        </div>
       </div><!-- /doc-body -->
 
       <div id="uxflow-doc-screenshot" class="uxflow-screenshot-display" style="display:none;padding:0 32px 16px;"></div>

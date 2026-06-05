@@ -4,7 +4,7 @@ var fs = require('fs');
 var path = require('path');
 
 var ROOT = path.join(__dirname, '..');
-var HTML_FILES = ['index.html', 'benchmark.html', 'uxflow.html', 'admin.html'];
+var HTML_FILES = ['index.html', 'benchmark.html', 'uxflow.html', 'admin.html', 'eisenhower.html', 'voc.html'];
 var JS_DIR = path.join(ROOT, 'js');
 
 function fail(message) {

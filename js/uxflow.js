@@ -1,6 +1,20 @@
 /* ─── CONSTANTES ─────────────────────────────────────────────── */
 var UXFLOW_SCREENSHOT_MAX_DIM = 1200;
 var UXFLOW_STORAGE_KEY = 'uxflow-historial';
+var UXFLOW_BLOB_URL_REVOKE_DELAY_MS = 2000;
+var MAX_PROMPT_ACTION_CLAUSES = 3;
+var BASE_IMPORTANCE_SCORE = 55;
+var IMPORTANCE_EDGE_CASE_BONUS = 6;
+var IMPORTANCE_EDGE_CASE_BONUS_CAP = 18;
+var IMPORTANCE_HIGH_IMPACT_BONUS = 22;
+var IMPORTANCE_CRITICALITY_BONUS = 10;
+var BASE_FEASIBILITY_SCORE = 72;
+var FEASIBILITY_MARKET_PENALTY = 4;
+var FEASIBILITY_MARKET_PENALTY_CAP = 16;
+var FEASIBILITY_EDGE_CASE_PENALTY = 8;
+var FEASIBILITY_EDGE_CASE_PENALTY_CAP = 24;
+var FEASIBILITY_COMPLEXITY_PENALTY = 16;
+var FEASIBILITY_QUICK_WIN_BONUS = 8;
 
 var historial = readHistory();
 var _uxflowScreenshot = null;
@@ -40,18 +54,91 @@ function readHistory() {
   try {
     var raw = localStorage.getItem(UXFLOW_STORAGE_KEY);
     var parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    return sanitizeHistory(parsed);
   } catch (e) {
     return [];
   }
 }
 
-function writeHistory() {
+function sanitizeHistory(items) {
+  if (!Array.isArray(items)) return [];
+  return items.map(sanitizeHistoryEntry).filter(Boolean);
+}
+
+function writeHistory(nextHistory) {
   try {
-    localStorage.setItem(UXFLOW_STORAGE_KEY, JSON.stringify(historial));
+    var data = Array.isArray(nextHistory) ? nextHistory : historial;
+    localStorage.setItem(UXFLOW_STORAGE_KEY, JSON.stringify(data));
+    return true;
   } catch (e) {
-    /* ignore storage errors */
+    return false;
   }
+}
+
+function sanitizeHistoryEntry(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  var title = String(entry.titulo || (entry.model && entry.model.title) || 'Proyecto UX').trim();
+  var prompt = normalizePrompt(entry.criterios || (entry.model && entry.model.prompt) || '');
+  var selectedLinea = entry.linea || (entry.model && entry.model.linea) || 'Otro';
+  var rawCountries = entry.paises || ((entry.model && Array.isArray(entry.model.countries))
+    ? entry.model.countries.join(', ')
+    : '');
+  var model = entry.model;
+
+  if (!model || !Array.isArray(model.steps) || !Array.isArray(model.criteria)) {
+    var countries = inferCountries(prompt, rawCountries);
+    var actor = extractActor(prompt);
+    var goal = extractGoal(prompt);
+    var benefit = extractBenefit(prompt);
+    var linea = inferLinea(prompt, selectedLinea);
+    var edgeCases = detectEdgeCases(prompt);
+    model = {
+      title: title,
+      actor: actor,
+      goal: goal,
+      benefit: benefit,
+      linea: linea,
+      countries: countries,
+      prompt: prompt,
+      edgeCases: edgeCases,
+      steps: detectSteps(prompt, actor, goal, linea, countries, edgeCases),
+      criteria: buildCriteria(goal, linea, countries, edgeCases, prompt),
+      tabDescription: LINEA_COPY[linea] || LINEA_COPY.Otro,
+      userStory: buildUserStory(actor, goal, benefit),
+      priorizacion: {
+        importancia: inferImportanceScore(prompt, edgeCases, goal),
+        factibilidad: inferFeasibilityScore(prompt, countries, edgeCases)
+      }
+    };
+  }
+
+  model = hydrateMinimalModel(model);
+
+  return {
+    id: entry.id || Date.now(),
+    titulo: title,
+    linea: model.linea || selectedLinea || 'Otro',
+    criterios: prompt,
+    paises: Array.isArray(model.countries) ? model.countries.join(', ') : rawCountries,
+    fecha: entry.fecha || fechaHoy(),
+    screenshot: entry.screenshot || null,
+    model: model,
+    flow: {
+      actor: model.actor,
+      goal: model.goal,
+      steps: Array.isArray(model.steps) ? model.steps : [],
+      criteria: Array.isArray(model.criteria) ? model.criteria : [],
+      edgeCases: Array.isArray(model.edgeCases) ? model.edgeCases : []
+    }
+  };
+}
+
+function nextHistoryId() {
+  var maxId = historial.reduce(function (acc, item) {
+    var current = Number(item.id) || 0;
+    return current > acc ? current : acc;
+  }, 0);
+  return Math.max(maxId + 1, Date.now());
 }
 
 function scrollToApp() {
@@ -73,6 +160,14 @@ function setSaveStatus(status) {
 
 function normalizePrompt(text) {
   return String(text || '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/<\/?[a-zA-Z][^>]*>/g, ' ')
+    .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]+)]\([^)]*\)/g, '$1')
+    .replace(/^\s*[-*+]\s+/gm, ' ')
+    .replace(/^\s*\d+[.)]\s+/gm, ' ')
+    .replace(/[`*_~#>|]/g, ' ')
+    .replace(/\r?\n+/g, ' ')
     .replace(/\s+/g, ' ')
     .replace(/[“”]/g, '"')
     .trim();
@@ -115,6 +210,83 @@ function extractGoal(prompt) {
   return slugToSentence(prompt) || 'Documentar el flujo';
 }
 
+function extractBenefit(prompt) {
+  var match = prompt.match(/\bpara\s+([^,.]+?)(?:,|\.| con | y | o | pero | cuando |$)/i);
+  if (match) return slugToSentence(match[1]);
+  if (/cliente|usuario/i.test(prompt)) return 'Mejorar la experiencia del usuario final';
+  if (/negocio|operaci/i.test(prompt)) return 'Alinear objetivos de negocio y ejecución';
+  return 'Alinear diseño, negocio y entrega';
+}
+
+function buildUserStory(actor, goal, benefit) {
+  var actorText = String(actor || 'usuario').trim();
+  var goalText = String(goal || 'resolver una necesidad').trim();
+  var benefitText = String(benefit || '').trim();
+  return 'Como ' + actorText + ', quiero ' + goalText.toLowerCase() +
+    (benefitText ? ' para ' + benefitText.toLowerCase() : '') + '.';
+}
+
+function clampPriority(value) {
+  var num = parseInt(value, 10);
+  if (isNaN(num)) num = 50;
+  return Math.max(0, Math.min(100, num));
+}
+
+function inferImportanceScore(prompt, edgeCases, goal) {
+  var source = String(prompt || '') + ' ' + String(goal || '');
+  var score = BASE_IMPORTANCE_SCORE;
+  score += Math.min((edgeCases || []).length * IMPORTANCE_EDGE_CASE_BONUS, IMPORTANCE_EDGE_CASE_BONUS_CAP);
+  if (/cliente|usuario|negocio|impacto|riesgo|estrateg|cr[ií]tic|reput/i.test(source)) score += IMPORTANCE_HIGH_IMPACT_BONUS;
+  if (/bloque|ca[ií]da|error|inciden|sla|regulatori/i.test(source)) score += IMPORTANCE_CRITICALITY_BONUS;
+  return clampPriority(score);
+}
+
+function inferFeasibilityScore(prompt, countries, edgeCases) {
+  var source = String(prompt || '');
+  var score = BASE_FEASIBILITY_SCORE;
+  score -= Math.min(Math.max(((countries || []).length - 1) * FEASIBILITY_MARKET_PENALTY, 0), FEASIBILITY_MARKET_PENALTY_CAP);
+  score -= Math.min((edgeCases || []).length * FEASIBILITY_EDGE_CASE_PENALTY, FEASIBILITY_EDGE_CASE_PENALTY_CAP);
+  if (/integraci|dependen|legacy|migraci|manual|multi|varios equipos/i.test(source)) score -= FEASIBILITY_COMPLEXITY_PENALTY;
+  if (/ajuste|optimiza|mejora|copy|texto|ui|filtro/i.test(source)) score += FEASIBILITY_QUICK_WIN_BONUS;
+  return clampPriority(score);
+}
+
+function getPriorityQuadrantLabel(importancia, factibilidad) {
+  var impHigh = importancia >= 50;
+  var facHigh = factibilidad >= 50;
+  if (impHigh && facHigh) return 'Alta importancia · Alta factibilidad';
+  if (impHigh && !facHigh) return 'Alta importancia · Baja factibilidad';
+  if (!impHigh && facHigh) return 'Baja importancia · Alta factibilidad';
+  return 'Baja importancia · Baja factibilidad';
+}
+
+function hydrateMinimalModel(model) {
+  var prompt = normalizePrompt(model.prompt || '');
+  var actor = model.actor || extractActor(prompt);
+  var goal = model.goal || extractGoal(prompt);
+  var countries = Array.isArray(model.countries) ? model.countries : inferCountries(prompt, '');
+  var edgeCases = Array.isArray(model.edgeCases) ? model.edgeCases : detectEdgeCases(prompt);
+  var benefit = model.benefit || extractBenefit(prompt);
+
+  model.actor = actor;
+  model.goal = goal;
+  model.countries = countries;
+  model.edgeCases = edgeCases;
+  model.prompt = prompt;
+  model.benefit = benefit;
+  model.userStory = model.userStory || buildUserStory(actor, goal, benefit);
+
+  var inferredImportance = inferImportanceScore(prompt, edgeCases, goal);
+  var inferredFeasibility = inferFeasibilityScore(prompt, countries, edgeCases);
+  var existing = model.priorizacion || {};
+  model.priorizacion = {
+    importancia: typeof existing.importancia === 'number' ? clampPriority(existing.importancia) : inferredImportance,
+    factibilidad: typeof existing.factibilidad === 'number' ? clampPriority(existing.factibilidad) : inferredFeasibility
+  };
+
+  return model;
+}
+
 function inferCountries(prompt, rawInput) {
   var fromInput = String(rawInput || '').split(',').map(function (item) { return item.trim(); }).filter(Boolean);
   var joined = normalizePrompt(prompt + ' ' + rawInput);
@@ -155,6 +327,7 @@ function detectEdgeCases(prompt) {
 
 function detectSteps(prompt, actor, goal, linea, countries, edgeCases) {
   var source = prompt.toLowerCase();
+  var knownDetails = {};
   var steps = [{
     label: 'Inicio',
     detail: actor + ' inicia la solicitud',
@@ -176,6 +349,22 @@ function detectSteps(prompt, actor, goal, linea, countries, edgeCases) {
   if (/valid|integridad|regla/.test(source)) {
     steps.push({ label: 'Validar integridad', detail: 'Se comprueban reglas y consistencia antes del publish', tone: 'light' });
   }
+  steps.forEach(function (item) {
+    var key = String(item.detail || '').toLowerCase().trim();
+    if (key) knownDetails[key] = true;
+  });
+  splitPromptClauses(prompt).slice(0, MAX_PROMPT_ACTION_CLAUSES).forEach(function (clause) {
+    var action = slugToSentence(
+      clause
+        .replace(/^yo como\s+[^,.]+?\s+quiero\s+/i, '')
+        .replace(/^quiero\s+/i, '')
+        .trim()
+    );
+    var actionKey = action.toLowerCase();
+    if (!action || actionKey === goal.toLowerCase() || knownDetails[actionKey]) return;
+    knownDetails[actionKey] = true;
+    steps.push({ label: 'Acción', detail: action, tone: 'light' });
+  });
   if (!steps.some(function (item) { return item.label === 'Renderizar salida'; })) {
     steps.push({ label: 'Resolver flujo', detail: goal, tone: 'cyan-bg' });
   }
@@ -219,14 +408,16 @@ function buildFlowModel() {
   var linea = inferLinea(prompt, document.getElementById('linea').value);
   var actor = extractActor(prompt);
   var goal = extractGoal(prompt);
+  var benefit = extractBenefit(prompt);
   var edgeCases = detectEdgeCases(prompt);
   var steps = detectSteps(prompt, actor, goal, linea, countries, edgeCases);
   var criteria = buildCriteria(goal, linea, countries, edgeCases, prompt);
 
-  return {
+  return hydrateMinimalModel({
     title: tituloInput,
     actor: actor,
     goal: goal,
+    benefit: benefit,
     linea: linea,
     countries: countries,
     prompt: prompt,
@@ -234,7 +425,7 @@ function buildFlowModel() {
     steps: steps,
     criteria: criteria,
     tabDescription: LINEA_COPY[linea] || LINEA_COPY.Otro
-  };
+  });
 }
 
 /* ─── RENDER ─────────────────────────────────────────────────── */
@@ -284,6 +475,85 @@ function renderCriteria(model) {
   container.innerHTML = model.criteria.map(function (item) {
     return '<div class="criteria-item">' + escapeHTML(item) + '</div>';
   }).join('');
+}
+
+function renderUserStory(model) {
+  var container = document.getElementById('hu-story');
+  if (!container) return;
+  container.textContent = model.userStory;
+}
+
+function renderPriorityMatrix(importancia, factibilidad) {
+  var point = document.getElementById('priority-point');
+  var caption = document.getElementById('priority-caption');
+  var importanceValue = document.getElementById('priority-importance-value');
+  var feasibilityValue = document.getElementById('priority-feasibility-value');
+  var importanceSlider = document.getElementById('priority-importance');
+  var feasibilitySlider = document.getElementById('priority-feasibility');
+  var imp = clampPriority(importancia);
+  var fac = clampPriority(factibilidad);
+
+  if (importanceSlider) importanceSlider.value = imp;
+  if (feasibilitySlider) feasibilitySlider.value = fac;
+  if (importanceValue) importanceValue.textContent = imp + '%';
+  if (feasibilityValue) feasibilityValue.textContent = fac + '%';
+  if (caption) caption.textContent = getPriorityQuadrantLabel(imp, fac);
+  if (point) {
+    point.style.left = fac + '%';
+    point.style.bottom = imp + '%';
+  }
+}
+
+function syncPriorityToModel(importancia, factibilidad) {
+  if (!_lastDocModel) return;
+  _lastDocModel.priorizacion = {
+    importancia: clampPriority(importancia),
+    factibilidad: clampPriority(factibilidad)
+  };
+}
+
+function updatePriorityFromControls() {
+  var importanceSlider = document.getElementById('priority-importance');
+  var feasibilitySlider = document.getElementById('priority-feasibility');
+  if (!importanceSlider || !feasibilitySlider) return;
+  var imp = clampPriority(importanceSlider.value);
+  var fac = clampPriority(feasibilitySlider.value);
+  renderPriorityMatrix(imp, fac);
+  syncPriorityToModel(imp, fac);
+}
+
+function updatePriorityFromMatrixPointer(event) {
+  var matrix = document.getElementById('priority-matrix');
+  if (!matrix || !event) return;
+  var coords = matrixPointerToScores(matrix, event);
+  if (!coords) return;
+  var fac = coords.factibilidad;
+  var imp = coords.importancia;
+  renderPriorityMatrix(imp, fac);
+  syncPriorityToModel(imp, fac);
+}
+
+function matrixPointerToScores(matrix, event) {
+  if (!matrix || !event) return null;
+  var rect = matrix.getBoundingClientRect();
+  if (!rect || rect.width === 0 || rect.height === 0) return null;
+  var x = Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+  var y = Math.max(0, Math.min(rect.height, event.clientY - rect.top));
+  return {
+    factibilidad: clampPriority(Math.round((x / rect.width) * 100)),
+    importancia: clampPriority(Math.round((1 - (y / rect.height)) * 100))
+  };
+}
+
+function bindPriorityInteractions() {
+  var importanceSlider = document.getElementById('priority-importance');
+  var feasibilitySlider = document.getElementById('priority-feasibility');
+  var matrix = document.getElementById('priority-matrix');
+  if (importanceSlider) importanceSlider.addEventListener('input', updatePriorityFromControls);
+  if (feasibilitySlider) feasibilitySlider.addEventListener('input', updatePriorityFromControls);
+  if (matrix) {
+    matrix.addEventListener('click', updatePriorityFromMatrixPointer);
+  }
 }
 
 function renderTabs(model) {
@@ -354,6 +624,7 @@ function renderAnalytics(model) {
 }
 
 function renderDoc(model) {
+  model = hydrateMinimalModel(model);
   _lastDocModel = model;
   document.getElementById('doc-titulo').textContent = model.title.toUpperCase();
   document.getElementById('doc-fecha').textContent = 'FECHA: ' + fechaHoy();
@@ -361,6 +632,8 @@ function renderDoc(model) {
   renderOverview(model);
   renderFlow(model);
   renderCriteria(model);
+  renderUserStory(model);
+  renderPriorityMatrix(model.priorizacion.importancia, model.priorizacion.factibilidad);
   renderTabs(model);
   renderTable(model);
   renderAnalytics(model);
@@ -392,36 +665,200 @@ function generarDoc(options) {
 }
 
 /* ─── EXPORT ────────────────────────────────────────────────── */
+function escapeXml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function truncateText(text, maxLen) {
+  var value = String(text || '');
+  if (value.length <= maxLen) return value;
+  return value.slice(0, maxLen - 1) + '…';
+}
+
+function sanitizeFilename(text) {
+  var sanitized = String(text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+  return sanitized || 'uxflow';
+}
+
+function buildFallbackModelFromHistory(item) {
+  var prompt = normalizePrompt(item && item.criterios);
+  var linea = inferLinea(prompt, item && item.linea);
+  var countries = inferCountries(prompt, item && item.paises);
+  var actor = extractActor(prompt);
+  var goal = extractGoal(prompt);
+  var benefit = extractBenefit(prompt);
+  var edgeCases = detectEdgeCases(prompt);
+  return hydrateMinimalModel({
+    title: (item && item.titulo) || 'Proyecto UX',
+    actor: actor,
+    goal: goal,
+    benefit: benefit,
+    linea: linea,
+    countries: countries,
+    prompt: prompt,
+    edgeCases: edgeCases,
+    steps: detectSteps(prompt, actor, goal, linea, countries, edgeCases),
+    criteria: buildCriteria(goal, linea, countries, edgeCases, prompt),
+    tabDescription: LINEA_COPY[linea] || LINEA_COPY.Otro
+  });
+}
+
+function tonePalette(tone) {
+  if (tone === 'dark') return { fill: '#001A72', stroke: '#001A72', text: '#FFFFFF' };
+  if (tone === 'warning') return { fill: '#FFF4E8', stroke: '#FF8C00', text: '#8A4A00' };
+  if (tone === 'cyan-bg') return { fill: '#E8F9FF', stroke: '#00B5E2', text: '#003B5E' };
+  return { fill: '#F4F7FF', stroke: '#C6D6FF', text: '#001A72' };
+}
+
+function buildFlowSvgAsset(model) {
+  var steps = Array.isArray(model.steps) && model.steps.length ? model.steps : [{
+    label: 'Resultado',
+    detail: model.goal || 'Documentación UX',
+    tone: 'dark'
+  }];
+  var stepHeight = 84;
+  var stepGap = 34;
+  var topOffset = 180;
+  var width = 1400;
+  var sideX = 860;
+  var flowX = 70;
+  var flowWidth = 730;
+  var headerHeight = 120;
+  var contentHeight = topOffset + (steps.length * (stepHeight + stepGap)) + 80;
+  var height = Math.max(860, contentHeight);
+  var criteria = Array.isArray(model.criteria) ? model.criteria.slice(0, 6) : [];
+  var countries = Array.isArray(model.countries) ? model.countries : [];
+  var svg = '';
+
+  svg += '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '">';
+  svg += '<rect x="0" y="0" width="' + width + '" height="' + height + '" fill="#051C77"/>';
+  svg += '<rect x="32" y="24" width="' + (width - 64) + '" height="' + (height - 48) + '" rx="20" fill="#FFFFFF"/>';
+  svg += '<rect x="32" y="24" width="' + (width - 64) + '" height="' + headerHeight + '" rx="20" fill="#001A72"/>';
+  svg += '<text x="62" y="72" fill="#FFFFFF" font-size="34" font-family="Inter, Arial, sans-serif" font-weight="700">' + escapeXml(truncateText(model.title || 'UX FLOW', 44).toUpperCase()) + '</text>';
+  svg += '<text x="62" y="102" fill="#8FD9FF" font-size="16" font-family="Inter, Arial, sans-serif">Línea: ' + escapeXml(truncateText(model.linea || 'Otro', 44)) + '</text>';
+  svg += '<text x="' + (width - 240) + '" y="102" fill="#8FD9FF" font-size="16" font-family="Inter, Arial, sans-serif">Fecha: ' + escapeXml(fechaHoy()) + '</text>';
+
+  svg += '<text x="' + flowX + '" y="160" fill="#001A72" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="700">Flujo de interacción</text>';
+  svg += '<text x="' + sideX + '" y="160" fill="#001A72" font-size="18" font-family="Inter, Arial, sans-serif" font-weight="700">Resumen</text>';
+
+  steps.forEach(function (step, index) {
+    var y = topOffset + index * (stepHeight + stepGap);
+    var palette = tonePalette(step.tone);
+    var label = truncateText(step.label || 'Paso', 42);
+    var detail = truncateText(step.detail || '', 90);
+    svg += '<rect x="' + flowX + '" y="' + y + '" width="' + flowWidth + '" height="' + stepHeight + '" rx="14" fill="' + palette.fill + '" stroke="' + palette.stroke + '" stroke-width="2"/>';
+    svg += '<text x="' + (flowX + 20) + '" y="' + (y + 34) + '" fill="' + palette.text + '" font-size="20" font-family="Inter, Arial, sans-serif" font-weight="700">' + escapeXml(label) + '</text>';
+    if (detail) {
+      svg += '<text x="' + (flowX + 20) + '" y="' + (y + 60) + '" fill="' + palette.text + '" font-size="15" font-family="Inter, Arial, sans-serif">' + escapeXml(detail) + '</text>';
+    }
+    if (index < steps.length - 1) {
+      var cx = flowX + flowWidth / 2;
+      var lineY = y + stepHeight + 8;
+      svg += '<line x1="' + cx + '" y1="' + lineY + '" x2="' + cx + '" y2="' + (lineY + 16) + '" stroke="#001A72" stroke-width="2"/>';
+      svg += '<polygon points="' + (cx - 6) + ',' + (lineY + 16) + ' ' + (cx + 6) + ',' + (lineY + 16) + ' ' + cx + ',' + (lineY + 24) + '" fill="#001A72"/>';
+    }
+  });
+
+  svg += '<rect x="' + sideX + '" y="176" width="480" height="250" rx="14" fill="#F6F9FF" stroke="#D9E6FF"/>';
+  svg += '<text x="' + (sideX + 20) + '" y="212" fill="#001A72" font-size="16" font-family="Inter, Arial, sans-serif" font-weight="700">Actor: ' + escapeXml(truncateText(model.actor || 'Equipo UX', 40)) + '</text>';
+  svg += '<text x="' + (sideX + 20) + '" y="240" fill="#004A74" font-size="15" font-family="Inter, Arial, sans-serif">Objetivo: ' + escapeXml(truncateText(model.goal || 'Documentar flujo', 64)) + '</text>';
+  svg += '<text x="' + (sideX + 20) + '" y="268" fill="#004A74" font-size="15" font-family="Inter, Arial, sans-serif">Mercados: ' + escapeXml(truncateText(countries.join(', ') || 'Sin definir', 64)) + '</text>';
+  svg += '<text x="' + (sideX + 20) + '" y="306" fill="#001A72" font-size="14" font-family="Inter, Arial, sans-serif" font-weight="700">Criterios clave</text>';
+  criteria.forEach(function (criterion, idx) {
+    svg += '<text x="' + (sideX + 20) + '" y="' + (332 + (idx * 24)) + '" fill="#003B5E" font-size="13" font-family="Inter, Arial, sans-serif">• ' + escapeXml(truncateText(criterion, 64)) + '</text>';
+  });
+
+  svg += '<text x="' + (width / 2) + '" y="' + (height - 30) + '" text-anchor="middle" fill="#6B83C5" font-size="12" font-family="DM Mono, monospace">Generado con UXFLOW · listo para Figma (PNG/PDF)</text>';
+  svg += '</svg>';
+
+  return { svg: svg, width: width, height: height };
+}
+
+function flowSvgToPngBlob(asset) {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    img.onload = function () {
+      var scale = 2;
+      var canvas = document.createElement('canvas');
+      canvas.width = asset.width * scale;
+      canvas.height = asset.height * scale;
+      var ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('No canvas context available'));
+        return;
+      }
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0, asset.width, asset.height);
+      canvas.toBlob(function (blob) {
+        if (!blob) {
+          reject(new Error('No se pudo generar PNG'));
+          return;
+        }
+        resolve(blob);
+      }, 'image/png');
+    };
+    img.onerror = function () {
+      reject(new Error('No se pudo renderizar SVG'));
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(asset.svg);
+  });
+}
+
+function downloadBlob(blob, filename) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, UXFLOW_BLOB_URL_REVOKE_DELAY_MS);
+}
+
 function copiarFigma() {
   var model = _lastDocModel || buildFlowModel();
-  var lines = [
-    'UXFLOW Export',
-    '──────────────',
-    'Proyecto: ' + model.title,
-    'Línea: ' + model.linea,
-    'Actor: ' + model.actor,
-    'Objetivo: ' + model.goal,
-    'Países: ' + model.countries.join(', '),
-    'Pasos: ' + model.steps.map(function (step) { return step.label; }).join(' → '),
-    '──────────────',
-    'Generado con vientonorte/uxflow'
-  ];
-  navigator.clipboard.writeText(lines.join('\n'))
-    .then(function () { showToast('📋 Copiado. Artefacto listo para Figma o QA.'); })
-    .catch(function () { showToast('⚠ No se pudo copiar. Usa copiar manual.'); });
+  var asset = buildFlowSvgAsset(model);
+  var fileName = sanitizeFilename(model.title) + '-flow.png';
+  flowSvgToPngBlob(asset)
+    .then(function (blob) {
+      if (navigator.clipboard && window.ClipboardItem) {
+        return navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          .then(function () {
+            showToast('🖼 PNG del flujo copiado. Pégalo directo en Figma.');
+          })
+          .catch(function () {
+            downloadBlob(blob, fileName);
+            showToast('⬇ PNG descargado. Sube el archivo a Figma.');
+          });
+      }
+      downloadBlob(blob, fileName);
+      showToast('⬇ PNG descargado. Sube el archivo a Figma.');
+    })
+    .catch(function () {
+      showToast('⚠ No se pudo generar el PNG del flujo');
+    });
 }
 
 /* ─── HISTORIAL ─────────────────────────────────────────────── */
 function guardarHistorial() {
   var model = _lastDocModel || buildFlowModel();
   var item = {
+    id: nextHistoryId(),
     titulo: model.title,
     linea: model.linea,
     criterios: model.prompt,
     paises: model.countries.join(', '),
     fecha: fechaHoy(),
-    id: Date.now(),
     screenshot: _uxflowScreenshot || null,
+    model: model,
     flow: {
       actor: model.actor,
       goal: model.goal,
@@ -430,9 +867,12 @@ function guardarHistorial() {
       edgeCases: model.edgeCases
     }
   };
-  historial.unshift(item);
-  if (historial.length > 20) historial = historial.slice(0, 20);
-  writeHistory();
+  var updatedHistory = [item].concat(historial).slice(0, 20);
+  if (!writeHistory(updatedHistory)) {
+    showToast('⚠ No se pudo guardar (revisa espacio de almacenamiento local)');
+    return;
+  }
+  historial = updatedHistory;
   renderHistorial();
   showToast('💾 Activo guardado en historial');
   setSaveStatus('saved');
@@ -441,17 +881,22 @@ function guardarHistorial() {
 function cargarDesdeHistorial(id) {
   var item = historial.find(function (entry) { return entry.id === id; });
   if (!item) return;
-  document.getElementById('titulo').value = item.titulo || 'Proyecto UX';
-  document.getElementById('linea').value = item.linea || 'Otro';
-  document.getElementById('criterios').value = item.criterios || '';
-  document.getElementById('paises').value = item.paises || '';
+  var model = item.model || null;
+  if (!model) {
+    var normalized = sanitizeHistoryEntry(item);
+    model = normalized ? normalized.model : null;
+  }
+  if (!model) model = buildFallbackModelFromHistory(item);
+  document.getElementById('titulo').value = model.title || item.titulo || 'Proyecto UX';
+  document.getElementById('linea').value = model.linea || item.linea || 'Otro';
+  document.getElementById('criterios').value = model.prompt || item.criterios || '';
+  document.getElementById('paises').value = (Array.isArray(model.countries) ? model.countries.join(', ') : item.paises || '');
   _uxflowScreenshot = item.screenshot || null;
   renderDocScreenshot(_uxflowScreenshot);
   renderUxflowScreenshotPreview(_uxflowScreenshot);
-  generarDoc({
-    preserveStatus: true,
-    toastMessage: '📂 Activo restaurado desde historial'
-  });
+  renderDoc(model);
+  showToast('📂 Flujo restaurado desde historial');
+  setSaveStatus('saved');
   document.getElementById('editor').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -548,6 +993,10 @@ function removeUxflowScreenshot() {
 
 /* ─── PDF EXPORT ────────────────────────────────────────────── */
 function exportarPDF() {
+  if (!_lastDocModel) {
+    showToast('⚠ Genera la documentación antes de exportar PDF');
+    return;
+  }
   window.print();
 }
 
@@ -564,6 +1013,7 @@ function bindDirtyState() {
 document.getElementById('doc-fecha').textContent = 'FECHA: ' + fechaHoy();
 document.getElementById('canvas-date').textContent = fechaHoy();
 bindDirtyState();
+bindPriorityInteractions();
 renderHistorial();
 renderDocScreenshot(null);
 generarDoc();

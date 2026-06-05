@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Operating Model DX — Pipeline Jira + Miro + Figma + Teams → Matriz Eisenhower. Priorización ejecutiva de fricciones Digital Experience.">
+  <title>Operating Model DX — SURA Investments</title>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=dm-mono:400,500|space-grotesk:300,400,500,600,700|inter:400,500" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/eisenhower.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav aria-label="Navegación principal">
+  <a class="nav-brand" href="index.html" aria-label="Operating Model DX — Inicio">
+    <div class="nav-logo" aria-hidden="true">DX</div>
+    <span class="nav-title">Operating Model DX</span>
+    <span class="nav-badge">v1.0</span>
+  </a>
+  <div class="nav-actions">
+    <span class="nav-save-status" id="save-status" title="Estado del guardado" style="display:none">● Guardado</span>
+    <a class="nav-link nav-link-admin" href="admin.html">⚙ Admin</a>
+    <a class="nav-link" href="index.html">← uxtools</a>
+    <a class="btn-nav" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-eyebrow">Operating Model DX · SURA Investments · 2026</div>
+  <h1>Matriz Eisenhower<br><span class="accent">para DX.</span></h1>
+  <p class="hero-sub">Pipeline de priorización ejecutiva: transforma señales dispersas de Jira, Miro, Figma y Teams en decisiones priorizadas con scoring automático.</p>
+  <div class="hero-cta">
+    <button class="btn-primary" onclick="scrollToMatrix()">Ver matriz →</button>
+    <button class="btn-ghost" onclick="openNewFrictionModal()">+ Nueva fricción</button>
+  </div>
+</header>
+
+<!-- STATS BAR -->
+<section class="stats-bar">
+  <div class="stat-item stat-critical">
+    <div class="stat-value" id="stat-critical">0</div>
+    <div class="stat-label">🔴 Hacer ahora</div>
+  </div>
+  <div class="stat-item stat-important">
+    <div class="stat-value" id="stat-important">0</div>
+    <div class="stat-label">🟠 Planificar</div>
+  </div>
+  <div class="stat-item stat-delegate">
+    <div class="stat-value" id="stat-delegate">0</div>
+    <div class="stat-label">🟡 Delegar</div>
+  </div>
+  <div class="stat-item stat-monitor">
+    <div class="stat-value" id="stat-monitor">0</div>
+    <div class="stat-label">🟢 Monitorear</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value" id="stat-total">0</div>
+    <div class="stat-label">Total fricciones</div>
+  </div>
+</section>
+
+<!-- MATRIX -->
+<section class="matrix-container" id="matrix-container">
+  <div class="matrix-header">
+    <h2>Matriz Eisenhower DX</h2>
+    <div class="matrix-controls">
+      <select id="filter-team" class="filter-select">
+        <option value="">Todos los equipos</option>
+      </select>
+      <select id="filter-type" class="filter-select">
+        <option value="">Todos los tipos</option>
+        <option value="sistema">Sistema</option>
+        <option value="proceso">Proceso</option>
+        <option value="data">Data</option>
+        <option value="personas">Personas</option>
+        <option value="diseño">Diseño</option>
+      </select>
+      <select id="filter-status" class="filter-select">
+        <option value="">Todos los estados</option>
+        <option value="nuevo">Nuevo</option>
+        <option value="validado">Validado</option>
+        <option value="en-curso">En curso</option>
+        <option value="resuelto">Resuelto</option>
+        <option value="descartado">Descartado</option>
+      </select>
+      <button class="btn-export" onclick="exportToCSV()">↓ Exportar CSV</button>
+    </div>
+  </div>
+
+  <div class="eisenhower-matrix">
+    <!-- Quadrant 1: Important + Urgent -->
+    <div class="quadrant q1" data-quadrant="hacer">
+      <div class="quadrant-header">
+        <div class="quadrant-title">🔴 Hacer ahora</div>
+        <div class="quadrant-subtitle">Importante + Urgente</div>
+      </div>
+      <div class="quadrant-content" id="quadrant-hacer"></div>
+    </div>
+
+    <!-- Quadrant 2: Important + Not Urgent -->
+    <div class="quadrant q2" data-quadrant="planificar">
+      <div class="quadrant-header">
+        <div class="quadrant-title">🟠 Planificar</div>
+        <div class="quadrant-subtitle">Importante + No urgente</div>
+      </div>
+      <div class="quadrant-content" id="quadrant-planificar"></div>
+    </div>
+
+    <!-- Quadrant 3: Not Important + Urgent -->
+    <div class="quadrant q3" data-quadrant="delegar">
+      <div class="quadrant-header">
+        <div class="quadrant-title">🟡 Delegar</div>
+        <div class="quadrant-subtitle">No importante + Urgente</div>
+      </div>
+      <div class="quadrant-content" id="quadrant-delegar"></div>
+    </div>
+
+    <!-- Quadrant 4: Not Important + Not Urgent -->
+    <div class="quadrant q4" data-quadrant="monitorear">
+      <div class="quadrant-header">
+        <div class="quadrant-title">🟢 Monitorear</div>
+        <div class="quadrant-subtitle">No importante + No urgente</div>
+      </div>
+      <div class="quadrant-content" id="quadrant-monitorear"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FRICTION MODAL -->
+<div class="modal" id="friction-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-title">Nueva fricción DX</h3>
+      <button class="modal-close" onclick="closeFrictionModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="friction-form">
+        <!-- Basic Info -->
+        <div class="form-section">
+          <div class="form-section-title">Información básica</div>
+          <div class="form-group">
+            <label for="f-equipo">Equipo afectado *</label>
+            <input type="text" id="f-equipo" required placeholder="Ej: Canal Digital">
+          </div>
+          <div class="form-group">
+            <label for="f-friccion">Descripción de la fricción *</label>
+            <textarea id="f-friccion" required rows="3" placeholder="Describe el problema observado..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-tipo">Tipo de fricción *</label>
+              <select id="f-tipo" required>
+                <option value="">Seleccionar...</option>
+                <option value="sistema">Sistema</option>
+                <option value="proceso">Proceso</option>
+                <option value="data">Data</option>
+                <option value="personas">Personas</option>
+                <option value="diseño">Diseño</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="f-evidencia">Evidencia (URL)</label>
+              <input type="url" id="f-evidencia" placeholder="Link a Jira, Miro, Figma o Teams">
+            </div>
+          </div>
+        </div>
+
+        <!-- Urgency Scoring -->
+        <div class="form-section">
+          <div class="form-section-title">Urgencia (Severidad + Frecuencia + SLA + Bloqueo)</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-severidad">Severidad *</label>
+              <select id="f-severidad" required>
+                <option value="">-</option>
+                <option value="1">1 - Molestia menor</option>
+                <option value="2">2 - Afecta operación parcial</option>
+                <option value="3">3 - Detiene operación / afecta cliente</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="f-frecuencia">Frecuencia *</label>
+              <select id="f-frecuencia" required>
+                <option value="">-</option>
+                <option value="1">1 - Caso aislado</option>
+                <option value="2">2 - Recurrente</option>
+                <option value="3">3 - Diario / masivo</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-sla">SLA / Fecha crítica *</label>
+              <select id="f-sla" required>
+                <option value="">-</option>
+                <option value="1">1 - Sin fecha crítica</option>
+                <option value="2">2 - Fecha próxima</option>
+                <option value="3">3 - Vencido / riesgo inmediato</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="f-bloqueo">Bloqueo actual *</label>
+              <select id="f-bloqueo" required>
+                <option value="">-</option>
+                <option value="1">1 - No bloquea</option>
+                <option value="2">2 - Bloquea parcialmente</option>
+                <option value="3">3 - Bloquea equipo/proceso</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Importance Scoring -->
+        <div class="form-section">
+          <div class="form-section-title">Importancia (Impacto Cliente + Operacional + Alcance + Riesgo)</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-impacto-cliente">Impacto cliente *</label>
+              <select id="f-impacto-cliente" required>
+                <option value="">-</option>
+                <option value="1">1 - Invisible para cliente</option>
+                <option value="2">2 - Afecta experiencia parcial</option>
+                <option value="3">3 - Afecta experiencia crítica</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="f-impacto-operacional">Impacto operacional *</label>
+              <select id="f-impacto-operacional" required>
+                <option value="">-</option>
+                <option value="1">1 - Bajo esfuerzo perdido</option>
+                <option value="2">2 - Retrabajo moderado</option>
+                <option value="3">3 - Alto volumen / alto coste</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-alcance">Alcance *</label>
+              <select id="f-alcance" required>
+                <option value="">-</option>
+                <option value="1">1 - Un equipo</option>
+                <option value="2">2 - 2-3 equipos</option>
+                <option value="3">3 - Transversal</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="f-riesgo">Riesgo estratégico *</label>
+              <select id="f-riesgo" required>
+                <option value="">-</option>
+                <option value="1">1 - Bajo</option>
+                <option value="2">2 - Medio</option>
+                <option value="3">3 - Alto / regulatorio / reputacional</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Governance -->
+        <div class="form-section">
+          <div class="form-section-title">Governance</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="f-owner">Owner</label>
+              <input type="text" id="f-owner" placeholder="Responsable de la fricción">
+            </div>
+            <div class="form-group">
+              <label for="f-estado">Estado *</label>
+              <select id="f-estado" required>
+                <option value="nuevo">Nuevo</option>
+                <option value="validado">Validado</option>
+                <option value="en-curso">En curso</option>
+                <option value="resuelto">Resuelto</option>
+                <option value="descartado">Descartado</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="f-proxima-accion">Próxima acción</label>
+            <textarea id="f-proxima-accion" rows="2" placeholder="Siguiente paso concreto..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" onclick="closeFrictionModal()">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar fricción</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal" id="detail-modal">
+  <div class="modal-content modal-detail">
+    <div class="modal-header">
+      <h3 id="detail-title">Detalle de fricción</h3>
+      <button class="modal-close" onclick="closeDetailModal()">×</button>
+    </div>
+    <div class="modal-body" id="detail-content">
+      <!-- Content populated by JS -->
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeDetailModal()">Cerrar</button>
+      <button class="btn-primary" onclick="editCurrentFriction()">Editar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  SURA Investments · Operating Model DX · 2026 · <a href="https://vientonorte.github.io/">vientonorte</a>
+</footer>
+
+<script src="js/utils.js"></script>
+<script src="js/eisenhower.js"></script>
+</body>
+</html>
