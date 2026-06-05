@@ -39,6 +39,11 @@ jobs:
   deploy:
     needs: validate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+      packages: read
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -51,9 +56,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@vientonorte'
 
       - name: Install dependencies
         run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         run: npm run build
