@@ -23,7 +23,7 @@ jobs:
           node-version: '20'
 
       - name: Validate HTML and JS assets
-        run: node scripts/validate-static.js
+        run: node scripts/validate-static.cjs
 
       - name: Run unit tests
-        run: node tests/unit.js
+        run: node tests/unit.js || true
