@@ -148,7 +148,7 @@ export default function Dashboard() {
       <header className="dash-header">
         <div className="dash-header-inner">
           <div className="dash-greeting-col">
-            <div className="dash-eyebrow">UX Tools Suite · SURA Investments</div>
+            <div className="dash-eyebrow">UX Tools Suite · vientonorte</div>
             <h1 className="dash-title">{greeting()}</h1>
             <p className="dash-sub">
               Hub de instrumentos UX: benchmark comparativo, documentación automatizada de flujos y gestión de contenido.
@@ -265,7 +265,7 @@ export default function Dashboard() {
                 <span className="mod-tag">React</span>
                 <span className="mod-tag">localStorage</span>
                 <span className="mod-tag">PDF Export</span>
-                <span className="mod-tag">SURA</span>
+                <span className="mod-tag">vientonorte</span>
               </div>
             </div>
             <div className="module-card-footer">

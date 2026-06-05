@@ -107,7 +107,7 @@ export default function Brief() {
   return (
     <main className="brief-main" id="main" tabIndex={-1}>
       <div className="brief-header">
-        <div className="brief-eyebrow">UX Tools Suite · SURA Investments</div>
+        <div className="brief-eyebrow">UX Tools Suite · vientonorte</div>
         <h1 className="brief-title">Brief de Campaña</h1>
         <p className="brief-sub">
           Calcula cuánto puedes ganar y qué necesitas invertir en Instagram para llegar a más clientes.
