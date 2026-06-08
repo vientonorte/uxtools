@@ -641,9 +641,32 @@ details[open] > .med-legal__summary::before {
 }
 
 /* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .med-main {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .med-title {
+    font-size: clamp(1.5rem, 7vw, 2rem);
+  }
+
+  .med-privacy {
+    gap: var(--space-3);
+  }
+}
+
 @media (max-width: 520px) {
   .med-card__body {
     flex-direction: column;
+    padding: var(--space-4);
+  }
+
+  .med-card__header {
+    padding: var(--space-4);
+  }
+
+  .med-card__footer {
+    padding: var(--space-3) var(--space-4);
   }
 
   .med-card__qr {
@@ -653,6 +676,28 @@ details[open] > .med-legal__summary::before {
   .med-form__row {
     grid-template-columns: 1fr;
   }
+
+  /* Modal full-screen on small phones */
+  .med-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .med-modal {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: none;
+  }
+
+  .med-actions {
+    flex-direction: column;
+  }
+
+  .med-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 400px) {
@@ -660,11 +705,13 @@ details[open] > .med-legal__summary::before {
     padding: var(--space-4) var(--space-3);
   }
 
-  .med-card__header,
-  .med-card__body,
-  .med-card__footer {
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
+  .med-card__title {
+    font-size: 0.78rem;
+  }
+
+  .med-privacy {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
