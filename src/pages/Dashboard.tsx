@@ -329,6 +329,34 @@ export default function Dashboard() {
             </div>
           </article>
 
+          {/* ID Medicinal */}
+          <article className="module-card" id="mod-medicinal">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">🌿</div>
+                <span className="badge badge-live module-badge">PERSONAL</span>
+              </div>
+              <h2 className="module-title">ID Medicinal</h2>
+              <p className="module-desc">
+                Carnet digital de paciente medicinal de cannabis bajo Ley 20.000. Accesible, privado y offline — tus datos nunca salen de tu dispositivo.
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">🔒</span>100% local · Sin servidores
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Características">
+                <span className="mod-tag">Ley 20.000</span>
+                <span className="mod-tag">QR</span>
+                <span className="mod-tag">Privacidad</span>
+                <span className="mod-tag">Imprimible</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <Link className="btn-module-open" to="/medicinal">Abrir ID Medicinal →</Link>
+            </div>
+          </article>
+
           {/* VOC */}
           <article className="module-card" id="mod-voc">
             <div className="module-card-inner">
