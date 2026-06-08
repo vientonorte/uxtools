@@ -7,6 +7,7 @@ import Benchmark from './pages/Benchmark';
 import UxFlow from './pages/UxFlow';
 import Admin from './pages/Admin';
 import Brief from './pages/Brief';
+import Medicinal from './pages/Medicinal';
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/uxflow" element={<UxFlow />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/brief" element={<Brief />} />
+        <Route path="/medicinal" element={<Medicinal />} />
       </Routes>
       <Footer />
     </BenchmarkProvider>
