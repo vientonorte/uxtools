@@ -537,6 +537,39 @@ details[open] > .med-legal__summary::before {
   color: #b45309;
 }
 
+.med-card__back-article--rights {
+  background: #f0f7ff;
+  border: 1px solid rgba(0,90,180,0.2);
+  border-left: 3px solid #3182ce;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-3) var(--space-4);
+  gap: var(--space-3);
+}
+
+.med-card__back-article--rights .med-card__back-art-title {
+  color: #1a4a8a;
+}
+
+.med-card__back-art-rights {
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  color: #2c5282;
+  line-height: 1.55;
+}
+
+.med-card__back-art-rights strong {
+  color: #1a365d;
+  font-weight: 700;
+}
+
+.med-card__back-art-rights--note {
+  font-style: italic;
+  color: #2d3748;
+  font-size: 0.75rem;
+  padding-top: var(--space-1);
+  border-top: 1px solid rgba(0,90,180,0.15);
+}
+
 .med-card__back-disclaimer {
   font-size: 0.72rem;
   color: #718096;

@@ -333,10 +333,32 @@ function IdCard({ data }: { data: MedicinalIdData }) {
               </p>
             </div>
 
+            <div className="med-card__back-article med-card__back-article--rights">
+              <h3 className="med-card__back-art-title">
+                Ley 20.584 Arts. 12°–13° — Confidencialidad Médica
+              </h3>
+              <p className="med-card__back-art-text">
+                «Toda la información que surja de la ficha clínica y demás documentos donde
+                se registren procedimientos y tratamientos será considerada dato sensible.
+                Los terceros no vinculados a la atención de salud no tendrán acceso a dicha
+                información.»
+              </p>
+              <p className="med-card__back-art-rights">
+                <strong>Solo pueden solicitar la receta:</strong> médico tratante ·
+                COMPIN · tribunales (con causa relacionada) · fiscales con autorización judicial.
+                Carabineros, empleadores y terceros no tienen ese derecho.
+              </p>
+              <p className="med-card__back-art-rights med-card__back-art-rights--note">
+                Este carnet es identificación voluntaria y suficiente para acreditar
+                el Art. 15°. No estás obligado a exhibir la receta original a quien
+                no figure en la lista anterior.
+              </p>
+            </div>
+
             <p className="med-card__back-disclaimer">
-              El Art. 15° justifica el porte para tratamiento médico. El consumo en recintos
-              públicos está regulado por Art. 50° independientemente. Porta siempre la
-              receta médica original.
+              Art. 15° (Ley 20.000) justifica el porte — incluido porte para uso próximo
+              en el tiempo — durante toda la vigencia de la receta. Porta siempre la
+              receta original para presentarla a quienes corresponde por ley.
             </p>
           </div>
 
