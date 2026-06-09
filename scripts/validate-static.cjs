@@ -31,8 +31,17 @@ function validateHtmlAssets(fileName) {
     var normalized = assetPath.split('?')[0].split('#')[0];
     if (!normalized) continue;
 
-    var target = path.join(ROOT, normalized);
-    if (!fs.existsSync(target)) {
+    // Strip the Vite base prefix (/uxtools/) before resolving locally;
+    // Vite copies public/ to dist/ so also check public/<path>.
+    var VITE_BASE = '/uxtools/';
+    var localPath = normalized.startsWith(VITE_BASE)
+      ? normalized.slice(VITE_BASE.length)
+      : normalized;
+
+    var target = path.join(ROOT, localPath);
+    var publicTarget = path.join(ROOT, 'public', localPath);
+    var srcTarget = path.join(ROOT, 'src', localPath);
+    if (!fs.existsSync(target) && !fs.existsSync(publicTarget) && !fs.existsSync(srcTarget)) {
       fail(fileName + ' references missing asset: ' + normalized);
     }
   }
