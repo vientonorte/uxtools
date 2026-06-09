@@ -4,6 +4,7 @@ export interface MedicinalIdData {
   fechaReceta: string;
   vigenciaMeses: 1 | 3 | 6 | 12;
   dosis: string;
+  cantidadMensual: string;
   diagnostico: string;
   medicoTratante: string;
   organizacion: string;
@@ -20,6 +21,7 @@ export const MEDICINAL_DEFAULT: MedicinalIdData = {
   fechaReceta: '',
   vigenciaMeses: 6,
   dosis: '',
+  cantidadMensual: '',
   diagnostico: '',
   medicoTratante: '',
   organizacion: '',

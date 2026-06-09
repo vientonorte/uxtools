@@ -43,7 +43,8 @@ function buildQrText(data: MedicinalIdData): string {
     `Receta: ${formatDateES(data.fechaReceta)}`,
     `Vigencia: ${data.vigenciaMeses} meses`,
     `Control: ${calcProximoControl(data.fechaReceta, data.vigenciaMeses)}`,
-    `Dosis: ${data.dosis} Cannabis spp (porte justificado)`,
+    `Dosis diaria: ${data.dosis}`,
+    data.cantidadMensual ? `Cantidad autorizada/mes: ${data.cantidadMensual}` : null,
     data.medicoTratante ? `Médico: ${data.medicoTratante}` : null,
     data.organizacion ? `Org: ${data.organizacion}` : null,
     '',
@@ -59,7 +60,8 @@ function buildShareText(data: MedicinalIdData): string {
     `Receta: ${formatDateES(data.fechaReceta)}`,
     `Vigencia: ${data.vigenciaMeses} meses`,
     `Control: ${calcProximoControl(data.fechaReceta, data.vigenciaMeses)}`,
-    `Dosis: ${data.dosis} Cannabis spp (porte justificado)`,
+    `Dosis diaria: ${data.dosis}`,
+    data.cantidadMensual ? `Cantidad autorizada/mes: ${data.cantidadMensual}` : null,
     data.mostrarDiagnostico && data.diagnostico ? `Diagnóstico: ${data.diagnostico}` : null,
     data.medicoTratante ? `Médico: ${data.medicoTratante}` : null,
     '',
@@ -213,9 +215,16 @@ function IdCard({ data }: { data: MedicinalIdData }) {
                 </div>
 
                 <div className="med-card__field">
-                  <dt>Dosis diaria Cannabis spp (porte justificado)</dt>
+                  <dt>Dosis diaria Cannabis spp</dt>
                   <dd>{data.dosis || '—'}</dd>
                 </div>
+
+                {data.cantidadMensual && (
+                  <div className="med-card__field med-card__field--highlight">
+                    <dt>Cantidad autorizada (dispensación)</dt>
+                    <dd>{data.cantidadMensual} <span className="med-card__field-note">porte justificado · Art. 15°</span></dd>
+                  </div>
+                )}
 
                 <div className="med-card__field">
                   <dt>Diagnóstico</dt>
@@ -510,19 +519,36 @@ function EditModal({ data, onSave, onClose }: EditModalProps) {
               </div>
             </div>
 
-            <div className="med-form__group">
-              <label htmlFor="med-dosis" className="med-form__label">
-                Dosis diaria *
-              </label>
-              <input
-                id="med-dosis"
-                className="med-form__input"
-                type="text"
-                value={form.dosis}
-                onChange={(e) => update('dosis', e.target.value)}
-                placeholder="ej: 1,5 gramos"
-                required
-              />
+            <div className="med-form__row">
+              <div className="med-form__group">
+                <label htmlFor="med-dosis" className="med-form__label">
+                  Dosis diaria *
+                </label>
+                <input
+                  id="med-dosis"
+                  className="med-form__input"
+                  type="text"
+                  value={form.dosis}
+                  onChange={(e) => update('dosis', e.target.value)}
+                  placeholder="ej: 2 gramos"
+                  required
+                />
+              </div>
+
+              <div className="med-form__group">
+                <label htmlFor="med-cantidad-mensual" className="med-form__label">
+                  Cantidad mensual{' '}
+                  <span className="med-form__hint">(dispensación)</span>
+                </label>
+                <input
+                  id="med-cantidad-mensual"
+                  className="med-form__input"
+                  type="text"
+                  value={form.cantidadMensual}
+                  onChange={(e) => update('cantidadMensual', e.target.value)}
+                  placeholder="ej: 50 g/mes"
+                />
+              </div>
             </div>
 
             <div className="med-form__group">
