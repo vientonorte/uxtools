@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
+import html2canvas from 'html2canvas';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import type { MedicinalIdData } from '../types/medicinal';
 import { MEDICINAL_DEFAULT, MEDICINAL_STORAGE_KEY } from '../types/medicinal';
@@ -42,7 +43,8 @@ function buildQrText(data: MedicinalIdData): string {
     `Receta: ${formatDateES(data.fechaReceta)}`,
     `Vigencia: ${data.vigenciaMeses} meses`,
     `Control: ${calcProximoControl(data.fechaReceta, data.vigenciaMeses)}`,
-    `Dosis: ${data.dosis} Cannabis spp (porte justificado)`,
+    `Dosis diaria: ${data.dosis}`,
+    data.cantidadMensual ? `Cantidad autorizada/mes: ${data.cantidadMensual}` : null,
     data.medicoTratante ? `Médico: ${data.medicoTratante}` : null,
     data.organizacion ? `Org: ${data.organizacion}` : null,
     '',
@@ -58,7 +60,8 @@ function buildShareText(data: MedicinalIdData): string {
     `Receta: ${formatDateES(data.fechaReceta)}`,
     `Vigencia: ${data.vigenciaMeses} meses`,
     `Control: ${calcProximoControl(data.fechaReceta, data.vigenciaMeses)}`,
-    `Dosis: ${data.dosis} Cannabis spp (porte justificado)`,
+    `Dosis diaria: ${data.dosis}`,
+    data.cantidadMensual ? `Cantidad autorizada/mes: ${data.cantidadMensual}` : null,
     data.mostrarDiagnostico && data.diagnostico ? `Diagnóstico: ${data.diagnostico}` : null,
     data.medicoTratante ? `Médico: ${data.medicoTratante}` : null,
     '',
@@ -212,9 +215,16 @@ function IdCard({ data }: { data: MedicinalIdData }) {
                 </div>
 
                 <div className="med-card__field">
-                  <dt>Dosis diaria Cannabis spp (porte justificado)</dt>
+                  <dt>Dosis diaria Cannabis spp</dt>
                   <dd>{data.dosis || '—'}</dd>
                 </div>
+
+                {data.cantidadMensual && (
+                  <div className="med-card__field med-card__field--highlight">
+                    <dt>Cantidad autorizada (dispensación)</dt>
+                    <dd>{data.cantidadMensual} <span className="med-card__field-note">porte justificado · Art. 15°</span></dd>
+                  </div>
+                )}
 
                 <div className="med-card__field">
                   <dt>Diagnóstico</dt>
@@ -298,9 +308,35 @@ function IdCard({ data }: { data: MedicinalIdData }) {
               </p>
             </div>
 
+            <div className="med-card__back-article med-card__back-article--warning">
+              <h3 className="med-card__back-art-title">
+                Artículo 50° — Consumo en Recintos Públicos o Privados
+              </h3>
+              <p className="med-card__back-art-text">
+                «Los que consumieren alguna de las drogas o sustancias estupefacientes o
+                sicotrópicas […] en lugares públicos o abiertos al público, tales como
+                calles, caminos, plazas, teatros, cines, hoteles, cafés, restaurantes,
+                bares, estadios, centros de baile o de música; o en establecimientos
+                educacionales o de capacitación, serán sancionados con:
+                a) Multa de una a diez unidades tributarias mensuales.
+                b) Asistencia obligatoria a programas de prevención hasta por sesenta días,
+                o tratamiento o rehabilitación hasta por ciento ochenta días.»
+              </p>
+              <p className="med-card__back-art-text">
+                «Idénticas penas se aplicarán a quienes tengan o porten en tales lugares
+                las drogas o sustancias antes indicadas para su uso o consumo personal
+                exclusivo y próximo en el tiempo.»
+              </p>
+              <p className="med-card__back-art-text">
+                «Con las mismas penas serán sancionados quienes consuman dichas drogas en
+                lugares o recintos privados, si se hubiesen concertado para tal propósito.»
+              </p>
+            </div>
+
             <p className="med-card__back-disclaimer">
-              Este carnet es un complemento informativo. Porta siempre la receta médica original.
-              No reemplaza documentos legales oficiales.
+              El Art. 15° justifica el porte para tratamiento médico. El consumo en recintos
+              públicos está regulado por Art. 50° independientemente. Porta siempre la
+              receta médica original.
             </p>
           </div>
 
@@ -483,19 +519,36 @@ function EditModal({ data, onSave, onClose }: EditModalProps) {
               </div>
             </div>
 
-            <div className="med-form__group">
-              <label htmlFor="med-dosis" className="med-form__label">
-                Dosis diaria *
-              </label>
-              <input
-                id="med-dosis"
-                className="med-form__input"
-                type="text"
-                value={form.dosis}
-                onChange={(e) => update('dosis', e.target.value)}
-                placeholder="ej: 1,5 gramos"
-                required
-              />
+            <div className="med-form__row">
+              <div className="med-form__group">
+                <label htmlFor="med-dosis" className="med-form__label">
+                  Dosis diaria *
+                </label>
+                <input
+                  id="med-dosis"
+                  className="med-form__input"
+                  type="text"
+                  value={form.dosis}
+                  onChange={(e) => update('dosis', e.target.value)}
+                  placeholder="ej: 2 gramos"
+                  required
+                />
+              </div>
+
+              <div className="med-form__group">
+                <label htmlFor="med-cantidad-mensual" className="med-form__label">
+                  Cantidad mensual{' '}
+                  <span className="med-form__hint">(dispensación)</span>
+                </label>
+                <input
+                  id="med-cantidad-mensual"
+                  className="med-form__input"
+                  type="text"
+                  value={form.cantidadMensual}
+                  onChange={(e) => update('cantidadMensual', e.target.value)}
+                  placeholder="ej: 50 g/mes"
+                />
+              </div>
             </div>
 
             <div className="med-form__group">
@@ -568,6 +621,13 @@ function EditModal({ data, onSave, onClose }: EditModalProps) {
 
 // ── Main page ────────────────────────────────────────────────
 
+// ── PWA install prompt ───────────────────────────────────────
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export default function Medicinal() {
   const [data, setData] = useLocalStorage<MedicinalIdData>(
     MEDICINAL_STORAGE_KEY,
@@ -575,8 +635,30 @@ export default function Medicinal() {
   );
   const [editOpen, setEditOpen] = useState(false);
   const [savedMsg, setSavedMsg] = useState('');
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isIos, setIsIos] = useState(false);
+  const [showIosHint, setShowIosHint] = useState(false);
+  const [savingImg, setSavingImg] = useState(false);
+  const cardRef = useRef<HTMLElement | null>(null);
 
   const hasData = !!data.nombre;
+
+  // Capture PWA install event (Android/Chrome)
+  useEffect(() => {
+    function handler(e: Event) {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    }
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  // Detect iOS Safari
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const ios = /iphone|ipad|ipod/i.test(ua) && !/chrome/i.test(ua);
+    setIsIos(ios);
+  }, []);
 
   function handleSave(newData: MedicinalIdData) {
     setData(newData);
@@ -604,9 +686,51 @@ export default function Medicinal() {
     window.print();
   }
 
+  async function handleInstall() {
+    if (isIos) {
+      setShowIosHint((v) => !v);
+      return;
+    }
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+      setSavedMsg('✓ App instalada en tu pantalla de inicio');
+      setTimeout(() => setSavedMsg(''), 4000);
+    }
+  }
+
+  async function handleSaveImage() {
+    const el = document.querySelector<HTMLElement>('.med-card');
+    if (!el) return;
+    setSavingImg(true);
+    try {
+      const canvas = await html2canvas(el, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const link = document.createElement('a');
+      link.download = `carnet-medicinal-${data.nombre.replace(/\s+/g, '-').toLowerCase()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      setSavedMsg('✓ Imagen guardada');
+      setTimeout(() => setSavedMsg(''), 3000);
+    } catch {
+      setSavedMsg('Error al generar imagen');
+      setTimeout(() => setSavedMsg(''), 3000);
+    } finally {
+      setSavingImg(false);
+    }
+  }
+
+  const showInstallBtn = isIos || !!installPrompt;
+
   return (
     <>
-      <main className="med-main" id="main" tabIndex={-1}>
+      <main className="med-main" id="main" tabIndex={-1} ref={cardRef}>
         <header className="med-header">
           <div className="med-eyebrow">Herramienta Personal · vientonorte</div>
           <h1 className="med-title">ID Medicinal</h1>
@@ -617,6 +741,40 @@ export default function Medicinal() {
         </header>
 
         <div className="med-body">
+          {/* ── PWA install banner ── */}
+          {showInstallBtn && (
+            <div className="med-install-banner" role="complementary" aria-label="Instalar app">
+              <div className="med-install-banner__text">
+                <strong>Agregar a pantalla de inicio</strong>
+                <span>Accede a tu carnet como app nativa, sin abrir el navegador</span>
+              </div>
+              <button
+                className="med-btn med-btn--install"
+                onClick={handleInstall}
+                aria-label={isIos ? 'Ver instrucciones para instalar en iOS' : 'Instalar app en pantalla de inicio'}
+              >
+                {isIos ? 'Cómo instalar' : 'Instalar'}
+              </button>
+            </div>
+          )}
+
+          {/* ── iOS install instructions ── */}
+          {showIosHint && (
+            <div className="med-ios-hint" role="note" aria-label="Instrucciones para iOS">
+              <p>
+                En Safari: toca <strong>Compartir</strong> <span aria-hidden="true">⎙</span> →
+                «<strong>Agregar a pantalla de inicio</strong>»
+              </p>
+              <button
+                className="med-ios-hint__close"
+                onClick={() => setShowIosHint(false)}
+                aria-label="Cerrar instrucciones"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           <div className="med-privacy" aria-label="Controles de privacidad">
             <span className="med-privacy__label">Privacidad:</span>
             <PrivacyToggle
@@ -649,6 +807,14 @@ export default function Medicinal() {
                 </button>
                 <button className="med-btn med-btn--ghost" onClick={handleShare}>
                   Compartir
+                </button>
+                <button
+                  className="med-btn med-btn--ghost"
+                  onClick={handleSaveImage}
+                  disabled={savingImg}
+                  aria-label="Guardar carnet como imagen PNG"
+                >
+                  {savingImg ? 'Generando…' : 'Guardar imagen'}
                 </button>
               </>
             )}

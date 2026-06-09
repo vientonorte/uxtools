@@ -228,6 +228,25 @@
   word-break: break-word;
 }
 
+.med-card__field--highlight {
+  padding: var(--space-2) var(--space-3);
+  background: rgba(0,181,226,0.07);
+  border-left: 3px solid var(--cyan);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.med-card__field--highlight dt { color: #2b6cb0; }
+.med-card__field--highlight dd { color: #1a365d; }
+
+.med-card__field-note {
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 400;
+  color: #4a5568;
+  letter-spacing: 0.05em;
+  margin-left: var(--space-1);
+}
+
 .med-card__qr {
   display: flex;
   flex-direction: column;
@@ -506,13 +525,25 @@ details[open] > .med-legal__summary::before {
   font-style: italic;
 }
 
+.med-card__back-article--warning {
+  background: #fffbf0;
+  border: 1px solid rgba(255,140,0,0.25);
+  border-left: 3px solid var(--warning);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.med-card__back-article--warning .med-card__back-art-title {
+  color: #b45309;
+}
+
 .med-card__back-disclaimer {
   font-size: 0.72rem;
   color: #718096;
   line-height: 1.55;
   padding: var(--space-3) var(--space-4);
-  background: #fffbf0;
-  border-left: 3px solid var(--warning);
+  background: #f7fafc;
+  border-left: 3px solid rgba(0,0,0,0.1);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
@@ -887,4 +918,110 @@ details[open] > .med-legal__summary::before {
   .med-empty {
     display: none !important;
   }
+
+  .med-install-banner,
+  .med-ios-hint {
+    display: none !important;
+  }
+}
+
+/* ── PWA install banner ──────────────────────────────────────── */
+.med-install-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: linear-gradient(135deg, rgba(0,181,226,0.12) 0%, rgba(0,13,58,0.6) 100%);
+  border: 1px solid rgba(0,181,226,0.3);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-5);
+}
+
+.med-install-banner__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.med-install-banner__text strong {
+  font-size: 0.92rem;
+  color: var(--white);
+  font-family: var(--font-display);
+}
+
+.med-install-banner__text span {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.55);
+  font-family: var(--font-mono);
+}
+
+.med-btn--install {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-4);
+  background: var(--cyan);
+  color: var(--navy-deep);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 44px;
+  transition: background var(--duration-fast), transform var(--duration-fast);
+}
+
+.med-btn--install:hover {
+  background: var(--cyan-2, #33c5e8);
+  transform: translateY(-1px);
+}
+
+/* ── iOS install hint ────────────────────────────────────────── */
+.med-ios-hint {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  background: rgba(0,181,226,0.08);
+  border: 1px solid rgba(0,181,226,0.2);
+  border-radius: var(--radius-md);
+  margin-top: calc(-1 * var(--space-3));
+  margin-bottom: var(--space-4);
+  animation: fade-in var(--duration-base) var(--ease-out) both;
+}
+
+.med-ios-hint p {
+  flex: 1;
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.4;
+}
+
+.med-ios-hint strong {
+  color: var(--white);
+}
+
+.med-ios-hint__close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.45);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast);
+}
+
+.med-ios-hint__close:hover { color: var(--white); }
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
