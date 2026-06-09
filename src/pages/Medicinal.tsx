@@ -48,7 +48,7 @@ function buildQrText(data: MedicinalIdData): string {
     data.medicoTratante ? `Médico: ${data.medicoTratante}` : null,
     data.organizacion ? `Org: ${data.organizacion}` : null,
     '',
-    'Art.15 Ley 20.000 — Porte justificado para tratamiento médico',
+    'Art.4° + Art.50° inc.final Ley 20.000 — Posesión, porte y uso justificados para tratamiento médico',
   ].filter(Boolean).join('\n');
 }
 
@@ -65,7 +65,7 @@ function buildShareText(data: MedicinalIdData): string {
     data.mostrarDiagnostico && data.diagnostico ? `Diagnóstico: ${data.diagnostico}` : null,
     data.medicoTratante ? `Médico: ${data.medicoTratante}` : null,
     '',
-    'Art.15 Ley 20.000 — Porte justificado para tratamiento médico',
+    'Art.4° + Art.50° inc.final Ley 20.000 — Posesión, porte y uso justificados para tratamiento médico',
   ].filter(Boolean).join('\n');
 }
 
@@ -222,7 +222,7 @@ function IdCard({ data }: { data: MedicinalIdData }) {
                 {data.cantidadMensual && (
                   <div className="med-card__field med-card__field--highlight">
                     <dt>Cantidad autorizada (dispensación)</dt>
-                    <dd>{data.cantidadMensual} <span className="med-card__field-note">porte justificado · Art. 15°</span></dd>
+                    <dd>{data.cantidadMensual} <span className="med-card__field-note">porte justificado · Art. 4° + Art. 50° inc. final</span></dd>
                   </div>
                 )}
 
@@ -285,58 +285,114 @@ function IdCard({ data }: { data: MedicinalIdData }) {
           </div>
 
           <div className="med-card__back-body">
-            <div className="med-card__back-article">
+            {/* Art. 4° — Microtráfico + excepción tratamiento médico */}
+            <div className="med-card__back-article med-card__back-article--protection">
               <h3 className="med-card__back-art-title">
-                Artículo 8° — Cultivo Justificado
+                Artículo 4° Ley 20.000 — Excepción Tratamiento Médico
               </h3>
               <p className="med-card__back-art-text">
-                «Se entenderá justificado el cultivo de especies vegetales del género cannabis
-                para la atención de un tratamiento médico, con la presentación de la receta
-                extendida para ese efecto por un médico cirujano tratante, la que deberá indicar
-                el diagnóstico de la enfermedad, su tratamiento y duración, además de la forma
-                de administración del cannabis, la que no podrá ser mediante combustión.»
+                «…posea, transporte, guarde o porte consigo pequeñas cantidades
+                de sustancias o drogas estupefacientes…, será castigado con
+                presidio menor en sus grados medio a máximo y multa de diez a
+                cuarenta unidades tributarias mensuales,{' '}
+                <span className="med-card__back-art-text--key">
+                  a menos que justifique que están destinadas a la atención de
+                  un tratamiento médico
+                </span>{' '}
+                o a su uso o consumo personal exclusivo y próximo en el tiempo.»
+              </p>
+              <p className="med-card__back-art-rights">
+                Art. 4° (microtráfico) no aplica cuando la droga portada
+                corresponde a la dispensación mensual autorizada en la receta
+                médica. La cantidad mensual del carnet acredita directamente
+                esta excepción.
               </p>
             </div>
 
+            {/* Art. 8° — Cultivo */}
             <div className="med-card__back-article">
               <h3 className="med-card__back-art-title">
-                Artículo 15° — Porte Justificado
+                Artículo 8° Ley 20.000 — Cultivo Justificado
               </h3>
               <p className="med-card__back-art-text">
-                «Dichas penas no se aplicarán a los que justifiquen el uso, consumo, porte
-                o tenencia de alguna de dichas sustancias en la atención de un tratamiento médico.»
+                «Se entenderá justificado el cultivo de especies vegetales del género
+                cannabis para la atención de un tratamiento médico, con la presentación
+                de la receta extendida para ese efecto por un médico cirujano tratante,
+                la que deberá indicar el diagnóstico de la enfermedad, su tratamiento y
+                duración, además de la forma de administración del cannabis, la que no
+                podrá ser mediante combustión.»
               </p>
             </div>
 
+            {/* Art. 50° — Sanciones (advertencia) + Inciso final (protección) */}
             <div className="med-card__back-article med-card__back-article--warning">
               <h3 className="med-card__back-art-title">
-                Artículo 50° — Consumo en Recintos Públicos o Privados
+                Artículo 50° Ley 20.000 — Consumo en Recintos Públicos
               </h3>
               <p className="med-card__back-art-text">
-                «Los que consumieren alguna de las drogas o sustancias estupefacientes o
-                sicotrópicas […] en lugares públicos o abiertos al público, tales como
-                calles, caminos, plazas, teatros, cines, hoteles, cafés, restaurantes,
-                bares, estadios, centros de baile o de música; o en establecimientos
-                educacionales o de capacitación, serán sancionados con:
-                a) Multa de una a diez unidades tributarias mensuales.
-                b) Asistencia obligatoria a programas de prevención hasta por sesenta días,
-                o tratamiento o rehabilitación hasta por ciento ochenta días.»
+                «Los que consumieren […] en lugares públicos o abiertos al público
+                serán sancionados con: a) Multa de 1 a 10 UTM. b) Asistencia a
+                programas de prevención hasta 60 días o rehabilitación hasta 180
+                días. c) Actividades comunitarias hasta 30 horas. Pena accesoria:
+                suspensión de licencia de conducir hasta 6 meses.»
               </p>
               <p className="med-card__back-art-text">
-                «Idénticas penas se aplicarán a quienes tengan o porten en tales lugares
-                las drogas o sustancias antes indicadas para su uso o consumo personal
-                exclusivo y próximo en el tiempo.»
+                «Idénticas penas se aplicarán a quienes tengan o porten en tales
+                lugares las drogas para su uso o consumo personal exclusivo y
+                próximo en el tiempo.»
               </p>
               <p className="med-card__back-art-text">
-                «Con las mismas penas serán sancionados quienes consuman dichas drogas en
-                lugares o recintos privados, si se hubiesen concertado para tal propósito.»
+                «Con las mismas penas serán sancionados quienes consuman dichas
+                drogas en lugares o recintos privados, si se hubiesen concertado
+                para tal propósito.»
+              </p>
+            </div>
+
+            {/* Art. 50° inciso final — PROTECCIÓN MÉDICA */}
+            <div className="med-card__back-article med-card__back-article--protection">
+              <h3 className="med-card__back-art-title">
+                Artículo 50° Ley 20.000 — Justificación por Tratamiento Médico
+              </h3>
+              <p className="med-card__back-art-text med-card__back-art-text--key">
+                «Se entenderá justificado el uso, consumo, porte o tenencia de
+                alguna de dichas sustancias para la atención de un tratamiento
+                médico.»
+              </p>
+              <p className="med-card__back-art-rights">
+                Este inciso final del Art. 50° desactiva todas las sanciones
+                anteriores del mismo artículo cuando el uso, porte o tenencia
+                corresponde a tratamiento médico — incluido el porte para uso
+                próximo en el tiempo durante toda la vigencia de la receta.
+              </p>
+            </div>
+
+            {/* Ley 20.584 — Confidencialidad */}
+            <div className="med-card__back-article med-card__back-article--rights">
+              <h3 className="med-card__back-art-title">
+                Ley 20.584 Arts. 12°–13° — Confidencialidad Médica
+              </h3>
+              <p className="med-card__back-art-text">
+                «Toda la información que surja de la ficha clínica y demás
+                documentos donde se registren procedimientos y tratamientos
+                será considerada dato sensible. Los terceros no vinculados
+                a la atención de salud no tendrán acceso a dicha información.»
+              </p>
+              <p className="med-card__back-art-rights">
+                <strong>Solo pueden solicitar la receta:</strong> médico
+                tratante · COMPIN · tribunales (con causa) · fiscales con
+                autorización judicial. Carabineros y terceros no tienen
+                ese derecho.
+              </p>
+              <p className="med-card__back-art-rights med-card__back-art-rights--note">
+                Este carnet es identificación voluntaria suficiente para
+                acreditar el Art. 50° inc. final. No estás obligado a
+                exhibir la receta original a quien no corresponda por ley.
               </p>
             </div>
 
             <p className="med-card__back-disclaimer">
-              El Art. 15° justifica el porte para tratamiento médico. El consumo en recintos
-              públicos está regulado por Art. 50° independientemente. Porta siempre la
-              receta médica original.
+              Porta siempre la receta original para presentarla a quienes
+              corresponde por ley (médico, COMPIN, tribunales).
             </p>
           </div>
 
