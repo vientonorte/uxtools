@@ -48,7 +48,7 @@ function buildQrText(data: MedicinalIdData): string {
     data.medicoTratante ? `Médico: ${data.medicoTratante}` : null,
     data.organizacion ? `Org: ${data.organizacion}` : null,
     '',
-    'Art.50 inc.final Ley 20.000 — Uso, consumo, porte y tenencia justificados para tratamiento médico',
+    'Art.4° + Art.50° inc.final Ley 20.000 — Posesión, porte y uso justificados para tratamiento médico',
   ].filter(Boolean).join('\n');
 }
 
@@ -65,7 +65,7 @@ function buildShareText(data: MedicinalIdData): string {
     data.mostrarDiagnostico && data.diagnostico ? `Diagnóstico: ${data.diagnostico}` : null,
     data.medicoTratante ? `Médico: ${data.medicoTratante}` : null,
     '',
-    'Art.50 inc.final Ley 20.000 — Uso, consumo, porte y tenencia justificados para tratamiento médico',
+    'Art.4° + Art.50° inc.final Ley 20.000 — Posesión, porte y uso justificados para tratamiento médico',
   ].filter(Boolean).join('\n');
 }
 
@@ -222,7 +222,7 @@ function IdCard({ data }: { data: MedicinalIdData }) {
                 {data.cantidadMensual && (
                   <div className="med-card__field med-card__field--highlight">
                     <dt>Cantidad autorizada (dispensación)</dt>
-                    <dd>{data.cantidadMensual} <span className="med-card__field-note">porte justificado · Art. 50° inc. final</span></dd>
+                    <dd>{data.cantidadMensual} <span className="med-card__field-note">porte justificado · Art. 4° + Art. 50° inc. final</span></dd>
                   </div>
                 )}
 
@@ -285,6 +285,30 @@ function IdCard({ data }: { data: MedicinalIdData }) {
           </div>
 
           <div className="med-card__back-body">
+            {/* Art. 4° — Microtráfico + excepción tratamiento médico */}
+            <div className="med-card__back-article med-card__back-article--protection">
+              <h3 className="med-card__back-art-title">
+                Artículo 4° Ley 20.000 — Excepción Tratamiento Médico
+              </h3>
+              <p className="med-card__back-art-text">
+                «…posea, transporte, guarde o porte consigo pequeñas cantidades
+                de sustancias o drogas estupefacientes…, será castigado con
+                presidio menor en sus grados medio a máximo y multa de diez a
+                cuarenta unidades tributarias mensuales,{' '}
+                <span className="med-card__back-art-text--key">
+                  a menos que justifique que están destinadas a la atención de
+                  un tratamiento médico
+                </span>{' '}
+                o a su uso o consumo personal exclusivo y próximo en el tiempo.»
+              </p>
+              <p className="med-card__back-art-rights">
+                Art. 4° (microtráfico) no aplica cuando la droga portada
+                corresponde a la dispensación mensual autorizada en la receta
+                médica. La cantidad mensual del carnet acredita directamente
+                esta excepción.
+              </p>
+            </div>
+
             {/* Art. 8° — Cultivo */}
             <div className="med-card__back-article">
               <h3 className="med-card__back-art-title">
