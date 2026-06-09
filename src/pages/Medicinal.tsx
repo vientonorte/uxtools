@@ -390,15 +390,28 @@ function EditModal({ data, onSave, onClose }: EditModalProps) {
         aria-labelledby="med-modal-title"
       >
         <div className="med-modal__header">
+          <button
+            type="button"
+            className="med-modal__cancel"
+            onClick={onClose}
+            aria-label="Cancelar y cerrar formulario"
+          >
+            Cancelar
+          </button>
           <h2 id="med-modal-title" className="med-modal__title">
-            {data.nombre ? 'Editar datos del carnet' : 'Cargar mis datos'}
+            {data.nombre ? 'Editar datos' : 'Cargar mis datos'}
           </h2>
           <button
-            className="med-modal__close"
-            onClick={onClose}
-            aria-label="Cerrar formulario"
+            type="button"
+            className="med-modal__save-header"
+            onClick={() => {
+              const canSave = !!form.nombre && !!form.fechaReceta && !!form.dosis;
+              if (canSave) onSave({ ...form, updatedAt: new Date().toISOString() });
+            }}
+            disabled={!form.nombre || !form.fechaReceta || !form.dosis}
+            aria-label="Guardar datos del carnet"
           >
-            ✕
+            Guardar
           </button>
         </div>
 
