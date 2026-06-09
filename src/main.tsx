@@ -12,6 +12,12 @@ import './styles/brief.css';
 import './styles/medicinal.css';
 import App from './App';
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/uxtools/sw.js').catch(() => {});
+  });
+}
+
 const root = document.getElementById('root');
 if (!root) throw new Error('No se encontró #root en el DOM');
 

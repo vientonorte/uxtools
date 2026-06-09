@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import QRCode from 'qrcode';
+import html2canvas from 'html2canvas';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import type { MedicinalIdData } from '../types/medicinal';
 import { MEDICINAL_DEFAULT, MEDICINAL_STORAGE_KEY } from '../types/medicinal';
@@ -568,6 +569,13 @@ function EditModal({ data, onSave, onClose }: EditModalProps) {
 
 // ── Main page ────────────────────────────────────────────────
 
+// ── PWA install prompt ───────────────────────────────────────
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export default function Medicinal() {
   const [data, setData] = useLocalStorage<MedicinalIdData>(
     MEDICINAL_STORAGE_KEY,
@@ -575,8 +583,30 @@ export default function Medicinal() {
   );
   const [editOpen, setEditOpen] = useState(false);
   const [savedMsg, setSavedMsg] = useState('');
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isIos, setIsIos] = useState(false);
+  const [showIosHint, setShowIosHint] = useState(false);
+  const [savingImg, setSavingImg] = useState(false);
+  const cardRef = useRef<HTMLElement | null>(null);
 
   const hasData = !!data.nombre;
+
+  // Capture PWA install event (Android/Chrome)
+  useEffect(() => {
+    function handler(e: Event) {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    }
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  // Detect iOS Safari
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const ios = /iphone|ipad|ipod/i.test(ua) && !/chrome/i.test(ua);
+    setIsIos(ios);
+  }, []);
 
   function handleSave(newData: MedicinalIdData) {
     setData(newData);
@@ -604,9 +634,51 @@ export default function Medicinal() {
     window.print();
   }
 
+  async function handleInstall() {
+    if (isIos) {
+      setShowIosHint((v) => !v);
+      return;
+    }
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
+      setSavedMsg('✓ App instalada en tu pantalla de inicio');
+      setTimeout(() => setSavedMsg(''), 4000);
+    }
+  }
+
+  async function handleSaveImage() {
+    const el = document.querySelector<HTMLElement>('.med-card');
+    if (!el) return;
+    setSavingImg(true);
+    try {
+      const canvas = await html2canvas(el, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      const link = document.createElement('a');
+      link.download = `carnet-medicinal-${data.nombre.replace(/\s+/g, '-').toLowerCase()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      setSavedMsg('✓ Imagen guardada');
+      setTimeout(() => setSavedMsg(''), 3000);
+    } catch {
+      setSavedMsg('Error al generar imagen');
+      setTimeout(() => setSavedMsg(''), 3000);
+    } finally {
+      setSavingImg(false);
+    }
+  }
+
+  const showInstallBtn = isIos || !!installPrompt;
+
   return (
     <>
-      <main className="med-main" id="main" tabIndex={-1}>
+      <main className="med-main" id="main" tabIndex={-1} ref={cardRef}>
         <header className="med-header">
           <div className="med-eyebrow">Herramienta Personal · vientonorte</div>
           <h1 className="med-title">ID Medicinal</h1>
@@ -617,6 +689,40 @@ export default function Medicinal() {
         </header>
 
         <div className="med-body">
+          {/* ── PWA install banner ── */}
+          {showInstallBtn && (
+            <div className="med-install-banner" role="complementary" aria-label="Instalar app">
+              <div className="med-install-banner__text">
+                <strong>Agregar a pantalla de inicio</strong>
+                <span>Accede a tu carnet como app nativa, sin abrir el navegador</span>
+              </div>
+              <button
+                className="med-btn med-btn--install"
+                onClick={handleInstall}
+                aria-label={isIos ? 'Ver instrucciones para instalar en iOS' : 'Instalar app en pantalla de inicio'}
+              >
+                {isIos ? 'Cómo instalar' : 'Instalar'}
+              </button>
+            </div>
+          )}
+
+          {/* ── iOS install instructions ── */}
+          {showIosHint && (
+            <div className="med-ios-hint" role="note" aria-label="Instrucciones para iOS">
+              <p>
+                En Safari: toca <strong>Compartir</strong> <span aria-hidden="true">⎙</span> →
+                «<strong>Agregar a pantalla de inicio</strong>»
+              </p>
+              <button
+                className="med-ios-hint__close"
+                onClick={() => setShowIosHint(false)}
+                aria-label="Cerrar instrucciones"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           <div className="med-privacy" aria-label="Controles de privacidad">
             <span className="med-privacy__label">Privacidad:</span>
             <PrivacyToggle
@@ -649,6 +755,14 @@ export default function Medicinal() {
                 </button>
                 <button className="med-btn med-btn--ghost" onClick={handleShare}>
                   Compartir
+                </button>
+                <button
+                  className="med-btn med-btn--ghost"
+                  onClick={handleSaveImage}
+                  disabled={savingImg}
+                  aria-label="Guardar carnet como imagen PNG"
+                >
+                  {savingImg ? 'Generando…' : 'Guardar imagen'}
                 </button>
               </>
             )}

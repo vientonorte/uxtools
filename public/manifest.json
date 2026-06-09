@@ -1,0 +1,29 @@
+{
+  "name": "ID Medicinal · Ley 20.000",
+  "short_name": "ID Medicinal",
+  "description": "Carnet digital de paciente medicinal de cannabis. Datos guardados solo en tu dispositivo.",
+  "start_url": "/uxtools/#/medicinal",
+  "display": "standalone",
+  "background_color": "#000D3A",
+  "theme_color": "#000D3A",
+  "orientation": "portrait-primary",
+  "lang": "es",
+  "categories": ["health", "medical"],
+  "icons": [
+    {
+      "src": "/uxtools/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/uxtools/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
+}
