@@ -299,9 +299,35 @@ function IdCard({ data }: { data: MedicinalIdData }) {
               </p>
             </div>
 
+            <div className="med-card__back-article med-card__back-article--warning">
+              <h3 className="med-card__back-art-title">
+                Artículo 50° — Consumo en Recintos Públicos o Privados
+              </h3>
+              <p className="med-card__back-art-text">
+                «Los que consumieren alguna de las drogas o sustancias estupefacientes o
+                sicotrópicas […] en lugares públicos o abiertos al público, tales como
+                calles, caminos, plazas, teatros, cines, hoteles, cafés, restaurantes,
+                bares, estadios, centros de baile o de música; o en establecimientos
+                educacionales o de capacitación, serán sancionados con:
+                a) Multa de una a diez unidades tributarias mensuales.
+                b) Asistencia obligatoria a programas de prevención hasta por sesenta días,
+                o tratamiento o rehabilitación hasta por ciento ochenta días.»
+              </p>
+              <p className="med-card__back-art-text">
+                «Idénticas penas se aplicarán a quienes tengan o porten en tales lugares
+                las drogas o sustancias antes indicadas para su uso o consumo personal
+                exclusivo y próximo en el tiempo.»
+              </p>
+              <p className="med-card__back-art-text">
+                «Con las mismas penas serán sancionados quienes consuman dichas drogas en
+                lugares o recintos privados, si se hubiesen concertado para tal propósito.»
+              </p>
+            </div>
+
             <p className="med-card__back-disclaimer">
-              Este carnet es un complemento informativo. Porta siempre la receta médica original.
-              No reemplaza documentos legales oficiales.
+              El Art. 15° justifica el porte para tratamiento médico. El consumo en recintos
+              públicos está regulado por Art. 50° independientemente. Porta siempre la
+              receta médica original.
             </p>
           </div>
 

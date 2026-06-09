@@ -506,13 +506,25 @@ details[open] > .med-legal__summary::before {
   font-style: italic;
 }
 
+.med-card__back-article--warning {
+  background: #fffbf0;
+  border: 1px solid rgba(255,140,0,0.25);
+  border-left: 3px solid var(--warning);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.med-card__back-article--warning .med-card__back-art-title {
+  color: #b45309;
+}
+
 .med-card__back-disclaimer {
   font-size: 0.72rem;
   color: #718096;
   line-height: 1.55;
   padding: var(--space-3) var(--space-4);
-  background: #fffbf0;
-  border-left: 3px solid var(--warning);
+  background: #f7fafc;
+  border-left: 3px solid rgba(0,0,0,0.1);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
