@@ -447,6 +447,75 @@ details[open] > .med-legal__summary::before {
   font-style: normal !important;
 }
 
+/* ── Card flip button ────────────────────────────────────── */
+.med-card__flip-btn {
+  background: none;
+  border: 1px solid rgba(0, 181, 226, 0.35);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+  min-height: 32px;
+  white-space: nowrap;
+}
+
+.med-card__flip-btn:hover {
+  background: rgba(0, 181, 226, 0.1);
+  border-color: var(--cyan);
+}
+
+/* ── Card back ───────────────────────────────────────────── */
+.med-card__header--legal {
+  background: linear-gradient(135deg, var(--navy-deep) 0%, #0a1840 100%);
+}
+
+.med-card__back-body {
+  padding: var(--space-5) var(--space-6);
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.med-card__back-article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.med-card__back-art-title {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+
+.med-card__back-art-text {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: #2d3748;
+  line-height: 1.65;
+  font-style: italic;
+}
+
+.med-card__back-disclaimer {
+  font-size: 0.72rem;
+  color: #718096;
+  line-height: 1.55;
+  padding: var(--space-3) var(--space-4);
+  background: #fffbf0;
+  border-left: 3px solid var(--warning);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
 /* ── License ─────────────────────────────────────────────── */
 .med-license {
   border-top: 1px solid var(--border-subtle);
@@ -505,45 +574,81 @@ details[open] > .med-legal__summary::before {
 }
 
 .med-modal__header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-5) var(--space-6);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border-subtle);
   flex-shrink: 0;
 }
 
 .med-modal__title {
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--white);
   margin: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.med-modal__close {
+/* Cancel button — left */
+.med-modal__cancel {
   background: none;
   border: none;
   color: var(--muted);
   cursor: pointer;
-  font-size: 1rem;
-  padding: var(--space-2);
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-sm);
-  transition: color var(--duration-fast) var(--ease-out);
-  min-width: 44px;
   min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-width: 44px;
+  transition: color var(--duration-fast) var(--ease-out);
+  text-align: left;
 }
 
-.med-modal__close:hover {
+.med-modal__cancel:hover {
   color: var(--white);
+}
+
+/* Save button — right (primary, always visible) */
+.med-modal__save-header {
+  background: var(--cyan);
+  border: none;
+  color: var(--navy-deep);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 700;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  min-height: 44px;
+  min-width: 44px;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    opacity var(--duration-fast) var(--ease-out);
+  justify-self: end;
+}
+
+.med-modal__save-header:hover:not(:disabled) {
+  background: var(--cyan-2);
+}
+
+.med-modal__save-header:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .med-modal__body {
   flex: 1;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: var(--space-5) var(--space-6);
   display: flex;
   flex-direction: column;
@@ -641,9 +746,32 @@ details[open] > .med-legal__summary::before {
 }
 
 /* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .med-main {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .med-title {
+    font-size: clamp(1.5rem, 7vw, 2rem);
+  }
+
+  .med-privacy {
+    gap: var(--space-3);
+  }
+}
+
 @media (max-width: 520px) {
   .med-card__body {
     flex-direction: column;
+    padding: var(--space-4);
+  }
+
+  .med-card__header {
+    padding: var(--space-4);
+  }
+
+  .med-card__footer {
+    padding: var(--space-3) var(--space-4);
   }
 
   .med-card__qr {
@@ -653,6 +781,35 @@ details[open] > .med-legal__summary::before {
   .med-form__row {
     grid-template-columns: 1fr;
   }
+
+  /* Modal full-screen on small phones */
+  .med-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .med-modal {
+    max-width: 100%;
+    max-height: 92dvh;
+    max-height: 92vh; /* fallback for browsers without dvh */
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    border-bottom: none;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Footer is redundant on mobile — header has both actions */
+  .med-modal__footer {
+    display: none;
+  }
+
+  .med-actions {
+    flex-direction: column;
+  }
+
+  .med-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (max-width: 400px) {
@@ -660,11 +817,13 @@ details[open] > .med-legal__summary::before {
     padding: var(--space-4) var(--space-3);
   }
 
-  .med-card__header,
-  .med-card__body,
-  .med-card__footer {
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
+  .med-card__title {
+    font-size: 0.78rem;
+  }
+
+  .med-privacy {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 
@@ -710,10 +869,15 @@ details[open] > .med-legal__summary::before {
   }
 
   .med-card__header,
+  .med-card__header--legal,
   .med-card__footer {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+  }
+
+  .med-card__flip-btn {
+    display: none !important;
   }
 
   .med-qr-img {
