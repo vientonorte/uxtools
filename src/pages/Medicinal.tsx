@@ -131,6 +131,7 @@ function PrivacyToggle({
 // ── ID Card ──────────────────────────────────────────────────
 
 function IdCard({ data }: { data: MedicinalIdData }) {
+  const [side, setSide] = useState<'front' | 'back'>('front');
   const vigente = isVigente(data.fechaReceta, data.vigenciaMeses);
   const control = calcProximoControl(data.fechaReceta, data.vigenciaMeses);
   const qrText = buildQrText(data);
@@ -151,136 +152,173 @@ function IdCard({ data }: { data: MedicinalIdData }) {
   return (
     <article
       className="med-card"
-      aria-label="Identificación de paciente medicinal de cannabis"
+      aria-label={
+        side === 'front'
+          ? 'Identificación de paciente medicinal de cannabis — anverso'
+          : 'Respaldo legal del carnet — reverso'
+      }
     >
-      <div className="med-card__header">
-        <div className="med-card__header-text">
-          <div className="med-card__law-badge">
-            <span aria-hidden="true">🌿</span>&nbsp;Ley 20.000 · Chile
+      {/* ── FRONT ── */}
+      {side === 'front' && (
+        <>
+          <div className="med-card__header">
+            <div className="med-card__header-text">
+              <div className="med-card__law-badge">
+                <span aria-hidden="true">🌿</span>&nbsp;Ley 20.000 · Chile
+              </div>
+              <h2 className="med-card__title">
+                Identificación de Paciente<br />Medicinal de Cannabis
+              </h2>
+            </div>
+            <div
+              className={`med-card__status med-card__status--${vigente ? 'vigente' : 'vencido'}`}
+              role="status"
+              aria-label={vigente ? 'Carnet vigente' : 'Carnet vencido'}
+            >
+              {vigente ? 'VIGENTE' : 'VENCIDO'}
+            </div>
           </div>
-          <h2 className="med-card__title">
-            Identificación de Paciente<br />Medicinal de Cannabis
-          </h2>
-        </div>
-        <div
-          className={`med-card__status med-card__status--${vigente ? 'vigente' : 'vencido'}`}
-          role="status"
-          aria-label={vigente ? 'Carnet vigente' : 'Carnet vencido'}
-        >
-          {vigente ? 'VIGENTE' : 'VENCIDO'}
-        </div>
-      </div>
 
-      <div className="med-card__body">
-        <div className="med-card__fields">
-          <dl>
-            <div className="med-card__field">
-              <dt>Nombre del paciente</dt>
-              <dd>{data.nombre}</dd>
+          <div className="med-card__body">
+            <div className="med-card__fields">
+              <dl>
+                <div className="med-card__field">
+                  <dt>Nombre del paciente</dt>
+                  <dd>{data.nombre}</dd>
+                </div>
+
+                {data.rut && (
+                  <div className="med-card__field">
+                    <dt>RUT</dt>
+                    <dd aria-label={data.mostrarRut ? `RUT: ${data.rut}` : 'RUT oculto'}>
+                      {data.mostrarRut ? data.rut : '•••••••-•'}
+                    </dd>
+                  </div>
+                )}
+
+                <div className="med-card__field">
+                  <dt>Fecha de receta</dt>
+                  <dd>{formatDateES(data.fechaReceta)}</dd>
+                </div>
+
+                <div className="med-card__field">
+                  <dt>Vigencia</dt>
+                  <dd>{data.vigenciaMeses} meses</dd>
+                </div>
+
+                <div className="med-card__field">
+                  <dt>Próximo control</dt>
+                  <dd>{control}</dd>
+                </div>
+
+                <div className="med-card__field">
+                  <dt>Dosis diaria Cannabis spp (porte justificado)</dt>
+                  <dd>{data.dosis || '—'}</dd>
+                </div>
+
+                <div className="med-card__field">
+                  <dt>Diagnóstico</dt>
+                  <dd
+                    aria-label={
+                      data.mostrarDiagnostico
+                        ? `Diagnóstico: ${data.diagnostico || 'no especificado'}`
+                        : 'Diagnóstico reservado'
+                    }
+                  >
+                    {data.mostrarDiagnostico ? (data.diagnostico || '—') : 'RESERVADO'}
+                  </dd>
+                </div>
+
+                {data.medicoTratante && (
+                  <div className="med-card__field">
+                    <dt>Médico tratante</dt>
+                    <dd>{data.medicoTratante}</dd>
+                  </div>
+                )}
+              </dl>
             </div>
 
-            {data.rut && (
-              <div className="med-card__field">
-                <dt>RUT</dt>
-                <dd aria-label={data.mostrarRut ? `RUT: ${data.rut}` : 'RUT oculto'}>
-                  {data.mostrarRut ? data.rut : '•••••••-•'}
-                </dd>
+            <div className="med-card__qr">
+              <QrDisplay text={qrText} />
+              <span className="med-card__qr-label">Escanear para validar</span>
+            </div>
+          </div>
+
+          <div className="med-card__footer">
+            <span className="med-card__footer-text">
+              Cannabis spp · Porte justificado
+              {data.dosis ? ` · ${data.dosis}/día` : ''}
+            </span>
+            <button
+              className="med-card__flip-btn"
+              onClick={() => setSide('back')}
+              aria-label="Ver respaldo legal del carnet"
+            >
+              Marco Legal →
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* ── BACK ── */}
+      {side === 'back' && (
+        <>
+          <div className="med-card__header med-card__header--legal">
+            <div className="med-card__header-text">
+              <div className="med-card__law-badge">
+                <span aria-hidden="true">⚖️</span>&nbsp;Respaldo Legal
               </div>
-            )}
+              <h2 className="med-card__title">
+                Ley 20.000 · República de Chile
+              </h2>
+            </div>
+          </div>
 
-            <div className="med-card__field">
-              <dt>Fecha de receta</dt>
-              <dd>{formatDateES(data.fechaReceta)}</dd>
+          <div className="med-card__back-body">
+            <div className="med-card__back-article">
+              <h3 className="med-card__back-art-title">
+                Artículo 8° — Cultivo Justificado
+              </h3>
+              <p className="med-card__back-art-text">
+                «Se entenderá justificado el cultivo de especies vegetales del género cannabis
+                para la atención de un tratamiento médico, con la presentación de la receta
+                extendida para ese efecto por un médico cirujano tratante, la que deberá indicar
+                el diagnóstico de la enfermedad, su tratamiento y duración, además de la forma
+                de administración del cannabis, la que no podrá ser mediante combustión.»
+              </p>
             </div>
 
-            <div className="med-card__field">
-              <dt>Vigencia</dt>
-              <dd>{data.vigenciaMeses} meses</dd>
+            <div className="med-card__back-article">
+              <h3 className="med-card__back-art-title">
+                Artículo 15° — Porte Justificado
+              </h3>
+              <p className="med-card__back-art-text">
+                «Dichas penas no se aplicarán a los que justifiquen el uso, consumo, porte
+                o tenencia de alguna de dichas sustancias en la atención de un tratamiento médico.»
+              </p>
             </div>
 
-            <div className="med-card__field">
-              <dt>Próximo control</dt>
-              <dd>{control}</dd>
-            </div>
+            <p className="med-card__back-disclaimer">
+              Este carnet es un complemento informativo. Porta siempre la receta médica original.
+              No reemplaza documentos legales oficiales.
+            </p>
+          </div>
 
-            <div className="med-card__field">
-              <dt>Dosis diaria Cannabis spp (porte justificado)</dt>
-              <dd>{data.dosis || '—'}</dd>
-            </div>
-
-            <div className="med-card__field">
-              <dt>Diagnóstico</dt>
-              <dd
-                aria-label={
-                  data.mostrarDiagnostico
-                    ? `Diagnóstico: ${data.diagnostico || 'no especificado'}`
-                    : 'Diagnóstico reservado'
-                }
-              >
-                {data.mostrarDiagnostico ? (data.diagnostico || '—') : 'RESERVADO'}
-              </dd>
-            </div>
-
-            {data.medicoTratante && (
-              <div className="med-card__field">
-                <dt>Médico tratante</dt>
-                <dd>{data.medicoTratante}</dd>
-              </div>
-            )}
-          </dl>
-        </div>
-
-        <div className="med-card__qr">
-          <QrDisplay text={qrText} />
-          <span className="med-card__qr-label">Escanear para validar</span>
-        </div>
-      </div>
-
-      <div className="med-card__footer">
-        <span className="med-card__footer-text">
-          Cannabis spp · Porte justificado
-          {data.dosis ? ` · ${data.dosis}/día` : ''}
-        </span>
-        {data.organizacion && (
-          <span className="med-card__org">{data.organizacion}</span>
-        )}
-      </div>
+          <div className="med-card__footer">
+            <button
+              className="med-card__flip-btn"
+              onClick={() => setSide('front')}
+              aria-label="Volver al anverso del carnet"
+            >
+              ← Ver datos
+            </button>
+            <span className="med-card__org" aria-hidden="true">
+              {data.nombre}
+            </span>
+          </div>
+        </>
+      )}
     </article>
-  );
-}
-
-// ── Legal panel ──────────────────────────────────────────────
-
-function LegalPanel() {
-  return (
-    <details className="med-legal">
-      <summary className="med-legal__summary">
-        Marco Legal · Ley 20.000 Chile
-      </summary>
-      <div className="med-legal__body">
-        <div className="med-legal__article">
-          <h3>Artículo 8° — Cultivo justificado</h3>
-          <p>
-            «Se entenderá que existe cultivo justificado de especies vegetales del género cannabis
-            para la atención de un tratamiento médico, con la presentación de la receta extendida
-            para ese efecto por un médico cirujano tratante, la que deberá indicar el diagnóstico
-            de la enfermedad, su tratamiento y duración, además de la forma de administración
-            del cannabis, la que no podrá ser mediante combustión.»
-          </p>
-        </div>
-        <div className="med-legal__article">
-          <h3>Artículo 15° — Porte justificado</h3>
-          <p>
-            «Dichas penas no se aplicarán a los que justifiquen el uso, consumo, porte o tenencia
-            de alguna de dichas sustancias en la atención de un tratamiento médico.»
-          </p>
-        </div>
-        <p className="med-legal__disclaimer">
-          Este carnet es un complemento informativo. Siempre porta la receta médica original
-          y documentación oficial. No reemplaza documentos legales.
-        </p>
-      </div>
-    </details>
   );
 }
 
@@ -613,8 +651,6 @@ export default function Medicinal() {
               {savedMsg}
             </div>
           )}
-
-          <LegalPanel />
 
           <section className="med-license" aria-label="Licencia">
             <p>

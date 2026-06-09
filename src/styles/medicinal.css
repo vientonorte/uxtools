@@ -447,6 +447,75 @@ details[open] > .med-legal__summary::before {
   font-style: normal !important;
 }
 
+/* ── Card flip button ────────────────────────────────────── */
+.med-card__flip-btn {
+  background: none;
+  border: 1px solid rgba(0, 181, 226, 0.35);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+  min-height: 32px;
+  white-space: nowrap;
+}
+
+.med-card__flip-btn:hover {
+  background: rgba(0, 181, 226, 0.1);
+  border-color: var(--cyan);
+}
+
+/* ── Card back ───────────────────────────────────────────── */
+.med-card__header--legal {
+  background: linear-gradient(135deg, var(--navy-deep) 0%, #0a1840 100%);
+}
+
+.med-card__back-body {
+  padding: var(--space-5) var(--space-6);
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.med-card__back-article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.med-card__back-art-title {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--navy);
+}
+
+.med-card__back-art-text {
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: #2d3748;
+  line-height: 1.65;
+  font-style: italic;
+}
+
+.med-card__back-disclaimer {
+  font-size: 0.72rem;
+  color: #718096;
+  line-height: 1.55;
+  padding: var(--space-3) var(--space-4);
+  background: #fffbf0;
+  border-left: 3px solid var(--warning);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
 /* ── License ─────────────────────────────────────────────── */
 .med-license {
   border-top: 1px solid var(--border-subtle);
@@ -757,10 +826,15 @@ details[open] > .med-legal__summary::before {
   }
 
   .med-card__header,
+  .med-card__header--legal,
   .med-card__footer {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
+  }
+
+  .med-card__flip-btn {
+    display: none !important;
   }
 
   .med-qr-img {
