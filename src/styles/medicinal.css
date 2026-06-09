@@ -1078,3 +1078,207 @@ details[open] > .med-legal__summary::before {
   from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ── FAQ Autodefensa ──────────────────────────────────────── */
+.med-faq {
+  margin-top: var(--space-xl);
+  width: 100%;
+  max-width: 480px;
+}
+
+.med-faq__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--navy-deep);
+  margin-bottom: 4px;
+}
+
+.med-faq__sub {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.med-faq__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.med-faq-item {
+  border-radius: 10px;
+  border-left: 4px solid;
+  background: #fff;
+  overflow: hidden;
+}
+
+.med-faq-item--protection { border-color: #16a34a; }
+.med-faq-item--warning    { border-color: #d97706; }
+.med-faq-item--rights     { border-color: #0ea5e9; }
+.med-faq-item--critical   { border-color: #dc2626; background: #fff5f5; }
+.med-faq-item--neutral    { border-color: #6b7280; }
+
+.med-faq-item__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  min-height: 48px;
+}
+
+.med-faq-item__trigger:hover { background: rgba(0,0,0,0.03); }
+.med-faq-item__trigger:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+
+.med-faq-item__scenario {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.med-faq-item__badges {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.med-faq-item__badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.med-faq-item--critical .med-faq-item__badge   { background: #fee2e2; color: #991b1b; }
+.med-faq-item--protection .med-faq-item__badge { background: #dcfce7; color: #166534; }
+.med-faq-item--warning .med-faq-item__badge    { background: #fef3c7; color: #92400e; }
+.med-faq-item--rights .med-faq-item__badge     { background: #e0f2fe; color: #075985; }
+
+.med-faq-item__chevron {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.med-faq-item__body {
+  padding: 0 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.med-faq-item__action {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  padding-top: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.med-faq-item--critical .med-faq-item__action  { color: #dc2626; }
+.med-faq-item--protection .med-faq-item__action { color: #16a34a; }
+
+.med-faq-item__say-block {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.med-faq-item__say-label,
+.med-faq-item__dont-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.med-faq-item__say-text {
+  font-size: 0.9rem;
+  color: #1e293b;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.med-faq-item__copy {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cyan-dark, #0284c7);
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 4px 10px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: background 0.15s;
+}
+
+.med-faq-item__copy:hover { background: rgba(2,132,199,0.07); }
+
+.med-faq-item__dont-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.med-faq-item__dont-list li {
+  font-size: 0.875rem;
+  color: #475569;
+  padding-left: 18px;
+  position: relative;
+}
+
+.med-faq-item__dont-list li::before {
+  content: '✕';
+  position: absolute;
+  left: 0;
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.med-faq-item__legal-details {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 8px;
+}
+
+.med-faq-item__legal-details summary {
+  font-size: 0.8rem;
+  color: #64748b;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.med-faq-item__legal-details summary::marker,
+.med-faq-item__legal-details summary::-webkit-details-marker { display: none; }
+
+.med-faq-item__legal-details summary::before { content: '▶ '; font-size: 0.65rem; }
+.med-faq-item__legal-details[open] summary::before { content: '▼ '; }
+
+.med-faq-item__legal-text {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 8px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+@media print {
+  .med-faq { display: none !important; }
+}
