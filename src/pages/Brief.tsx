@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useToast } from '../hooks/useToast';
+import { ToastContainer } from '../components/Toast';
 
 interface BriefInputs {
   servicio: string;
@@ -13,12 +16,16 @@ interface BriefInputs {
   objetivo: string;
 }
 
+interface BriefScenario extends BriefInputs {
+  id: string;
+  nombre: string;
+}
+
 interface Proyeccion {
   diasCampana: number;
   semanas: number;
   setsTotal: number;
   ingresosBrutos: number;
-  ingresosMensual: number;
   alcanceEstimado: number;
   impresiones: number;
   clientesPotenciales: number;
@@ -26,8 +33,11 @@ interface Proyeccion {
   ingresoPorDia: number;
 }
 
+const STORAGE_KEY = 'uxtools-brief-scenarios';
+
 function calcularProyeccion(inputs: BriefInputs): Proyeccion {
   const { precioSet, setsPerDia, diasSemana, fechaInicio, fechaFin, presupuestoIG, cpResultado } = inputs;
+
   const inicio = new Date(fechaInicio);
   const fin = new Date(fechaFin);
   const diasCalendario = Math.max(1, Math.round((fin.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24)));
@@ -35,13 +45,14 @@ function calcularProyeccion(inputs: BriefInputs): Proyeccion {
   const diasTrabajo = semanas * diasSemana;
   const setsTotal = diasTrabajo * setsPerDia;
   const ingresosBrutos = setsTotal * precioSet;
-  const ingresosMensual = (ingresosBrutos / diasCalendario) * 30;
   const ingresoPorDia = ingresosBrutos / diasCalendario;
+
   const alcanceEstimado = cpResultado > 0 ? Math.round((presupuestoIG / cpResultado) * 10) : 0;
   const impresiones = alcanceEstimado * 3;
   const clientesPotenciales = Math.round(alcanceEstimado * 0.02);
   const roiEstimado = presupuestoIG > 0 ? ((clientesPotenciales * precioSet - presupuestoIG) / presupuestoIG) * 100 : 0;
-  return { diasCampana: diasCalendario, semanas, setsTotal, ingresosBrutos, ingresosMensual, alcanceEstimado, impresiones, clientesPotenciales, roiEstimado, ingresoPorDia };
+
+  return { diasCampana: diasCalendario, semanas, setsTotal, ingresosBrutos, alcanceEstimado, impresiones, clientesPotenciales, roiEstimado, ingresoPorDia };
 }
 
 function fmt(n: number) {
@@ -51,24 +62,17 @@ function fmt(n: number) {
 const HOY = new Date().toISOString().split('T')[0];
 const EN_MES = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-function Tooltip({ text }: { text: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <span className="brief-tooltip-wrap">
-      <button
-        className="brief-tooltip-btn"
-        type="button"
-        aria-label="Más información"
-        onClick={() => setOpen((v) => !v)}
-        onBlur={() => setOpen(false)}
-      >?</button>
-      {open && <span className="brief-tooltip-bubble" role="tooltip">{text}</span>}
-    </span>
-  );
+function generarId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `esc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export default function Brief() {
-  const [inputs, setInputs] = useState<BriefInputs>({
+function crearEscenario(nombre: string): BriefScenario {
+  return {
+    id: generarId(),
+    nombre,
     servicio: 'Estilismo de uñas',
     precioSet: 15000,
     setsPerDia: 1,
@@ -77,88 +81,219 @@ export default function Brief() {
     fechaFin: EN_MES,
     presupuestoIG: 50000,
     cpResultado: 150,
-    targetAudience: 'Mujeres 18–35, interesadas en belleza y cuidado personal',
-    objetivo: 'Conseguir más clientas y reservas para mis servicios de uñas',
-  });
+    targetAudience: 'Mujeres 18–35, Santiago, interesadas en belleza y cuidado personal',
+    objetivo: 'Aumentar clientes y reservas para servicios de uñas',
+  };
+}
 
-  const [avanzado, setAvanzado] = useState(false);
+export default function Brief() {
+  const [scenarios, setScenarios] = useLocalStorage<BriefScenario[]>(STORAGE_KEY, [crearEscenario('Escenario 1')]);
+  const [activeId, setActiveId] = useState<string>(() => scenarios[0]?.id ?? '');
   const [generado, setGenerado] = useState(false);
+  const { toasts, showToast, dismissToast } = useToast();
 
-  const fechaError =
-    inputs.fechaInicio && inputs.fechaFin && inputs.fechaFin <= inputs.fechaInicio
-      ? 'La fecha de fin debe ser posterior al inicio'
-      : null;
+  const lista = scenarios.length ? scenarios : [crearEscenario('Escenario 1')];
+  const active = lista.find((s) => s.id === activeId) ?? lista[0];
 
-  function set<K extends keyof BriefInputs>(key: K, val: BriefInputs[K]) {
-    setInputs((prev) => ({ ...prev, [key]: val }));
+  function update<K extends keyof BriefInputs>(key: K, val: BriefInputs[K]) {
+    setScenarios((prev) => prev.map((s) => (s.id === active.id ? { ...s, [key]: val } : s)));
     setGenerado(false);
   }
 
-  const proy = calcularProyeccion(inputs);
+  function renombrar(nombre: string) {
+    setScenarios((prev) => prev.map((s) => (s.id === active.id ? { ...s, nombre } : s)));
+  }
+
+  function agregarEscenario() {
+    const nuevo = crearEscenario(`Escenario ${scenarios.length + 1}`);
+    setScenarios((prev) => [...prev, nuevo]);
+    setActiveId(nuevo.id);
+    showToast('✓ Escenario agregado');
+  }
+
+  function duplicarEscenario() {
+    const copia: BriefScenario = { ...active, id: generarId(), nombre: `${active.nombre} (copia)` };
+    setScenarios((prev) => [...prev, copia]);
+    setActiveId(copia.id);
+    showToast('✓ Escenario duplicado');
+  }
+
+  function eliminarEscenario(id: string) {
+    if (scenarios.length <= 1) return;
+    const next = scenarios.filter((s) => s.id !== id);
+    setScenarios(next);
+    if (activeId === id) setActiveId(next[0].id);
+    showToast('✓ Escenario eliminado');
+  }
+
+  function handleTabKeyDown(e: React.KeyboardEvent, index: number) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    const dir = e.key === 'ArrowRight' ? 1 : -1;
+    const nextIndex = (index + dir + scenarios.length) % scenarios.length;
+    const next = scenarios[nextIndex];
+    setActiveId(next.id);
+    document.getElementById(`brief-tab-${next.id}`)?.focus();
+  }
+
+  const fechaError =
+    active.fechaInicio && active.fechaFin && active.fechaFin <= active.fechaInicio
+      ? 'La fecha de fin debe ser posterior al inicio'
+      : null;
+
+  const proy = calcularProyeccion(active);
 
   function handleCopiar() {
     if (fechaError) return;
-    const texto = generarTexto(inputs, proy);
+    const texto = generarTexto(active, proy);
     navigator.clipboard.writeText(texto).catch(() => {});
     setGenerado(true);
-    setTimeout(() => setGenerado(false), 2500);
+    showToast('✓ Brief copiado al portapapeles');
+    setTimeout(() => setGenerado(false), 2000);
+  }
+
+  function handleExportarPDF() {
+    window.print();
+  }
+
+  function handleExportarComparacion() {
+    const f = (n: number) => Math.round(n);
+    const rows = [
+      ['Escenario', 'Servicio', 'Ingresos brutos', 'Promedio diario', 'Sets totales', 'Alcance estimado', 'Impresiones', 'Clientes potenciales', 'ROI %'].join(';'),
+      ...scenarios.map((s) => {
+        const p = calcularProyeccion(s);
+        return [
+          s.nombre,
+          s.servicio,
+          f(p.ingresosBrutos),
+          f(p.ingresoPorDia),
+          f(p.setsTotal),
+          p.alcanceEstimado,
+          p.impresiones,
+          p.clientesPotenciales,
+          p.roiEstimado.toFixed(0),
+        ].join(';');
+      }),
+    ].join('\n');
+    const blob = new Blob(['﻿' + rows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'brief-comparacion-escenarios.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('✓ Comparación exportada (CSV)');
   }
 
   return (
     <main className="brief-main" id="main" tabIndex={-1}>
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+
       <div className="brief-header">
-        <div className="brief-eyebrow">UX Tools Suite · vientonorte</div>
+        <div className="brief-eyebrow">UX Tools Suite · SURA Investments</div>
         <h1 className="brief-title">Brief de Campaña</h1>
-        <p className="brief-sub">
-          Calcula cuánto puedes ganar y qué necesitas invertir en Instagram para llegar a más clientes.
-        </p>
+        <p className="brief-sub">Proyección de ingresos y configuración de pauta para Instagram. Tus escenarios se guardan automáticamente en este navegador.</p>
       </div>
 
-      <div className="brief-body">
-        {/* ── Formulario ── */}
-        <section className="brief-form-col" aria-label="Configuración del brief">
+      {/* Tabs de escenarios */}
+      <div className="brief-scenarios no-print">
+        <div role="tablist" aria-label="Escenarios de campaña" className="brief-tabs">
+          {scenarios.map((s, i) => (
+            <div key={s.id} className="brief-tab-wrap">
+              <button
+                role="tab"
+                id={`brief-tab-${s.id}`}
+                aria-selected={s.id === active.id}
+                aria-controls={`brief-panel-${s.id}`}
+                tabIndex={s.id === active.id ? 0 : -1}
+                className={`brief-tab${s.id === active.id ? ' brief-tab--active' : ''}`}
+                onClick={() => setActiveId(s.id)}
+                onKeyDown={(e) => handleTabKeyDown(e, i)}
+                type="button"
+              >
+                {s.nombre}
+              </button>
+              {scenarios.length > 1 && (
+                <button
+                  className="brief-tab-close"
+                  aria-label={`Eliminar ${s.nombre}`}
+                  onClick={() => eliminarEscenario(s.id)}
+                  type="button"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          ))}
+          <button className="brief-tab brief-tab-add" onClick={agregarEscenario} type="button">
+            + Escenario
+          </button>
+        </div>
+      </div>
 
+      <div
+        className="brief-body"
+        role="tabpanel"
+        id={`brief-panel-${active.id}`}
+        aria-labelledby={`brief-tab-${active.id}`}
+      >
+        {/* Columna izquierda: formulario */}
+        <section className="brief-form-col" aria-label="Configuración del brief">
           <div className="brief-card">
-            <h2 className="brief-card-title">Tu servicio</h2>
+            <h2 className="brief-card-title">Escenario</h2>
             <div className="brief-field">
-              <label className="brief-label" htmlFor="servicio">¿Qué servicio ofreces?</label>
-              <input id="servicio" className="brief-input" value={inputs.servicio}
-                onChange={(e) => set('servicio', e.target.value)}
-                placeholder="Ej: Estilismo de uñas" />
+              <label className="brief-label" htmlFor="nombreEscenario">Nombre del escenario</label>
+              <input id="nombreEscenario" className="brief-input" value={active.nombre}
+                onChange={(e) => renombrar(e.target.value)} />
             </div>
-            <div className="brief-row">
-              <div className="brief-field">
-                <label className="brief-label" htmlFor="precio">¿Cuánto cobras por servicio? (CLP)</label>
-                <input id="precio" className="brief-input" type="number" min={0}
-                  value={inputs.precioSet} onChange={(e) => set('precioSet', Number(e.target.value))} />
-              </div>
-              <div className="brief-field">
-                <label className="brief-label" htmlFor="sets">¿Cuántos clientes atiendes por día?</label>
-                <input id="sets" className="brief-input" type="number" min={0} max={24}
-                  value={inputs.setsPerDia} onChange={(e) => set('setsPerDia', Number(e.target.value))} />
-              </div>
-            </div>
-            <div className="brief-field">
-              <label className="brief-label" htmlFor="diasSem">¿Cuántos días a la semana trabajas?</label>
-              <input id="diasSem" className="brief-input" type="number" min={1} max={7}
-                value={inputs.diasSemana} onChange={(e) => set('diasSemana', Number(e.target.value))} />
+            <div className="brief-actions-row">
+              <button className="btn-brief-secondary" onClick={duplicarEscenario} type="button">
+                Duplicar escenario
+              </button>
             </div>
           </div>
 
           <div className="brief-card">
-            <h2 className="brief-card-title">Período de la campaña</h2>
+            <h2 className="brief-card-title">Servicio</h2>
+            <div className="brief-field">
+              <label className="brief-label" htmlFor="servicio">Nombre del servicio</label>
+              <input id="servicio" className="brief-input" value={active.servicio}
+                onChange={(e) => update('servicio', e.target.value)} />
+            </div>
             <div className="brief-row">
               <div className="brief-field">
-                <label className="brief-label" htmlFor="fechaIni">¿Cuándo empieza?</label>
-                <input id="fechaIni" className="brief-input" type="date"
-                  value={inputs.fechaInicio} onChange={(e) => set('fechaInicio', e.target.value)} />
+                <label className="brief-label" htmlFor="precio">Precio por set (CLP)</label>
+                <input id="precio" className="brief-input" type="number" min={0}
+                  value={active.precioSet} onChange={(e) => update('precioSet', Number(e.target.value))} />
               </div>
               <div className="brief-field">
-                <label className="brief-label" htmlFor="fechaFin">¿Cuándo termina?</label>
+                <label className="brief-label" htmlFor="sets">Sets por día</label>
+                <input id="sets" className="brief-input" type="number" min={0} max={24}
+                  value={active.setsPerDia} onChange={(e) => update('setsPerDia', Number(e.target.value))} />
+              </div>
+            </div>
+            <div className="brief-field">
+              <label className="brief-label" htmlFor="diasSem">Días de trabajo por semana</label>
+              <input id="diasSem" className="brief-input" type="number" min={1} max={7}
+                value={active.diasSemana} onChange={(e) => update('diasSemana', Number(e.target.value))} />
+            </div>
+          </div>
+
+          <div className="brief-card">
+            <h2 className="brief-card-title">Período</h2>
+            <div className="brief-row">
+              <div className="brief-field">
+                <label className="brief-label" htmlFor="fechaIni">Inicio campaña</label>
+                <input id="fechaIni" className="brief-input" type="date"
+                  value={active.fechaInicio} onChange={(e) => update('fechaInicio', e.target.value)} />
+              </div>
+              <div className="brief-field">
+                <label className="brief-label" htmlFor="fechaFin">Fin campaña</label>
                 <input id="fechaFin"
                   className={`brief-input${fechaError ? ' brief-input--error' : ''}`}
-                  type="date" value={inputs.fechaFin}
-                  onChange={(e) => set('fechaFin', e.target.value)}
+                  type="date"
+                  value={active.fechaFin}
+                  onChange={(e) => update('fechaFin', e.target.value)}
                   aria-describedby={fechaError ? 'fechaFin-error' : undefined} />
                 {fechaError && (
                   <span id="fechaFin-error" className="brief-error" role="alert">{fechaError}</span>
@@ -168,150 +303,169 @@ export default function Brief() {
           </div>
 
           <div className="brief-card">
-            <h2 className="brief-card-title">Inversión en Instagram</h2>
-            <div className="brief-field">
-              <label className="brief-label" htmlFor="presup">
-                ¿Cuánto quieres gastar en publicidad? (CLP)
-              </label>
-              <input id="presup" className="brief-input" type="number" min={0}
-                value={inputs.presupuestoIG} onChange={(e) => set('presupuestoIG', Number(e.target.value))} />
+            <h2 className="brief-card-title">Pauta Instagram</h2>
+            <div className="brief-row">
+              <div className="brief-field">
+                <label className="brief-label" htmlFor="presup">Presupuesto total (CLP)</label>
+                <input id="presup" className="brief-input" type="number" min={0}
+                  value={active.presupuestoIG} onChange={(e) => update('presupuestoIG', Number(e.target.value))} />
+              </div>
+              <div className="brief-field">
+                <label className="brief-label" htmlFor="cpr">Costo por resultado (CLP)</label>
+                <input id="cpr" className="brief-input" type="number" min={0}
+                  value={active.cpResultado} onChange={(e) => update('cpResultado', Number(e.target.value))} />
+              </div>
             </div>
-
-            {/* Opciones avanzadas toggle */}
-            <button
-              className="brief-toggle-avanzado"
-              type="button"
-              onClick={() => setAvanzado((v) => !v)}
-              aria-expanded={avanzado}
-            >
-              {avanzado ? '▲ Ocultar opciones avanzadas' : '▼ Opciones avanzadas'}
-            </button>
-
-            {avanzado && (
-              <>
-                <div className="brief-field" style={{ marginTop: 'var(--space-md)' }}>
-                  <label className="brief-label" htmlFor="cpr">
-                    Costo por resultado (CLP)
-                    <Tooltip text="¿Cuánto pagas en promedio por cada persona que reacciona a tu anuncio (clic, mensaje, etc.)? Si no lo sabes, deja $150." />
-                  </label>
-                  <input id="cpr" className="brief-input" type="number" min={0}
-                    value={inputs.cpResultado} onChange={(e) => set('cpResultado', Number(e.target.value))} />
-                </div>
-                <div className="brief-field">
-                  <label className="brief-label" htmlFor="audience">¿A quién le habla tu campaña?</label>
-                  <textarea id="audience" className="brief-input brief-textarea" value={inputs.targetAudience}
-                    onChange={(e) => set('targetAudience', e.target.value)} rows={2} />
-                </div>
-                <div className="brief-field">
-                  <label className="brief-label" htmlFor="objetivo">Objetivo de la campaña</label>
-                  <textarea id="objetivo" className="brief-input brief-textarea" value={inputs.objetivo}
-                    onChange={(e) => set('objetivo', e.target.value)} rows={2} />
-                </div>
-              </>
-            )}
+            <div className="brief-field">
+              <label className="brief-label" htmlFor="audience">Audiencia objetivo</label>
+              <textarea id="audience" className="brief-input brief-textarea" value={active.targetAudience}
+                onChange={(e) => update('targetAudience', e.target.value)} rows={2} />
+            </div>
+            <div className="brief-field">
+              <label className="brief-label" htmlFor="objetivo">Objetivo de campaña</label>
+              <textarea id="objetivo" className="brief-input brief-textarea" value={active.objetivo}
+                onChange={(e) => update('objetivo', e.target.value)} rows={2} />
+            </div>
           </div>
         </section>
 
-        {/* ── Resultados ── */}
+        {/* Columna derecha: proyección */}
         <section className="brief-results-col" aria-label="Proyección de resultados">
-
-          {/* KPI principal: ingreso mensual */}
           <div className="brief-card brief-card-highlight">
-            <h2 className="brief-card-title">¿Cuánto puedes ganar?</h2>
-            <div className="brief-hero-kpi">
-              <div className="brief-hero-val">{fmt(proy.ingresosMensual)}</div>
-              <div className="brief-hero-lbl">al mes</div>
-            </div>
-            <div className="proy-grid proy-grid--3">
+            <h2 className="brief-card-title">Proyección de ingresos</h2>
+            <div className="proy-grid">
+              <div className="proy-kpi">
+                <div className="proy-val">{fmt(proy.ingresosBrutos)}</div>
+                <div className="proy-lbl">Ingresos brutos estimados</div>
+              </div>
               <div className="proy-kpi">
                 <div className="proy-val">{fmt(proy.ingresoPorDia)}</div>
-                <div className="proy-lbl">por día</div>
+                <div className="proy-lbl">Promedio por día</div>
               </div>
               <div className="proy-kpi">
                 <div className="proy-val">{Math.round(proy.setsTotal)}</div>
-                <div className="proy-lbl">servicios en {proy.diasCampana} días</div>
+                <div className="proy-lbl">Sets totales en el período</div>
               </div>
               <div className="proy-kpi">
-                <div className="proy-val">{fmt(proy.ingresosBrutos)}</div>
-                <div className="proy-lbl">total del período</div>
+                <div className="proy-val">{proy.diasCampana} días</div>
+                <div className="proy-lbl">Duración de campaña</div>
               </div>
             </div>
           </div>
 
-          {/* Pauta IG */}
           <div className="brief-card">
-            <h2 className="brief-card-title">
-              ¿Qué logra tu inversión en Instagram?
-              <Tooltip text="Estimaciones basadas en CTR promedio del 2% para servicios de belleza en Instagram. Los valores reales varían según el contenido y segmentación." />
-            </h2>
+            <h2 className="brief-card-title">Estimación pauta IG</h2>
             <div className="proy-grid">
               <div className="proy-kpi">
                 <div className="proy-val">{proy.alcanceEstimado.toLocaleString('es-CL')}</div>
-                <div className="proy-lbl">personas te verán</div>
-              </div>
-              <div className="proy-kpi">
-                <div className="proy-val">{proy.clientesPotenciales}</div>
-                <div className="proy-lbl">clientes potenciales</div>
+                <div className="proy-lbl">Alcance estimado</div>
               </div>
               <div className="proy-kpi">
                 <div className="proy-val">{proy.impresiones.toLocaleString('es-CL')}</div>
-                <div className="proy-lbl">impresiones totales</div>
+                <div className="proy-lbl">Impresiones</div>
+              </div>
+              <div className="proy-kpi">
+                <div className="proy-val">{proy.clientesPotenciales}</div>
+                <div className="proy-lbl">Clientes potenciales (2% CTR)</div>
               </div>
               <div className="proy-kpi proy-kpi-roi" data-positive={proy.roiEstimado >= 0}>
                 <div className="proy-val">
-                  {inputs.presupuestoIG > 0
-                    ? `${proy.roiEstimado >= 0 ? '↑' : '↓'} ${Math.abs(proy.roiEstimado).toFixed(0)}%`
+                  {active.presupuestoIG > 0
+                    ? `${proy.roiEstimado >= 0 ? '↑' : '↓'} ${proy.roiEstimado.toFixed(0)}%`
                     : '—'}
                 </div>
-                <div className="proy-lbl">retorno estimado</div>
+                <div className="proy-lbl">ROI estimado</div>
               </div>
             </div>
+            <p className="brief-disclaimer">
+              Estimación basada en CTR promedio del 2% para servicios de belleza en Instagram. Los valores reales dependen del contenido y segmentación.
+            </p>
           </div>
 
-          {/* Brief exportable */}
           <div className="brief-card">
-            <h2 className="brief-card-title">Brief listo para compartir</h2>
-            <pre className="brief-preview">{generarTexto(inputs, proy)}</pre>
-            <button
-              className={`btn-brief-copy${generado ? ' btn-brief-copy--done' : ''}`}
-              onClick={handleCopiar}
-              disabled={!!fechaError}
-            >
-              <span aria-live="polite">{generado ? '✓ ¡Copiado!' : '📋 Copiar brief'}</span>
-            </button>
+            <h2 className="brief-card-title">Brief generado</h2>
+            <pre className="brief-preview">{generarTexto(active, proy)}</pre>
+            <div className="brief-export-row">
+              <button className="btn-brief-copy" onClick={handleCopiar} disabled={!!fechaError}>
+                <span aria-live="polite">{generado ? '✓ Copiado' : 'Copiar brief al portapapeles'}</span>
+              </button>
+              <button className="btn-brief-secondary no-print" onClick={handleExportarPDF} type="button">
+                Exportar PDF
+              </button>
+            </div>
           </div>
-
         </section>
       </div>
+
+      {/* Comparación de escenarios */}
+      {scenarios.length > 1 && (
+        <section className="brief-card brief-comparison" aria-label="Comparación de escenarios">
+          <div className="brief-comparison-header">
+            <h2 className="brief-card-title">Comparación de escenarios</h2>
+            <button className="btn-brief-secondary no-print" onClick={handleExportarComparacion} type="button">
+              Exportar CSV
+            </button>
+          </div>
+          <div className="brief-table-wrap">
+            <table className="brief-table">
+              <thead>
+                <tr>
+                  <th scope="col">Escenario</th>
+                  <th scope="col">Ingresos brutos</th>
+                  <th scope="col">Promedio/día</th>
+                  <th scope="col">Sets totales</th>
+                  <th scope="col">Alcance</th>
+                  <th scope="col">ROI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {scenarios.map((s) => {
+                  const p = calcularProyeccion(s);
+                  return (
+                    <tr key={s.id} className={s.id === active.id ? 'brief-table-row--active' : ''}>
+                      <th scope="row">{s.nombre}</th>
+                      <td>{fmt(p.ingresosBrutos)}</td>
+                      <td>{fmt(p.ingresoPorDia)}</td>
+                      <td>{Math.round(p.setsTotal)}</td>
+                      <td>{p.alcanceEstimado.toLocaleString('es-CL')}</td>
+                      <td data-positive={p.roiEstimado >= 0}>
+                        {s.presupuestoIG > 0 ? `${p.roiEstimado >= 0 ? '↑' : '↓'} ${p.roiEstimado.toFixed(0)}%` : '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </main>
   );
 }
 
-function generarTexto(inputs: BriefInputs, proy: Proyeccion): string {
-  const f = (n: number) =>
-    new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
-  return `BRIEF DE CAMPAÑA INSTAGRAM
+function generarTexto(scenario: BriefScenario, proy: Proyeccion): string {
+  const f = (n: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
+  return `BRIEF DE CAMPAÑA INSTAGRAM — ${scenario.nombre}
 =============================
-Servicio: ${inputs.servicio}
-Período: ${inputs.fechaInicio} → ${inputs.fechaFin} (${proy.diasCampana} días)
-Audiencia: ${inputs.targetAudience}
-Objetivo: ${inputs.objetivo}
+Servicio: ${scenario.servicio}
+Período: ${scenario.fechaInicio} → ${scenario.fechaFin} (${proy.diasCampana} días)
+Audiencia: ${scenario.targetAudience}
+Objetivo: ${scenario.objetivo}
 
 PROYECCIÓN DE INGRESOS
-• Precio por servicio: ${f(inputs.precioSet)}
-• Servicios por día: ${inputs.setsPerDia} · ${inputs.diasSemana} días/semana
-• Total estimado de servicios: ${Math.round(proy.setsTotal)}
-• Ingreso mensual proyectado: ${f(proy.ingresosMensual)}
-• Ingresos totales del período: ${f(proy.ingresosBrutos)}
+• Precio por set: ${f(scenario.precioSet)}
+• Sets por día: ${scenario.setsPerDia} · ${scenario.diasSemana} días/semana
+• Sets totales estimados: ${Math.round(proy.setsTotal)}
+• Ingresos brutos: ${f(proy.ingresosBrutos)}
 • Promedio diario: ${f(proy.ingresoPorDia)}
 
 PAUTA INSTAGRAM
-• Presupuesto: ${f(inputs.presupuestoIG)}
-• Costo por resultado: ${f(inputs.cpResultado)}
+• Presupuesto: ${f(scenario.presupuestoIG)}
+• Costo por resultado: ${f(scenario.cpResultado)}
 • Alcance estimado: ${proy.alcanceEstimado.toLocaleString('es-CL')} personas
 • Impresiones estimadas: ${proy.impresiones.toLocaleString('es-CL')}
 • Clientes potenciales: ${proy.clientesPotenciales}
-• Retorno estimado: ${proy.roiEstimado.toFixed(0)}%
+• ROI estimado: ${proy.roiEstimado.toFixed(0)}%
 
-Generado con UX Tools Suite · vientonorte`;
+Generado con UX Tools Suite · SURA Investments`;
 }
