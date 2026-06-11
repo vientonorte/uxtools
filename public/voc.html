@@ -964,6 +964,214 @@ h1 {
 }
 .autosave-indicator.visible { opacity: 1; }
 
+/* ===== BITÁCORA LOCAL ===== */
+.bitacora-section {
+  max-width: 1100px;
+  margin: 60px auto 0;
+  padding: 0 24px;
+}
+.bitacora-section h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 32px; font-weight: 500;
+  margin-bottom: 8px; text-align: center;
+}
+.bitacora-section .seccion-sub {
+  text-align: center;
+  font-family: 'Caveat', cursive;
+  font-size: 22px; color: var(--accent);
+  margin-bottom: 32px;
+}
+.bitacora-privacidad {
+  border: 2px dashed var(--sage);
+  background: rgba(94, 122, 98, 0.08);
+  padding: 14px 18px;
+  font-size: 14px; line-height: 1.6;
+  margin-bottom: 24px;
+}
+.bitacora-log {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+.bitacora-lista {
+  list-style: none;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+}
+.bitacora-lista:empty { display: none; }
+.bitacora-lista li {
+  display: flex; flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px; line-height: 1.5;
+}
+.bitacora-lista li:last-child { border-bottom: none; }
+.bitacora-lista time {
+  font-family: 'Caveat', cursive;
+  font-size: 17px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  min-width: 150px;
+}
+.bitacora-acciones { margin-bottom: 20px; }
+.bitacora-borrar {
+  background: var(--ink); color: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 10px 18px;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600; font-size: 12px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--accent);
+  min-height: 44px;
+}
+.bitacora-borrar:hover {
+  background: var(--accent); border-color: var(--accent);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.bitacora-principios {
+  font-size: 14px; line-height: 1.7;
+  color: var(--ink-soft);
+}
+.bitacora-principios summary {
+  cursor: pointer;
+  font-weight: 600; color: var(--ink);
+  padding: 8px 0;
+  min-height: 24px;
+}
+.bitacora-principios ul { margin: 8px 0 0 20px; }
+.bitacora-principios li { margin-bottom: 6px; }
+.bitacora-principios strong { color: var(--ink); }
+
+/* ===== ADJUNTOS DE LA MENTORÍA ===== */
+.adjuntos {
+  margin-bottom: 24px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  padding: 20px;
+}
+.adjuntos h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px; font-weight: 500;
+  margin-bottom: 4px;
+}
+.adjuntos-sub {
+  font-family: 'Caveat', cursive;
+  font-size: 19px; color: var(--accent);
+  margin-bottom: 16px;
+}
+.adjuntos-form {
+  display: flex; flex-wrap: wrap;
+  gap: 12px; align-items: flex-end;
+  margin-bottom: 16px;
+}
+.adjuntos-form .campo-descripcion {
+  flex: 1 1 220px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.adjuntos-form label {
+  font-size: 12px; font-weight: 600;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.adjuntos-form input[type="text"] {
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  padding: 10px 12px;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 14px;
+  min-height: 44px;
+}
+.adjuntos-agregar {
+  background: var(--sage); color: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 10px 18px;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600; font-size: 12px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--ink);
+  min-height: 44px;
+}
+.adjuntos-agregar:hover {
+  background: var(--accent);
+  box-shadow: 3px 3px 0 var(--sage);
+}
+.adjuntos-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+.adjuntos-grid:empty { display: none; }
+.adjunto-item {
+  border: 1px solid var(--line);
+  background: var(--paper-shadow);
+  padding: 8px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.adjunto-miniatura {
+  width: 100%; height: 110px;
+  padding: 0; border: 1px solid var(--line);
+  background: var(--paper);
+  cursor: zoom-in;
+}
+.adjunto-miniatura img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+.adjunto-item figcaption {
+  font-size: 12px; line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.adjunto-item time {
+  display: block;
+  font-family: 'Caveat', cursive;
+  font-size: 15px; color: var(--ink-soft);
+}
+.adjunto-eliminar {
+  background: var(--paper); color: var(--ink);
+  border: 2px solid var(--ink);
+  padding: 6px 10px;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600; font-size: 11px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  cursor: pointer;
+  min-height: 32px;
+}
+.adjunto-eliminar:hover { background: var(--accent); color: var(--paper); border-color: var(--accent); }
+.adjuntos-espacio {
+  margin-top: 12px;
+  font-size: 12px; color: var(--ink-soft);
+}
+.adjunto-dialog {
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  padding: 16px;
+  max-width: min(90vw, 900px);
+}
+.adjunto-dialog::backdrop { background: rgba(26, 34, 56, 0.7); }
+.adjunto-dialog img {
+  max-width: 100%; max-height: 70vh;
+  display: block; margin: 0 auto 12px;
+}
+.adjunto-dialog p {
+  font-size: 14px; text-align: center;
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+.adjunto-dialog .adjunto-dialog-cerrar {
+  display: block; margin: 0 auto;
+  background: var(--ink); color: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 10px 18px;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600; font-size: 12px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  cursor: pointer;
+  min-height: 44px;
+}
+
 /* ===== REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -980,7 +1188,7 @@ h1 {
 @media print {
   body { background: white; }
   body::before { display: none; }
-  .controles, .modal-bg, .onboarding, .autosave-indicator, .toast { display: none !important; }
+  .controles, .modal-bg, .onboarding, .autosave-indicator, .toast, .bitacora-section { display: none !important; }
   header { position: static; }
   .nodo { page-break-inside: avoid; }
   .cronograma-section, .analisis-section { page-break-before: always; }
@@ -1262,6 +1470,64 @@ h1 {
     <div class="loading-bar-fill" id="loading-bar-fill"></div>
   </div>
   <div class="resultado-analisis" id="resultado" aria-live="polite"></div>
+</section>
+
+<!-- BITÁCORA LOCAL -->
+<section class="bitacora-section" aria-labelledby="h-bitacora">
+  <h2 id="h-bitacora">Bitácora local</h2>
+  <p class="seccion-sub">La memoria de tu mapa, solo en este dispositivo</p>
+
+  <div class="bitacora-privacidad">
+    <strong>🔒 Privado de verdad:</strong> esta bitácora vive únicamente en tu navegador y en este
+    dispositivo. No viaja a ningún servidor, nadie más puede verla y puedes borrarla cuando quieras.
+  </div>
+
+  <div class="bitacora-log" role="log" aria-label="Registro de actividad de tu mapa" tabindex="0">
+    <p class="sin-datos" id="bitacora-vacia">Aún no hay actividad registrada. Cuando guardes, exportes o analices tu mapa, quedará anotado aquí.</p>
+    <ol class="bitacora-lista" id="bitacora-lista"></ol>
+  </div>
+
+  <div class="bitacora-acciones">
+    <button class="bitacora-borrar" id="bitacora-borrar" type="button">🗑 Borrar bitácora</button>
+  </div>
+
+  <section class="adjuntos" aria-labelledby="h-adjuntos">
+    <h3 id="h-adjuntos">📎 Archivos de la mentoría</h3>
+    <p class="adjuntos-sub">Fotos y capturas de pantalla para documentar lo que van trabajando</p>
+
+    <div class="adjuntos-form">
+      <div class="campo-descripcion">
+        <label for="adjunto-descripcion">Descripción (opcional)</label>
+        <input type="text" id="adjunto-descripcion" maxlength="120"
+               placeholder="Ej: captura de la sesión de hoy"
+               autocomplete="off">
+      </div>
+      <button class="adjuntos-agregar" id="adjunto-agregar" type="button">📷 Agregar fotos o capturas</button>
+      <input type="file" id="adjunto-input" accept="image/*" multiple hidden>
+    </div>
+
+    <p class="sin-datos" id="adjuntos-vacio">Todavía no hay archivos. Las imágenes que subas se comprimen y se guardan solo en este navegador.</p>
+    <ul class="adjuntos-grid" id="adjuntos-grid"></ul>
+    <p class="adjuntos-espacio" id="adjuntos-espacio" aria-live="polite"></p>
+
+    <dialog class="adjunto-dialog" id="adjunto-dialog">
+      <img id="adjunto-dialog-img" src="" alt="">
+      <p id="adjunto-dialog-info"></p>
+      <button class="adjunto-dialog-cerrar" id="adjunto-dialog-cerrar" type="button">Cerrar</button>
+    </dialog>
+  </section>
+
+  <details class="bitacora-principios">
+    <summary>¿Cómo se cuida esta bitácora?</summary>
+    <ul>
+      <li><strong>Solo en tu dispositivo:</strong> se guarda con localStorage, sin telemetría, rastreadores ni servidores de por medio.</li>
+      <li><strong>Texto plano siempre:</strong> cada entrada se registra y se muestra como texto, nunca como código ejecutable.</li>
+      <li><strong>Tamaño acotado:</strong> se conservan solo las últimas 100 entradas para no llenar el almacenamiento del navegador.</li>
+      <li><strong>Tus archivos también son locales:</strong> las fotos y capturas se comprimen y se guardan en este navegador; nada se sube a internet.</li>
+      <li><strong>Tú tienes el control:</strong> puedes borrar la bitácora completa o cada archivo por separado en cualquier momento.</li>
+      <li><strong>Fuera de impresión y export:</strong> no aparece en la versión impresa ni en el archivo JSON que descargas.</li>
+    </ul>
+  </details>
 </section>
 
 </main>
@@ -1864,6 +2130,273 @@ function actualizarProgreso() {
 }
 
 // =========================================================================
+// BITÁCORA LOCAL
+// Vive solo en localStorage: nunca sale del dispositivo. Las entradas se
+// renderizan con textContent (jamás innerHTML con datos guardados) y se
+// validan al cargar por si el almacenamiento llega corrupto o manipulado.
+// =========================================================================
+const BITACORA_KEY = 'mapa-martina-bitacora-v1';
+const BITACORA_MAX = 100;
+const BITACORA_DETALLE_MAX = 140;
+
+let bitacora = [];
+
+function cargarBitacora() {
+  try {
+    const data = JSON.parse(localStorage.getItem(BITACORA_KEY) || '[]');
+    bitacora = Array.isArray(data)
+      ? data.filter(e => e && typeof e.fecha === 'string' && typeof e.detalle === 'string')
+            .slice(0, BITACORA_MAX)
+      : [];
+  } catch(e) { bitacora = []; }
+  renderBitacora();
+}
+
+function registrarEvento(detalle) {
+  bitacora.unshift({
+    fecha: new Date().toISOString(),
+    detalle: String(detalle).slice(0, BITACORA_DETALLE_MAX)
+  });
+  if (bitacora.length > BITACORA_MAX) bitacora.length = BITACORA_MAX;
+  try {
+    localStorage.setItem(BITACORA_KEY, JSON.stringify(bitacora));
+  } catch(e) { /* Sin espacio: la bitácora sigue en memoria */ }
+  renderBitacora();
+}
+
+function renderBitacora() {
+  const lista = $('#bitacora-lista');
+  lista.textContent = '';
+  $('#bitacora-vacia').hidden = bitacora.length > 0;
+  bitacora.forEach(e => {
+    const li = document.createElement('li');
+    const time = document.createElement('time');
+    time.dateTime = e.fecha;
+    const d = new Date(e.fecha);
+    time.textContent = isNaN(d) ? e.fecha
+      : d.toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' });
+    const span = document.createElement('span');
+    span.textContent = e.detalle;
+    li.appendChild(time);
+    li.appendChild(span);
+    lista.appendChild(li);
+  });
+}
+
+$('#bitacora-borrar').addEventListener('click', () => {
+  if (!confirm('¿Borrar toda la bitácora? Esta acción no se puede deshacer. (Los archivos adjuntos no se borran aquí.)')) return;
+  bitacora = [];
+  try { localStorage.removeItem(BITACORA_KEY); } catch(e) { /* Nada que borrar */ }
+  renderBitacora();
+  mostrarToast('Bitácora borrada ✓');
+});
+
+// =========================================================================
+// ADJUNTOS DE LA MENTORÍA
+// Imágenes comprimidas en el cliente (canvas) y guardadas en localStorage:
+// nunca salen del dispositivo. El src de cada miniatura se valida contra
+// el prefijo data:image/ al cargar, y nombres/descripciones se renderizan
+// con textContent. El presupuesto de espacio evita reventar la cuota
+// (~5 MB) que comparte con el mapa y la bitácora.
+// =========================================================================
+const ADJUNTOS_KEY = 'mapa-martina-adjuntos-v1';
+const ADJUNTOS_MAX = 20;
+const ADJUNTOS_PRESUPUESTO = 3500000;   // chars de base64 para todos los adjuntos
+const ADJUNTO_TOPE_INDIVIDUAL = 900000; // chars máx. por imagen ya comprimida
+const ADJUNTO_LADO_MAX = 1280;          // px del lado mayor al comprimir
+const ADJUNTO_NOMBRE_MAX = 80;
+const ADJUNTO_DESC_MAX = 120;
+
+let adjuntos = [];
+
+function espacioAdjuntos() {
+  return adjuntos.reduce((sum, a) => sum + a.dataUrl.length, 0);
+}
+
+function cargarAdjuntos() {
+  try {
+    const data = JSON.parse(localStorage.getItem(ADJUNTOS_KEY) || '[]');
+    adjuntos = Array.isArray(data)
+      ? data.filter(a => a && typeof a.fecha === 'string'
+          && typeof a.nombre === 'string'
+          && typeof a.descripcion === 'string'
+          && typeof a.dataUrl === 'string'
+          && a.dataUrl.startsWith('data:image/'))
+            .slice(0, ADJUNTOS_MAX)
+      : [];
+  } catch(e) { adjuntos = []; }
+  renderAdjuntos();
+}
+
+function guardarAdjuntos() {
+  try {
+    localStorage.setItem(ADJUNTOS_KEY, JSON.stringify(adjuntos));
+    return true;
+  } catch(e) {
+    mostrarToast('No hay espacio en el navegador para guardar el archivo');
+    return false;
+  }
+}
+
+function comprimirImagen(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const escala = Math.min(1, ADJUNTO_LADO_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * escala));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * escala));
+      const ctx = canvas.getContext('2d');
+      // Fondo blanco: el JPEG no soporta transparencia (capturas PNG)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('imagen ilegible'));
+    };
+    img.src = url;
+  });
+}
+
+function renderAdjuntos() {
+  const grid = $('#adjuntos-grid');
+  grid.textContent = '';
+  $('#adjuntos-vacio').hidden = adjuntos.length > 0;
+
+  adjuntos.forEach(a => {
+    const li = document.createElement('li');
+    li.className = 'adjunto-item';
+
+    const figure = document.createElement('figure');
+    const verBtn = document.createElement('button');
+    verBtn.type = 'button';
+    verBtn.className = 'adjunto-miniatura';
+    verBtn.setAttribute('aria-label', `Ver en grande: ${a.descripcion || a.nombre}`);
+    const img = document.createElement('img');
+    img.src = a.dataUrl;
+    img.alt = a.descripcion || a.nombre;
+    verBtn.appendChild(img);
+    verBtn.addEventListener('click', () => abrirAdjunto(a));
+
+    const figcaption = document.createElement('figcaption');
+    const time = document.createElement('time');
+    time.dateTime = a.fecha;
+    const d = new Date(a.fecha);
+    time.textContent = isNaN(d) ? a.fecha
+      : d.toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' });
+    const nombre = document.createElement('span');
+    nombre.textContent = a.descripcion || a.nombre;
+    figcaption.appendChild(nombre);
+    figcaption.appendChild(time);
+
+    figure.appendChild(verBtn);
+    figure.appendChild(figcaption);
+
+    const borrar = document.createElement('button');
+    borrar.type = 'button';
+    borrar.className = 'adjunto-eliminar';
+    borrar.textContent = '🗑 Eliminar';
+    borrar.addEventListener('click', () => eliminarAdjunto(a.id));
+
+    li.appendChild(figure);
+    li.appendChild(borrar);
+    grid.appendChild(li);
+  });
+
+  const usado = espacioAdjuntos();
+  $('#adjuntos-espacio').textContent = adjuntos.length
+    ? `${adjuntos.length} de ${ADJUNTOS_MAX} archivos · ${Math.round(usado / ADJUNTOS_PRESUPUESTO * 100)}% del espacio local usado`
+    : '';
+}
+
+function abrirAdjunto(a) {
+  const dlg = $('#adjunto-dialog');
+  if (typeof dlg.showModal !== 'function') return;
+  $('#adjunto-dialog-img').src = a.dataUrl;
+  $('#adjunto-dialog-img').alt = a.descripcion || a.nombre;
+  $('#adjunto-dialog-info').textContent = a.descripcion ? `${a.descripcion} (${a.nombre})` : a.nombre;
+  dlg.showModal();
+}
+
+function eliminarAdjunto(id) {
+  const adjunto = adjuntos.find(a => a.id === id);
+  if (!adjunto) return;
+  if (!confirm(`¿Eliminar "${adjunto.descripcion || adjunto.nombre}"? Esta acción no se puede deshacer.`)) return;
+  adjuntos = adjuntos.filter(a => a.id !== id);
+  guardarAdjuntos();
+  renderAdjuntos();
+  registrarEvento(`Eliminaste un archivo adjunto: ${adjunto.nombre}`);
+  mostrarToast('Archivo eliminado ✓');
+}
+
+$('#adjunto-agregar').addEventListener('click', () => $('#adjunto-input').click());
+$('#adjunto-dialog-cerrar').addEventListener('click', () => $('#adjunto-dialog').close());
+
+$('#adjunto-input').addEventListener('change', async (e) => {
+  const files = Array.from(e.target.files || []);
+  e.target.value = '';
+  if (!files.length) return;
+
+  const descripcion = $('#adjunto-descripcion').value.trim().slice(0, ADJUNTO_DESC_MAX);
+  let guardados = 0;
+
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) {
+      mostrarToast(`"${file.name}" no es una imagen; por ahora solo se aceptan fotos y capturas`);
+      continue;
+    }
+    if (adjuntos.length >= ADJUNTOS_MAX) {
+      mostrarToast(`Límite de ${ADJUNTOS_MAX} archivos alcanzado; elimina alguno para subir más`);
+      break;
+    }
+
+    let dataUrl;
+    try {
+      dataUrl = await comprimirImagen(file);
+    } catch(err) {
+      mostrarToast(`No se pudo leer "${file.name}"`);
+      continue;
+    }
+
+    if (dataUrl.length > ADJUNTO_TOPE_INDIVIDUAL) {
+      mostrarToast(`"${file.name}" sigue muy pesada incluso comprimida`);
+      continue;
+    }
+    if (espacioAdjuntos() + dataUrl.length > ADJUNTOS_PRESUPUESTO) {
+      mostrarToast('Espacio local lleno; elimina algún archivo para subir más');
+      break;
+    }
+
+    const nombre = String(file.name || 'imagen').slice(0, ADJUNTO_NOMBRE_MAX);
+    adjuntos.unshift({
+      id: Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+      fecha: new Date().toISOString(),
+      nombre,
+      descripcion,
+      dataUrl
+    });
+    if (!guardarAdjuntos()) {
+      adjuntos.shift();
+      break;
+    }
+    registrarEvento(`Adjuntaste un archivo: ${nombre}`);
+    guardados++;
+  }
+
+  if (guardados > 0) {
+    $('#adjunto-descripcion').value = '';
+    renderAdjuntos();
+    mostrarToast(guardados === 1 ? 'Archivo guardado en este navegador ✓'
+                                 : `${guardados} archivos guardados en este navegador ✓`);
+  }
+});
+
+// =========================================================================
 // MAPA MOBILE: generar dinámicamente
 // =========================================================================
 function generarMapaMobile() {
@@ -2307,7 +2840,10 @@ function renderizarResultado(ranking, modo) {
   cont.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-$('#analizar').addEventListener('click', analizar);
+$('#analizar').addEventListener('click', () => {
+  registrarEvento('Ejecutaste el análisis de tu mapa');
+  analizar();
+});
 
 // =========================================================================
 // UI HELPERS
@@ -2335,7 +2871,10 @@ function mostrarAutosave() {
 // =========================================================================
 // CONTROLES
 // =========================================================================
-$('#btn-guardar').addEventListener('click', () => guardarEstado(false));
+$('#btn-guardar').addEventListener('click', () => {
+  guardarEstado(false);
+  registrarEvento('Guardaste tu mapa manualmente');
+});
 
 $('#btn-exportar').addEventListener('click', () => {
   const data = JSON.stringify(estado, null, 2);
@@ -2347,6 +2886,7 @@ $('#btn-exportar').addEventListener('click', () => {
   a.click();
   URL.revokeObjectURL(url);
   mostrarToast('JSON descargado ✓');
+  registrarEvento('Exportaste tu mapa a un archivo JSON');
 });
 
 $('#btn-cargar').addEventListener('click', () => $('#file-input').click());
@@ -2361,14 +2901,19 @@ $('#file-input').addEventListener('change', e => {
       aplicarEstadoUI();
       guardarEstado(false);
       mostrarToast('Cargado ✓');
+      registrarEvento('Cargaste un mapa desde un archivo JSON');
     } catch(err) {
       mostrarToast('Archivo inválido');
+      registrarEvento('Intentaste cargar un archivo que no era válido');
     }
   };
   reader.readAsText(file);
 });
 
-$('#btn-imprimir').addEventListener('click', () => window.print());
+$('#btn-imprimir').addEventListener('click', () => {
+  registrarEvento('Enviaste tu mapa a imprimir');
+  window.print();
+});
 
 $('#btn-onboarding').addEventListener('click', () => {
   $('#onboarding').classList.add('activo');
@@ -2382,6 +2927,7 @@ $('#btn-limpiar').addEventListener('click', () => {
   $('#resultado').classList.remove('visible');
   guardarEstado(false);
   aplicarEstadoUI();
+  registrarEvento('Borraste todo el mapa para empezar de nuevo');
 });
 
 // =========================================================================
@@ -2405,6 +2951,8 @@ function mostrarOnboardingSiPrimeraVez() {
 generarSemanal();
 generarMapaMobile();
 cargarEstado();
+cargarBitacora();
+cargarAdjuntos();
 mostrarOnboardingSiPrimeraVez();
 
 // Aplicar autosave a todos los textareas dinámicos también
