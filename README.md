@@ -23,6 +23,8 @@ index.html          → Dashboard / hub con tabs de productos
 benchmark.html      → App: UX Benchmark (embed Figma)
 uxflow.html         → App: UXFLOW Auto-Doc Engine
 eisenhower.html     → App: Operating Model DX (Eisenhower Matrix)
+voc.html            → App: Mapa VOC con bitácora local y archivos adjuntos
+                      (fotos/capturas comprimidas en el cliente, solo localStorage)
 .github/workflows/
   ci.yml            → Validación automática para PRs y main
   deploy.yml        → Deploy formal a GitHub Pages mediante artifact
