@@ -964,6 +964,86 @@ h1 {
 }
 .autosave-indicator.visible { opacity: 1; }
 
+/* ===== BITÁCORA LOCAL ===== */
+.bitacora-section {
+  max-width: 1100px;
+  margin: 60px auto 0;
+  padding: 0 24px;
+}
+.bitacora-section h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 32px; font-weight: 500;
+  margin-bottom: 8px; text-align: center;
+}
+.bitacora-section .seccion-sub {
+  text-align: center;
+  font-family: 'Caveat', cursive;
+  font-size: 22px; color: var(--accent);
+  margin-bottom: 32px;
+}
+.bitacora-privacidad {
+  border: 2px dashed var(--sage);
+  background: rgba(94, 122, 98, 0.08);
+  padding: 14px 18px;
+  font-size: 14px; line-height: 1.6;
+  margin-bottom: 24px;
+}
+.bitacora-log {
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 16px;
+}
+.bitacora-lista {
+  list-style: none;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+}
+.bitacora-lista:empty { display: none; }
+.bitacora-lista li {
+  display: flex; flex-wrap: wrap;
+  gap: 4px 16px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px; line-height: 1.5;
+}
+.bitacora-lista li:last-child { border-bottom: none; }
+.bitacora-lista time {
+  font-family: 'Caveat', cursive;
+  font-size: 17px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  min-width: 150px;
+}
+.bitacora-acciones { margin-bottom: 20px; }
+.bitacora-borrar {
+  background: var(--ink); color: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 10px 18px;
+  font-family: 'Inter Tight', sans-serif;
+  font-weight: 600; font-size: 12px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--accent);
+  min-height: 44px;
+}
+.bitacora-borrar:hover {
+  background: var(--accent); border-color: var(--accent);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.bitacora-principios {
+  font-size: 14px; line-height: 1.7;
+  color: var(--ink-soft);
+}
+.bitacora-principios summary {
+  cursor: pointer;
+  font-weight: 600; color: var(--ink);
+  padding: 8px 0;
+  min-height: 24px;
+}
+.bitacora-principios ul { margin: 8px 0 0 20px; }
+.bitacora-principios li { margin-bottom: 6px; }
+.bitacora-principios strong { color: var(--ink); }
+
 /* ===== REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -980,7 +1060,7 @@ h1 {
 @media print {
   body { background: white; }
   body::before { display: none; }
-  .controles, .modal-bg, .onboarding, .autosave-indicator, .toast { display: none !important; }
+  .controles, .modal-bg, .onboarding, .autosave-indicator, .toast, .bitacora-section { display: none !important; }
   header { position: static; }
   .nodo { page-break-inside: avoid; }
   .cronograma-section, .analisis-section { page-break-before: always; }
@@ -1262,6 +1342,37 @@ h1 {
     <div class="loading-bar-fill" id="loading-bar-fill"></div>
   </div>
   <div class="resultado-analisis" id="resultado" aria-live="polite"></div>
+</section>
+
+<!-- BITÁCORA LOCAL -->
+<section class="bitacora-section" aria-labelledby="h-bitacora">
+  <h2 id="h-bitacora">Bitácora local</h2>
+  <p class="seccion-sub">La memoria de tu mapa, solo en este dispositivo</p>
+
+  <div class="bitacora-privacidad">
+    <strong>🔒 Privado de verdad:</strong> esta bitácora vive únicamente en tu navegador y en este
+    dispositivo. No viaja a ningún servidor, nadie más puede verla y puedes borrarla cuando quieras.
+  </div>
+
+  <div class="bitacora-log" role="log" aria-label="Registro de actividad de tu mapa" tabindex="0">
+    <p class="sin-datos" id="bitacora-vacia">Aún no hay actividad registrada. Cuando guardes, exportes o analices tu mapa, quedará anotado aquí.</p>
+    <ol class="bitacora-lista" id="bitacora-lista"></ol>
+  </div>
+
+  <div class="bitacora-acciones">
+    <button class="bitacora-borrar" id="bitacora-borrar" type="button">🗑 Borrar bitácora</button>
+  </div>
+
+  <details class="bitacora-principios">
+    <summary>¿Cómo se cuida esta bitácora?</summary>
+    <ul>
+      <li><strong>Solo en tu dispositivo:</strong> se guarda con localStorage, sin telemetría, rastreadores ni servidores de por medio.</li>
+      <li><strong>Texto plano siempre:</strong> cada entrada se registra y se muestra como texto, nunca como código ejecutable.</li>
+      <li><strong>Tamaño acotado:</strong> se conservan solo las últimas 100 entradas para no llenar el almacenamiento del navegador.</li>
+      <li><strong>Tú tienes el control:</strong> puedes borrarla completa en cualquier momento con el botón de arriba.</li>
+      <li><strong>Fuera de impresión y export:</strong> no aparece en la versión impresa ni en el archivo JSON que descargas.</li>
+    </ul>
+  </details>
 </section>
 
 </main>
@@ -1864,6 +1975,68 @@ function actualizarProgreso() {
 }
 
 // =========================================================================
+// BITÁCORA LOCAL
+// Vive solo en localStorage: nunca sale del dispositivo. Las entradas se
+// renderizan con textContent (jamás innerHTML con datos guardados) y se
+// validan al cargar por si el almacenamiento llega corrupto o manipulado.
+// =========================================================================
+const BITACORA_KEY = 'mapa-martina-bitacora-v1';
+const BITACORA_MAX = 100;
+const BITACORA_DETALLE_MAX = 140;
+
+let bitacora = [];
+
+function cargarBitacora() {
+  try {
+    const data = JSON.parse(localStorage.getItem(BITACORA_KEY) || '[]');
+    bitacora = Array.isArray(data)
+      ? data.filter(e => e && typeof e.fecha === 'string' && typeof e.detalle === 'string')
+            .slice(0, BITACORA_MAX)
+      : [];
+  } catch(e) { bitacora = []; }
+  renderBitacora();
+}
+
+function registrarEvento(detalle) {
+  bitacora.unshift({
+    fecha: new Date().toISOString(),
+    detalle: String(detalle).slice(0, BITACORA_DETALLE_MAX)
+  });
+  if (bitacora.length > BITACORA_MAX) bitacora.length = BITACORA_MAX;
+  try {
+    localStorage.setItem(BITACORA_KEY, JSON.stringify(bitacora));
+  } catch(e) { /* Sin espacio: la bitácora sigue en memoria */ }
+  renderBitacora();
+}
+
+function renderBitacora() {
+  const lista = $('#bitacora-lista');
+  lista.textContent = '';
+  $('#bitacora-vacia').hidden = bitacora.length > 0;
+  bitacora.forEach(e => {
+    const li = document.createElement('li');
+    const time = document.createElement('time');
+    time.dateTime = e.fecha;
+    const d = new Date(e.fecha);
+    time.textContent = isNaN(d) ? e.fecha
+      : d.toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' });
+    const span = document.createElement('span');
+    span.textContent = e.detalle;
+    li.appendChild(time);
+    li.appendChild(span);
+    lista.appendChild(li);
+  });
+}
+
+$('#bitacora-borrar').addEventListener('click', () => {
+  if (!confirm('¿Borrar toda la bitácora? Esta acción no se puede deshacer.')) return;
+  bitacora = [];
+  try { localStorage.removeItem(BITACORA_KEY); } catch(e) { /* Nada que borrar */ }
+  renderBitacora();
+  mostrarToast('Bitácora borrada ✓');
+});
+
+// =========================================================================
 // MAPA MOBILE: generar dinámicamente
 // =========================================================================
 function generarMapaMobile() {
@@ -2307,7 +2480,10 @@ function renderizarResultado(ranking, modo) {
   cont.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-$('#analizar').addEventListener('click', analizar);
+$('#analizar').addEventListener('click', () => {
+  registrarEvento('Ejecutaste el análisis de tu mapa');
+  analizar();
+});
 
 // =========================================================================
 // UI HELPERS
@@ -2335,7 +2511,10 @@ function mostrarAutosave() {
 // =========================================================================
 // CONTROLES
 // =========================================================================
-$('#btn-guardar').addEventListener('click', () => guardarEstado(false));
+$('#btn-guardar').addEventListener('click', () => {
+  guardarEstado(false);
+  registrarEvento('Guardaste tu mapa manualmente');
+});
 
 $('#btn-exportar').addEventListener('click', () => {
   const data = JSON.stringify(estado, null, 2);
@@ -2347,6 +2526,7 @@ $('#btn-exportar').addEventListener('click', () => {
   a.click();
   URL.revokeObjectURL(url);
   mostrarToast('JSON descargado ✓');
+  registrarEvento('Exportaste tu mapa a un archivo JSON');
 });
 
 $('#btn-cargar').addEventListener('click', () => $('#file-input').click());
@@ -2361,14 +2541,19 @@ $('#file-input').addEventListener('change', e => {
       aplicarEstadoUI();
       guardarEstado(false);
       mostrarToast('Cargado ✓');
+      registrarEvento('Cargaste un mapa desde un archivo JSON');
     } catch(err) {
       mostrarToast('Archivo inválido');
+      registrarEvento('Intentaste cargar un archivo que no era válido');
     }
   };
   reader.readAsText(file);
 });
 
-$('#btn-imprimir').addEventListener('click', () => window.print());
+$('#btn-imprimir').addEventListener('click', () => {
+  registrarEvento('Enviaste tu mapa a imprimir');
+  window.print();
+});
 
 $('#btn-onboarding').addEventListener('click', () => {
   $('#onboarding').classList.add('activo');
@@ -2382,6 +2567,7 @@ $('#btn-limpiar').addEventListener('click', () => {
   $('#resultado').classList.remove('visible');
   guardarEstado(false);
   aplicarEstadoUI();
+  registrarEvento('Borraste todo el mapa para empezar de nuevo');
 });
 
 // =========================================================================
@@ -2405,6 +2591,7 @@ function mostrarOnboardingSiPrimeraVez() {
 generarSemanal();
 generarMapaMobile();
 cargarEstado();
+cargarBitacora();
 mostrarOnboardingSiPrimeraVez();
 
 // Aplicar autosave a todos los textareas dinámicos también
