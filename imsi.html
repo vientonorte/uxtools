@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RF Recon Console — Blueprint UX para operación SIGINT (tipo IMSI catcher). Prototipo de interfaz táctica con datos simulados: arquitectura de información, dashboard de 3 paneles y reglas de UX crítica.">
+  <title>RF Recon Console — Blueprint UX · SURA Investments</title>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=dm-mono:400,500|space-grotesk:300,400,500,600,700|inter:400,500" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/imsi.css">
+</head>
+<body class="ops">
+
+<!-- NAV -->
+<nav aria-label="Navegación principal">
+  <a class="nav-brand" href="index.html" aria-label="RF Recon Console — Inicio">
+    <div class="nav-logo" aria-hidden="true">RF</div>
+    <span class="nav-title">RF Recon Console</span>
+    <span class="nav-badge">blueprint</span>
+  </a>
+  <div class="nav-actions">
+    <a class="nav-link" href="index.html">← uxtools</a>
+    <a class="btn-nav" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </div>
+</nav>
+
+<!-- BANNER DE PROTOTIPO (honesto y permanente) -->
+<div class="ops-banner" role="note">
+  <span>⚠ <strong>PROTOTIPO UX · DATOS SIMULADOS</strong></span>
+  <span>Maqueta de interfaz para diseño y formación. No controla hardware SDR, no emite ni captura radiofrecuencia, no intercepta comunicaciones.</span>
+</div>
+
+<main class="ops-shell">
+
+  <!-- HEADER -->
+  <div class="ops-head">
+    <div>
+      <h1 class="ops-head__title">Consola de Reconocimiento RF</h1>
+      <p class="ops-head__sub">Blueprint UX para operación SIGINT · <span class="accent">eficiencia cognitiva bajo estrés</span> · alta densidad de datos</p>
+    </div>
+    <div class="ops-clock">
+      <span>MODO <strong id="mode-tag">PASIVO</strong></span>
+      <span>·</span>
+      <span>UTC-4 <span class="ops-clock__val" id="ops-clock">--:--:--</span></span>
+    </div>
+  </div>
+
+  <!-- STEPPER DE FASES -->
+  <nav class="phases" role="tablist" aria-label="Fases de la operación">
+    <button class="phase" role="tab" data-phase="1" aria-selected="false">
+      <span class="phase__num">1</span>
+      <span class="phase__label">Configuración<small>Setup terrestre · bandas · celda</small></span>
+    </button>
+    <button class="phase" role="tab" data-phase="2" aria-selected="false">
+      <span class="phase__num">2</span>
+      <span class="phase__label">Escaneo<small>Reconocimiento · pasivo / activo</small></span>
+    </button>
+    <button class="phase" role="tab" data-phase="3" aria-selected="true">
+      <span class="phase__num">3</span>
+      <span class="phase__label">Captura<small>Núcleo · monitoreo en vivo</small></span>
+    </button>
+    <button class="phase" role="tab" data-phase="4" aria-selected="false">
+      <span class="phase__num">4</span>
+      <span class="phase__label">Análisis<small>Forense · export de logs</small></span>
+    </button>
+  </nav>
+
+  <!-- ═══════════ FASE 1 · CONFIGURACIÓN ═══════════ -->
+  <section class="phase-view" data-phase="1" role="tabpanel" aria-label="Fase 1: Configuración de misión">
+    <div class="form-grid">
+      <div class="form-card">
+        <h3>Bandas de frecuencia</h3>
+        <div class="band-grid">
+          <button class="band-toggle" data-band="2G" aria-pressed="true">2G<small>GSM 900</small></button>
+          <button class="band-toggle" data-band="3G" aria-pressed="true">3G<small>UMTS 2100</small></button>
+          <button class="band-toggle" data-band="4G" aria-pressed="true">4G<small>LTE B3</small></button>
+          <button class="band-toggle" data-band="5G" aria-pressed="false">5G<small>NR n78</small></button>
+        </div>
+        <div class="field" style="margin-top:20px">
+          <label class="field__label" for="tx-power">Potencia de transmisión (Tx)</label>
+          <div class="field__row">
+            <input type="range" class="ops-range" id="tx-power" min="0" max="43" step="1" aria-describedby="tx-power-val">
+            <span class="field__val" id="tx-power-val">24 dBm</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h3>Configuración de celda</h3>
+        <div class="field">
+          <label class="field__label" for="cell-mcc">MCC · Mobile Country Code</label>
+          <input class="ops-input" id="cell-mcc" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field__label" for="cell-mnc">MNC · Mobile Network Code</label>
+          <input class="ops-input" id="cell-mnc" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field__label" for="cell-lac">LAC · Location Area Code</label>
+          <input class="ops-input" id="cell-lac" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="field__label" for="cell-tac">TAC · Tracking Area Code</label>
+          <input class="ops-input" id="cell-tac" inputmode="numeric" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h3>Listas de control de identidades</h3>
+        <p style="font-size:12px;color:var(--ops-text-dim);line-height:1.6;margin-bottom:14px">
+          Define qué hace el sistema con cada identidad detectada. Estas listas se persisten localmente (localStorage).
+        </p>
+        <div class="metric"><span class="metric__label"><span class="cls cls--white">WHITE-LIST</span></span><span class="metric__val">equipo propio · ignorado</span></div>
+        <div class="metric"><span class="metric__label"><span class="cls cls--target">TARGET</span></span><span class="metric__val">alerta inmediata</span></div>
+        <div class="metric"><span class="metric__label"><span class="cls cls--catch">catch-all</span></span><span class="metric__val">desconocidos en radio</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FASE 2 · ESCANEO ═══════════ -->
+  <section class="phase-view" data-phase="2" role="tabpanel" aria-label="Fase 2: Escaneo y reconocimiento">
+    <div class="form-grid">
+      <div class="form-card">
+        <h3>Modo de operación</h3>
+        <div class="mode-toggle">
+          <button class="mode-opt" data-mode="passive" aria-pressed="true">
+            <div class="mode-opt__name">Pasivo</div>
+            <div class="mode-opt__desc">Solo escucha de espectro. No emite señal. Menor exposición, menor tasa de captura.</div>
+          </button>
+          <button class="mode-opt mode-opt--active" data-mode="active" aria-pressed="false">
+            <div class="mode-opt__name">Activo</div>
+            <div class="mode-opt__desc">Emisión de señal para forzar enganche. Requiere confirmación sostenida.</div>
+          </button>
+        </div>
+        <button class="hold-btn" id="hold-active" aria-label="Mantener presionado para armar modo activo">
+          <span class="hold-btn__fill"></span>
+          <span class="hold-btn__label">⏻ MANTÉN PRESIONADO — armar emisión activa</span>
+        </button>
+      </div>
+
+      <div class="form-card">
+        <h3>Acciones sensibles · confirmación en dos pasos</h3>
+        <p style="font-size:12px;color:var(--ops-text-dim);line-height:1.6;margin-bottom:14px">
+          Toda acción que altere la red exige <strong>hold-to-trigger</strong> para evitar activaciones accidentales. En este prototipo solo se simula la confirmación.
+        </p>
+        <button class="hold-btn" id="hold-downgrade" aria-label="Mantener presionado para marcar acción de degradación (simulada)">
+          <span class="hold-btn__fill"></span>
+          <span class="hold-btn__label">⏻ MANTÉN PRESIONADO — marcar acción (simulada)</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FASE 3 · CAPTURA (NÚCLEO) ═══════════ -->
+  <section class="phase-view is-active" data-phase="3" role="tabpanel" aria-label="Fase 3: Captura y monitoreo">
+    <div class="ops-grid">
+
+      <!-- PANEL A: Control e Infraestructura -->
+      <aside class="panel panel--infra">
+        <div class="panel__head">
+          <span class="panel__title">A · Infraestructura</span>
+          <span class="panel__tag">SDR online</span>
+        </div>
+        <div class="panel__body">
+          <div class="metric">
+            <span class="metric__label"><span class="dot dot--good"></span>Estado SDR</span>
+            <span class="metric__val is-good">CONECTADO</span>
+          </div>
+          <div class="metric">
+            <span class="metric__label">Temperatura</span>
+            <span class="metric__val" id="hw-temp">47 °C</span>
+          </div>
+          <div class="metric">
+            <span class="metric__label">Batería</span>
+            <span class="metric__val" id="hw-batt">88 %</span>
+          </div>
+          <div class="bar"><div class="bar__fill bar__fill--good" id="bar-batt" style="width:88%"></div></div>
+
+          <div class="metric" style="margin-top:14px">
+            <span class="metric__label">RSSI (nivel señal)</span>
+            <span class="metric__val" id="hw-rssi">-72 dBm</span>
+          </div>
+          <div class="bar"><div class="bar__fill bar__fill--good" id="bar-rssi" style="width:54%"></div></div>
+
+          <div class="metric" style="margin-top:14px">
+            <span class="metric__label">Nivel de ruido</span>
+            <span class="metric__val" id="hw-noise">28 %</span>
+          </div>
+          <div class="bar"><div class="bar__fill bar__fill--good" id="bar-noise" style="width:28%"></div></div>
+
+          <div class="field" style="margin-top:18px">
+            <label class="field__label" for="antenna-gain">Ganancia de antena</label>
+            <div class="field__row">
+              <input type="range" class="ops-range" id="antenna-gain" min="0" max="60" step="1">
+              <span class="field__val" id="gain-val">42 dB</span>
+            </div>
+          </div>
+
+          <div class="switch-row">
+            <button class="ops-switch" id="switch-silent" aria-pressed="false">
+              <span class="ops-switch__icon">🔇</span>
+              Silent Mode
+            </button>
+            <button class="ops-switch ops-switch--danger" id="switch-emergency" aria-pressed="false">
+              <span class="ops-switch__icon">⏻</span>
+              Emergency<br>Shutdown
+            </button>
+          </div>
+
+          <!-- Alerta abstraída de errores técnicos -->
+          <div class="ops-alert" id="ops-alert" role="alert">
+            <span id="ops-alert-msg"></span>
+            <button class="ops-alert__act" id="ops-alert-act" style="display:none">Ajustar</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- PANEL B: Espectro y Geolocalización -->
+      <div class="ops-center">
+        <div class="viz">
+          <div class="panel__head">
+            <span class="panel__title">B · Cascada de espectro (Waterfall)</span>
+            <span class="panel__tag">tiempo real</span>
+          </div>
+          <div class="viz__canvas-wrap">
+            <canvas class="viz__canvas" id="waterfall" height="180" aria-label="Visualización de cascada del espectro radioeléctrico (simulada)"></canvas>
+            <span class="viz__overlay">700–2600 MHz · bins 96 · sim</span>
+          </div>
+          <div class="viz__legend">
+            <span><span class="dot dot--good"></span> ocupación normal</span>
+            <span><span class="dot dot--warn"></span> pico de energía</span>
+            <span>eje X: frecuencia · eje Y: tiempo (desplaza ↓)</span>
+          </div>
+        </div>
+
+        <div class="viz">
+          <div class="panel__head">
+            <span class="panel__title">Mapa de calor · triangulación (RTT)</span>
+            <span class="panel__tag">distancia estimada</span>
+          </div>
+          <div class="viz__canvas-wrap">
+            <canvas class="viz__canvas" id="heatmap" height="220" aria-label="Mapa de calor de triangulación por distancia (simulado)"></canvas>
+          </div>
+          <div class="viz__legend">
+            <span><span class="dot dot--crit"></span> target</span>
+            <span><span class="dot" style="background:var(--ops-cyan)"></span> white-list</span>
+            <span><span class="dot dot--good"></span> catch-all</span>
+            <span>anillos = distancia desde la antena</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL C: Consola de Identidades -->
+      <section class="panel panel--ident" aria-label="Consola de identidades capturadas">
+        <div class="panel__head">
+          <span class="panel__title">C · Identidades capturadas</span>
+          <span class="panel__tag" id="count-all">0</span>
+        </div>
+        <div class="ident__toolbar" role="group" aria-label="Filtros de identidades">
+          <button class="filter-chip" data-filter="all" aria-pressed="true">Todas <span class="count" id="count-all-2"></span></button>
+          <button class="filter-chip" data-filter="target" aria-pressed="false">Target <span class="count">(<span id="count-target">0</span>)</span></button>
+          <button class="filter-chip" data-filter="white" aria-pressed="false">White <span class="count">(<span id="count-white">0</span>)</span></button>
+          <button class="filter-chip" data-filter="catch" aria-pressed="false">Catch-all <span class="count">(<span id="count-catch">0</span>)</span></button>
+          <span class="freeze-note" id="freeze-note">❄ fila fijada — inspección</span>
+        </div>
+        <div class="ident__table-wrap">
+          <table class="ident">
+            <thead>
+              <tr>
+                <th scope="col">Clase</th>
+                <th scope="col">IMSI</th>
+                <th scope="col">IMEI</th>
+                <th scope="col">TMSI</th>
+                <th scope="col">País · Operador</th>
+                <th scope="col">Distancia (dBm)</th>
+                <th scope="col">RAT</th>
+                <th scope="col">Modelo</th>
+              </tr>
+            </thead>
+            <tbody id="ident-body"></tbody>
+          </table>
+        </div>
+        <div class="sr-only" id="ident-live" aria-live="assertive" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></div>
+      </section>
+
+    </div>
+  </section>
+
+  <!-- ═══════════ FASE 4 · ANÁLISIS / FORENSE ═══════════ -->
+  <section class="phase-view" data-phase="4" role="tabpanel" aria-label="Fase 4: Análisis y reporte">
+    <div class="form-grid">
+      <div class="form-card">
+        <h3>Exportación de logs</h3>
+        <p style="font-size:12px;color:var(--ops-text-dim);line-height:1.6">
+          Exporta los metadatos de identidades capturadas en esta sesión (data simulada). Formatos estándar para análisis posterior.
+        </p>
+        <div class="export-row">
+          <button class="btn-ops btn-ops--primary" id="exp-csv">⬇ CSV · metadatos</button>
+          <button class="btn-ops btn-ops--primary" id="exp-json">⬇ JSON · metadatos</button>
+          <button class="btn-ops" id="exp-pcap">⬇ PCAP · tráfico de red</button>
+        </div>
+      </div>
+      <div class="form-card">
+        <h3>Resumen de sesión</h3>
+        <div class="metric"><span class="metric__label">Identidades totales</span><span class="metric__val" id="sum-total">—</span></div>
+        <div class="metric"><span class="metric__label"><span class="cls cls--target">TARGET</span></span><span class="metric__val is-crit" id="sum-target">—</span></div>
+        <div class="metric"><span class="metric__label"><span class="cls cls--white">WHITE</span></span><span class="metric__val" id="sum-white">—</span></div>
+        <div class="metric"><span class="metric__label"><span class="cls cls--catch">catch-all</span></span><span class="metric__val" id="sum-catch">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="ops-foot">
+    RF Recon Console · blueprint UX de la suite uxtools — SURA Investments. Vista de diseño para ergonomía cognitiva en software táctico:
+    arquitectura de información en 4 fases, dashboard de 3 paneles, modo oscuro obligatorio, tipografía monoespaciada para identificadores,
+    confirmación en dos pasos (hold-to-trigger), abstracción de errores técnicos y persistencia de foco (freeze) en la tabla de capturas.
+    Toda la data es sintética y se procesa solo en tu navegador (localStorage). Sin backend, sin telemetría, sin captura real de RF.
+  </p>
+
+</main>
+
+<footer>
+  uxtools · RF Recon Console (blueprint) — <a href="index.html">← volver a la suite</a>
+</footer>
+
+<script src="js/imsi.js"></script>
+</body>
+</html>

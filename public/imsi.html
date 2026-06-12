@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- GENERADO por scripts/build-imsi.cjs desde imsi.html + css/ + js/imsi.js. No editar a mano. -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RF Recon Console — Blueprint UX para operación SIGINT (tipo IMSI catcher). Prototipo de interfaz táctica con datos simulados: arquitectura de información, dashboard de 3 paneles y reglas de UX crítica.">
+  <title>RF Recon Console — Blueprint UX · SURA Investments</title>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=dm-mono:400,500|space-grotesk:300,400,500,600,700|inter:400,500" rel="stylesheet">
+  <style>
+/* tokens.css */
+/* ── DESIGN TOKENS ─────────────────────────────────────────── */
+:root {
+  /* ── Color Palette ─── */
+  --navy:    #001A72;
+  --navy-2:  #0033A0;
+  --navy-deep: #000D3A;
+  --cyan:    #00B5E2;
+  --cyan-2:  #38CFEF;
+  --cyan-glow: rgba(0,181,226,0.25);
+  --white:   #FFFFFF;
+  --slate:   #F0F4FA;
+  --muted:   #8E99B0;
+  --success: #3DBA6F;
+  --warning: #FF8C00;
+  --border:  rgba(0,26,114,0.12);
+
+  /* ── Surfaces ─── */
+  --surface-glass:   rgba(255,255,255,0.04);
+  --surface-hover:   rgba(255,255,255,0.08);
+  --surface-active:  rgba(0,181,226,0.12);
+  --border-subtle:   rgba(255,255,255,0.08);
+  --border-medium:   rgba(255,255,255,0.14);
+  --border-accent:   rgba(0,181,226,0.35);
+
+  /* ── Elevation ─── */
+  --shadow-sm:  0 2px 8px rgba(0,13,58,0.10);
+  --shadow-md:  0 4px 24px rgba(0,13,58,0.12), 0 1px 4px rgba(0,13,58,0.06);
+  --shadow-lg:  0 12px 40px rgba(0,13,58,0.18), 0 2px 8px rgba(0,13,58,0.08);
+  --shadow-glow: 0 0 32px rgba(0,181,226,0.15);
+
+  /* ── Spacing Scale (4px base) ─── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+  --space-11: 80px;
+  --space-12: 96px;
+
+  /* ── Radius ─── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 100px;
+
+  /* ── Transitions ─── */
+  --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 0.15s;
+  --duration-base: 0.25s;
+  --duration-slow: 0.4s;
+
+  /* ── Typography ─── */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+  --font-body:    'Inter', sans-serif;
+
+  /* ── Light Surfaces (white-card interiors) ─── */
+  --surface-form:      #F6F9FF;
+  --surface-form-focus: #EEF8FF;
+  --border-form:       #E0E8FF;
+  --border-card:       #E8EFFF;
+  --border-form-focus: var(--cyan);
+  --text-on-light-muted: #8E99B0;
+  --text-on-light-hint:  #B0BDD8;
+
+  /* ── Semantic score colors ─── */
+  --score-lo:  #CC4444;
+  --score-mid: #D09000;
+  --score-hi:  #2A9A5A;
+
+  /* ── Legacy Aliases (backward compat) ─── */
+  --radius: var(--radius-lg);
+  --shadow: var(--shadow-md);
+}
+
+
+/* base.css */
+/* ── RESET ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--navy);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,51,160,0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 20%, rgba(0,181,226,0.08) 0%, transparent 50%);
+  color: var(--white);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── GRAIN OVERLAY ──────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1000;
+  opacity: .45;
+}
+
+/* ── SCROLLBAR ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+/* ── FOCUS VISIBLE ─────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* ── SCROLL ANIMATIONS ─────────────────────────────────── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--duration-slow) var(--ease-out),
+              transform var(--duration-slow) var(--ease-out);
+}
+.fade-up.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.delay-1 { transition-delay: 0.08s; }
+.delay-2 { transition-delay: 0.16s; }
+.delay-3 { transition-delay: 0.24s; }
+
+
+/* nav.css */
+/* ── NAV ────────────────────────────────────────────────── */
+nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-5) var(--space-8);
+  border-bottom: 1px solid var(--border-subtle);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(0,26,114,0.82);
+  transition: background var(--duration-base) var(--ease-out);
+}
+.nav-brand {
+  display: flex; align-items: center; gap: var(--space-3);
+  text-decoration: none;
+  transition: opacity var(--duration-fast);
+}
+.nav-brand:hover { opacity: 0.85; }
+.nav-logo {
+  width: 36px; height: 36px;
+  background: var(--cyan);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--navy);
+  letter-spacing: -0.5px;
+  box-shadow: 0 0 16px rgba(0,181,226,0.3);
+  transition: box-shadow var(--duration-base);
+}
+.nav-brand:hover .nav-logo {
+  box-shadow: 0 0 24px rgba(0,181,226,0.45);
+}
+.nav-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--white);
+  letter-spacing: -0.3px;
+}
+.nav-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  padding: 3px 10px;
+  background: rgba(0,181,226,0.14);
+  color: var(--cyan);
+  border: 1px solid rgba(0,181,226,0.25);
+  border-radius: var(--radius-pill);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.nav-actions { display: flex; align-items: center; gap: var(--space-3); }
+.nav-link {
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+  text-decoration: none;
+  transition: color var(--duration-fast);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+.nav-link:hover { color: var(--white); }
+.btn-nav {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-5);
+  background: var(--cyan);
+  color: var(--navy);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--duration-fast), transform var(--duration-fast), box-shadow var(--duration-fast);
+  box-shadow: 0 2px 12px rgba(0,181,226,0.2);
+}
+.btn-nav:hover {
+  background: var(--cyan-2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px rgba(0,181,226,0.35);
+}
+
+/* ── FOOTER ─────────────────────────────────────────────── */
+footer {
+  text-align: center;
+  padding: var(--space-8) var(--space-8);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+footer a {
+  color: var(--cyan);
+  text-decoration: none;
+  transition: color var(--duration-fast);
+}
+footer a:hover { text-decoration: underline; }
+
+/* ── NAV SAVE STATUS ─────────────────────────────────────── */
+.nav-save-status {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--success);
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(61,186,111,0.1);
+  border: 1px solid rgba(61,186,111,0.2);
+}
+.nav-save-status.unsaved {
+  color: var(--warning);
+  background: rgba(255,140,0,0.1);
+  border-color: rgba(255,140,0,0.2);
+}
+
+@media (max-width: 768px) {
+  nav { padding: 14px 20px; }
+  .nav-link { display: none; }
+  .nav-actions { gap: var(--space-2); }
+}
+@media (max-width: 480px) {
+  .nav-badge { display: none; }
+}
+
+/* ── ADMIN NAV LINK ──────────────────────────────────────────── */
+.nav-link-admin {
+  color: #c09aff !important;
+  font-weight: 500;
+}
+.nav-link-admin:hover { color: #d4b8ff !important; }
+
+
+/* imsi.css */
+/* ─────────────────────────────────────────────────────────────
+   RF RECON CONSOLE — Blueprint UX para operación SIGINT
+   Tema táctico oscuro. Datos simulados. Sin hardware real.
+   Convención: BEM-style (.block__element--modifier)
+   ───────────────────────────────────────────────────────────── */
+
+/* ── Tactical tokens (override del tema navy para esta vista) ── */
+:root {
+  --ops-bg:        #0B0F19;   /* gris militar / fondo puro */
+  --ops-bg-2:      #0E141F;
+  --ops-panel:     #11171F;
+  --ops-panel-2:   #151C28;
+  --ops-line:      rgba(255,255,255,0.07);
+  --ops-line-2:    rgba(255,255,255,0.12);
+  --ops-text:      #C9D4E5;
+  --ops-text-dim:  #8A98AE;
+  --ops-muted:     #5E6A7E;
+
+  --ops-green:     #21D07A;   /* normal / operativo */
+  --ops-green-dim: rgba(33,208,122,0.14);
+  --ops-cyan:      #00E5FF;
+  --ops-cyan-dim:  rgba(0,229,255,0.12);
+  --ops-amber:     #FFB020;   /* advertencia */
+  --ops-amber-dim: rgba(255,176,32,0.13);
+  --ops-red:       #FF3B30;   /* crítico / target */
+  --ops-red-dim:   rgba(255,59,48,0.16);
+
+  --ops-mono:      'DM Mono', 'Menlo', monospace;
+  --ops-radius:    8px;
+  --ops-radius-sm: 6px;
+}
+
+/* ── Page-level overrides del base.css navy ── */
+body.ops {
+  background: var(--ops-bg);
+  background-image:
+    radial-gradient(ellipse 70% 45% at 50% -5%, rgba(0,229,255,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 92% 4%, rgba(33,208,122,0.04) 0%, transparent 50%);
+  color: var(--ops-text);
+  font-family: var(--font-body);
+}
+body.ops::before { opacity: 0.25; } /* atenúa grain para densidad de datos */
+
+body.ops nav {
+  background: rgba(11,15,25,0.88);
+  border-bottom: 1px solid var(--ops-line);
+}
+body.ops .nav-logo {
+  background: var(--ops-green);
+  color: #06210F;
+  box-shadow: 0 0 16px rgba(33,208,122,0.35);
+}
+body.ops .nav-badge {
+  background: var(--ops-amber-dim);
+  color: var(--ops-amber);
+  border-color: rgba(255,176,32,0.3);
+}
+body.ops .btn-nav {
+  background: transparent;
+  color: var(--ops-text);
+  border: 1px solid var(--ops-line-2);
+  box-shadow: none;
+}
+body.ops .btn-nav:hover {
+  background: var(--ops-panel-2);
+  color: var(--ops-cyan);
+}
+
+/* ── Banner de prototipo (siempre visible, honesto) ── */
+.ops-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 8px 16px;
+  background: var(--ops-amber-dim);
+  border-bottom: 1px solid rgba(255,176,32,0.28);
+  font-family: var(--ops-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  color: var(--ops-amber);
+  text-align: center;
+}
+.ops-banner strong { color: #FFD27A; }
+
+/* ── Shell ── */
+.ops-shell { padding: var(--space-5) var(--space-6) var(--space-9); max-width: 1680px; margin: 0 auto; }
+
+/* ── Header de operación ── */
+.ops-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+.ops-head__title { font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: -0.3px; color: #EAF1FB; }
+.ops-head__sub { font-family: var(--ops-mono); font-size: 12px; color: var(--ops-text-dim); margin-top: 4px; }
+.ops-head__sub .accent { color: var(--ops-cyan); }
+
+/* Reloj / estado de sesión */
+.ops-clock {
+  font-family: var(--ops-mono);
+  font-size: 12px;
+  color: var(--ops-text-dim);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.ops-clock__val { color: var(--ops-green); }
+
+/* ── Stepper de fases ── */
+.phases {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--ops-line);
+  border-radius: var(--ops-radius);
+  background: var(--ops-panel);
+  padding: var(--space-2);
+}
+.phase {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--ops-radius-sm);
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ops-text-dim);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast);
+  min-height: 44px;
+}
+.phase:hover { background: var(--ops-panel-2); color: var(--ops-text); }
+.phase[aria-selected="true"] {
+  background: var(--ops-cyan-dim);
+  border-color: rgba(0,229,255,0.3);
+  color: #EAF1FB;
+}
+.phase__num {
+  font-family: var(--ops-mono);
+  font-size: 12px;
+  width: 24px; height: 24px;
+  flex: 0 0 24px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--ops-line-2);
+  color: var(--ops-text-dim);
+}
+.phase[aria-selected="true"] .phase__num {
+  border-color: var(--ops-cyan);
+  color: var(--ops-cyan);
+}
+.phase__label small { display: block; font-family: var(--ops-mono); font-size: 10px; font-weight: 400; color: var(--ops-muted); margin-top: 2px; }
+
+/* ── Panels grid (vista de operación = fase 3) ── */
+.ops-grid {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 460px;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.panel {
+  background: var(--ops-panel);
+  border: 1px solid var(--ops-line);
+  border-radius: var(--ops-radius);
+  overflow: hidden;
+}
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ops-line);
+  background: var(--ops-bg-2);
+}
+.panel__title {
+  font-family: var(--ops-mono);
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--ops-text-dim);
+}
+.panel__tag {
+  font-family: var(--ops-mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  color: var(--ops-green);
+  background: var(--ops-green-dim);
+  border: 1px solid rgba(33,208,122,0.25);
+}
+.panel__body { padding: var(--space-4); }
+
+/* ── Métricas hardware (Panel A) ── */
+.metric {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--ops-line);
+}
+.metric:last-child { border-bottom: none; }
+.metric__label { font-size: 12px; color: var(--ops-text-dim); display: flex; align-items: center; gap: 8px; }
+.metric__val { font-family: var(--ops-mono); font-size: 13px; color: var(--ops-text); }
+.metric__val.is-good { color: var(--ops-green); }
+.metric__val.is-warn { color: var(--ops-amber); }
+.metric__val.is-crit { color: var(--ops-red); }
+
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot--good { background: var(--ops-green); box-shadow: 0 0 8px var(--ops-green); }
+.dot--warn { background: var(--ops-amber); box-shadow: 0 0 8px var(--ops-amber); }
+.dot--crit { background: var(--ops-red); box-shadow: 0 0 8px var(--ops-red); }
+
+/* Barra de nivel (RSSI / ruido / batería) */
+.bar { height: 6px; border-radius: 4px; background: var(--ops-line); overflow: hidden; margin-top: 8px; }
+.bar__fill { height: 100%; border-radius: 4px; transition: width var(--duration-base) var(--ease-out); }
+.bar__fill--good { background: linear-gradient(90deg, var(--ops-green), #16E08A); }
+.bar__fill--warn { background: linear-gradient(90deg, var(--ops-amber), #FFC75A); }
+.bar__fill--crit { background: linear-gradient(90deg, var(--ops-red), #FF6B62); }
+
+/* Control de ganancia */
+.field { margin-bottom: var(--space-4); }
+.field__label { display: block; font-family: var(--ops-mono); font-size: 11px; letter-spacing: 0.4px; color: var(--ops-text-dim); margin-bottom: 7px; }
+.field__row { display: flex; align-items: center; gap: var(--space-3); }
+input[type="range"].ops-range {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 4px; border-radius: 4px;
+  background: var(--ops-line-2);
+  outline-offset: 4px;
+}
+input[type="range"].ops-range::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--ops-cyan); cursor: pointer;
+  border: 2px solid #06212B;
+  box-shadow: 0 0 10px rgba(0,229,255,0.5);
+}
+input[type="range"].ops-range::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--ops-cyan); cursor: pointer; border: 2px solid #06212B;
+}
+.field__val { font-family: var(--ops-mono); font-size: 13px; color: var(--ops-cyan); min-width: 64px; text-align: right; }
+
+/* ── Switches críticos ── */
+.switch-row { display: flex; gap: var(--space-3); margin-top: var(--space-4); }
+.ops-switch {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 8px;
+  border-radius: var(--ops-radius-sm);
+  border: 1px solid var(--ops-line-2);
+  background: var(--ops-panel-2);
+  color: var(--ops-text-dim);
+  font-family: var(--ops-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all var(--duration-fast);
+}
+.ops-switch__icon { font-size: 16px; }
+.ops-switch[aria-pressed="true"] {
+  border-color: var(--ops-cyan);
+  color: var(--ops-cyan);
+  background: var(--ops-cyan-dim);
+}
+.ops-switch--danger:hover { border-color: var(--ops-red); color: var(--ops-red); }
+.ops-switch--danger[aria-pressed="true"] {
+  border-color: var(--ops-red);
+  color: var(--ops-red);
+  background: var(--ops-red-dim);
+}
+
+/* ── Hold-to-trigger (confirmación física de acciones sensibles) ── */
+.hold-btn {
+  position: relative;
+  width: 100%;
+  margin-top: var(--space-3);
+  padding: 14px;
+  border-radius: var(--ops-radius-sm);
+  border: 1px solid rgba(255,59,48,0.4);
+  background: var(--ops-red-dim);
+  color: #FF8A82;
+  font-family: var(--ops-mono);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  min-height: 48px;
+  transition: color var(--duration-fast);
+}
+.hold-btn__fill {
+  position: absolute; inset: 0;
+  width: 0%;
+  background: rgba(255,59,48,0.35);
+  pointer-events: none;
+}
+.hold-btn__label { position: relative; z-index: 1; }
+.hold-btn[data-armed="true"] {
+  border-color: var(--ops-red);
+  color: #FFD9D6;
+  background: rgba(255,59,48,0.28);
+}
+.hold-btn:focus-visible { outline: 2px solid var(--ops-red); outline-offset: 2px; }
+
+/* ── Centro: espectro + geo ── */
+.ops-center { display: grid; gap: var(--space-4); }
+.viz {
+  background: var(--ops-panel);
+  border: 1px solid var(--ops-line);
+  border-radius: var(--ops-radius);
+  overflow: hidden;
+}
+.viz__canvas-wrap { position: relative; background: #060A12; }
+canvas.viz__canvas { display: block; width: 100%; }
+.viz__overlay {
+  position: absolute; top: 10px; left: 12px;
+  font-family: var(--ops-mono); font-size: 10px; color: var(--ops-text-dim);
+  letter-spacing: 0.5px; pointer-events: none;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+}
+.viz__legend {
+  display: flex; gap: var(--space-4); flex-wrap: wrap;
+  padding: 8px 14px; border-top: 1px solid var(--ops-line);
+  font-family: var(--ops-mono); font-size: 10px; color: var(--ops-muted);
+}
+.viz__legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* ── Alerta de error abstraída ── */
+.ops-alert {
+  display: none;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 11px 14px;
+  border-radius: var(--ops-radius-sm);
+  font-family: var(--ops-mono);
+  font-size: 12px;
+  margin-top: var(--space-3);
+}
+.ops-alert.is-show { display: flex; }
+.ops-alert--warn { background: var(--ops-amber-dim); border: 1px solid rgba(255,176,32,0.35); color: var(--ops-amber); }
+.ops-alert--crit { background: var(--ops-red-dim); border: 1px solid rgba(255,59,48,0.4); color: #FF8A82; }
+.ops-alert__act {
+  margin-left: auto;
+  font-family: var(--ops-mono); font-size: 11px;
+  background: transparent; border: 1px solid currentColor;
+  color: inherit; border-radius: 6px; padding: 4px 10px; cursor: pointer;
+  min-height: 28px;
+}
+
+/* ── Consola de identidades (Panel C) ── */
+.ident__toolbar {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  padding: 8px 14px; border-bottom: 1px solid var(--ops-line);
+  background: var(--ops-bg-2);
+}
+.filter-chip {
+  font-family: var(--ops-mono); font-size: 11px;
+  padding: 5px 11px; border-radius: 100px;
+  border: 1px solid var(--ops-line-2); background: transparent;
+  color: var(--ops-text-dim); cursor: pointer;
+  min-height: 30px;
+  transition: all var(--duration-fast);
+}
+.filter-chip[aria-pressed="true"] { color: #EAF1FB; border-color: var(--ops-cyan); background: var(--ops-cyan-dim); }
+.filter-chip .count { color: var(--ops-muted); }
+
+.freeze-note {
+  margin-left: auto; font-family: var(--ops-mono); font-size: 10px;
+  color: var(--ops-amber); display: none; align-items: center; gap: 6px;
+}
+.freeze-note.is-show { display: inline-flex; }
+
+.ident__table-wrap { max-height: 560px; overflow-y: auto; }
+table.ident {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--ops-mono); font-size: 11.5px;
+}
+table.ident thead th {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--ops-bg-2);
+  color: var(--ops-text-dim);
+  font-weight: 500; text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ops-line-2);
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+table.ident tbody td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ops-line);
+  color: var(--ops-text);
+  white-space: nowrap;
+}
+table.ident tbody tr { cursor: pointer; transition: background var(--duration-fast); }
+table.ident tbody tr:hover { background: var(--ops-panel-2); }
+table.ident tbody tr.is-frozen { background: rgba(0,229,255,0.10); outline: 1px solid rgba(0,229,255,0.4); }
+table.ident tbody tr.is-new { animation: rowIn var(--duration-base) var(--ease-out); }
+
+/* Badge de clasificación de identidad */
+.cls {
+  font-size: 10px; padding: 2px 8px; border-radius: 100px;
+  letter-spacing: 0.3px; white-space: nowrap;
+}
+.cls--white  { color: var(--ops-cyan);  background: var(--ops-cyan-dim);  border: 1px solid rgba(0,229,255,0.3); }
+.cls--target { color: var(--ops-red);   background: var(--ops-red-dim);   border: 1px solid rgba(255,59,48,0.4); }
+.cls--catch  { color: var(--ops-text-dim); background: var(--ops-panel-2); border: 1px solid var(--ops-line-2); }
+
+table.ident tbody tr.row--target td:first-child { box-shadow: inset 3px 0 0 var(--ops-red); }
+table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1) infinite; }
+
+.dbm { color: var(--ops-text-dim); }
+.dbm--near { color: var(--ops-green); }
+.dbm--mid  { color: var(--ops-amber); }
+.dbm--far  { color: var(--ops-muted); }
+
+/* ── Formularios de fases 1/2/4 ── */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-4); }
+.form-card {
+  background: var(--ops-panel); border: 1px solid var(--ops-line);
+  border-radius: var(--ops-radius); padding: var(--space-5);
+}
+.form-card h3 { font-family: var(--ops-mono); font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--ops-text-dim); margin-bottom: var(--space-4); }
+.ops-input, .ops-select {
+  width: 100%; padding: 9px 11px;
+  background: var(--ops-bg-2); border: 1px solid var(--ops-line-2);
+  border-radius: var(--ops-radius-sm); color: var(--ops-text);
+  font-family: var(--ops-mono); font-size: 13px;
+  min-height: 40px;
+}
+.ops-input:focus, .ops-select:focus { outline: 2px solid var(--ops-cyan); outline-offset: 1px; border-color: var(--ops-cyan); }
+
+.band-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+.band-toggle {
+  padding: 12px 6px; text-align: center;
+  border-radius: var(--ops-radius-sm); border: 1px solid var(--ops-line-2);
+  background: var(--ops-panel-2); color: var(--ops-text-dim);
+  font-family: var(--ops-mono); font-size: 13px; cursor: pointer;
+  min-height: 44px; transition: all var(--duration-fast);
+}
+.band-toggle[aria-pressed="true"] { border-color: var(--ops-green); color: var(--ops-green); background: var(--ops-green-dim); }
+.band-toggle small { display: block; font-size: 9px; color: var(--ops-muted); margin-top: 3px; }
+
+.mode-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.mode-opt {
+  padding: var(--space-4); border-radius: var(--ops-radius-sm);
+  border: 1px solid var(--ops-line-2); background: var(--ops-panel-2);
+  cursor: pointer; min-height: 44px; transition: all var(--duration-fast);
+}
+.mode-opt[aria-pressed="true"] { border-color: var(--ops-cyan); background: var(--ops-cyan-dim); }
+.mode-opt__name { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: #EAF1FB; }
+.mode-opt__desc { font-size: 11px; color: var(--ops-text-dim); margin-top: 4px; line-height: 1.4; }
+.mode-opt--active[aria-pressed="true"] { border-color: var(--ops-amber); background: var(--ops-amber-dim); }
+
+/* ── Botones genéricos ── */
+.btn-ops {
+  font-family: var(--ops-mono); font-size: 12px; letter-spacing: 0.4px;
+  padding: 10px 16px; border-radius: var(--ops-radius-sm);
+  border: 1px solid var(--ops-line-2); background: var(--ops-panel-2);
+  color: var(--ops-text); cursor: pointer; min-height: 40px;
+  transition: all var(--duration-fast);
+}
+.btn-ops:hover { border-color: var(--ops-cyan); color: var(--ops-cyan); }
+.btn-ops--primary { background: var(--ops-green-dim); border-color: rgba(33,208,122,0.4); color: var(--ops-green); }
+.btn-ops--primary:hover { background: rgba(33,208,122,0.22); border-color: var(--ops-green); color: var(--ops-green); }
+
+.export-row { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
+
+/* ── Tabs de fase: visibilidad ── */
+.phase-view { display: none; }
+.phase-view.is-active { display: block; }
+
+/* ── Foot helper ── */
+.ops-foot {
+  margin-top: var(--space-6); padding-top: var(--space-4);
+  border-top: 1px solid var(--ops-line);
+  font-family: var(--ops-mono); font-size: 10.5px; color: var(--ops-muted);
+  line-height: 1.6;
+}
+
+/* ── Animaciones ── */
+@keyframes rowIn { from { background: var(--ops-green-dim); } to { background: transparent; } }
+@keyframes targetBlink {
+  0%   { background: var(--ops-red-dim); }
+  50%  { background: rgba(255,59,48,0.04); }
+  100% { background: var(--ops-red-dim); }
+}
+
+/* Respeto a usuarios con sensibilidad al movimiento */
+@media (prefers-reduced-motion: reduce) {
+  table.ident tbody tr.row--target.is-alerting { animation: none; outline: 1px solid var(--ops-red); }
+  table.ident tbody tr.is-new { animation: none; }
+  * { scroll-behavior: auto !important; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1280px) {
+  .ops-grid { grid-template-columns: 1fr 1fr; }
+  .panel--ident { grid-column: 1 / -1; }
+}
+@media (max-width: 860px) {
+  .ops-grid { grid-template-columns: 1fr; }
+  .phases { grid-template-columns: 1fr 1fr; }
+  .phase__label small { display: none; }
+}
+@media (max-width: 560px) {
+  .phases { grid-template-columns: 1fr; }
+  .band-grid { grid-template-columns: 1fr 1fr; }
+  .ops-shell { padding: var(--space-4) var(--space-3) var(--space-8); }
+}
+
+  </style>
+</head>
+<body class="ops">
+
+<!-- NAV -->
+<nav aria-label="Navegación principal">
+  <a class="nav-brand" href="index.html" aria-label="RF Recon Console — Inicio">
+    <div class="nav-logo" aria-hidden="true">RF</div>
+    <span class="nav-title">RF Recon Console</span>
+    <span class="nav-badge">blueprint</span>
+  </a>
+  <div class="nav-actions">
+    <a class="nav-link" href="index.html">← uxtools</a>
+    <a class="btn-nav" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </div>
+</nav>
+
+<!-- BANNER DE PROTOTIPO (honesto y permanente) -->
+<div class="ops-banner" role="note">
+  <span>⚠ <strong>PROTOTIPO UX · DATOS SIMULADOS</strong></span>
+  <span>Maqueta de interfaz para diseño y formación. No controla hardware SDR, no emite ni captura radiofrecuencia, no intercepta comunicaciones.</span>
+</div>
+
+<main class="ops-shell">
+
+  <!-- HEADER -->
+  <div class="ops-head">
+    <div>
+      <h1 class="ops-head__title">Consola de Reconocimiento RF</h1>
+      <p class="ops-head__sub">Blueprint UX para operación SIGINT · <span class="accent">eficiencia cognitiva bajo estrés</span> · alta densidad de datos</p>
+    </div>
+    <div class="ops-clock">
+      <span>MODO <strong id="mode-tag">PASIVO</strong></span>
+      <span>·</span>
+      <span>UTC-4 <span class="ops-clock__val" id="ops-clock">--:--:--</span></span>
+    </div>
+  </div>
+
+  <!-- STEPPER DE FASES -->
+  <nav class="phases" role="tablist" aria-label="Fases de la operación">
+    <button class="phase" role="tab" data-phase="1" aria-selected="false">
+      <span class="phase__num">1</span>
+      <span class="phase__label">Configuración<small>Setup terrestre · bandas · celda</small></span>
+    </button>
+    <button class="phase" role="tab" data-phase="2" aria-selected="false">
+      <span class="phase__num">2</span>
+      <span class="phase__label">Escaneo<small>Reconocimiento · pasivo / activo</small></span>
+    </button>
+    <button class="phase" role="tab" data-phase="3" aria-selected="true">
+      <span class="phase__num">3</span>
+      <span class="phase__label">Captura<small>Núcleo · monitoreo en vivo</small></span>
+    </button>
+    <button class="phase" role="tab" data-phase="4" aria-selected="false">
+      <span class="phase__num">4</span>
+      <span class="phase__label">Análisis<small>Forense · export de logs</small></span>
+    </button>
+  </nav>
+
+  <!-- ═══════════ FASE 1 · CONFIGURACIÓN ═══════════ -->
+  <section class="phase-view" data-phase="1" role="tabpanel" aria-label="Fase 1: Configuración de misión">
+    <div class="form-grid">
+      <div class="form-card">
+        <h3>Bandas de frecuencia</h3>
+        <div class="band-grid">
+          <button class="band-toggle" data-band="2G" aria-pressed="true">2G<small>GSM 900</small></button>
+          <button class="band-toggle" data-band="3G" aria-pressed="true">3G<small>UMTS 2100</small></button>
+          <button class="band-toggle" data-band="4G" aria-pressed="true">4G<small>LTE B3</small></button>
+          <button class="band-toggle" data-band="5G" aria-pressed="false">5G<small>NR n78</small></button>
+        </div>
+        <div class="field" style="margin-top:20px">
+          <label class="field__label" for="tx-power">Potencia de transmisión (Tx)</label>
+          <div class="field__row">
+            <input type="range" class="ops-range" id="tx-power" min="0" max="43" step="1" aria-describedby="tx-power-val">
+            <span class="field__val" id="tx-power-val">24 dBm</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h3>Configuración de celda</h3>
+        <div class="field">
+          <label class="field__label" for="cell-mcc">MCC · Mobile Country Code</label>
+          <input class="ops-input" id="cell-mcc" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field__label" for="cell-mnc">MNC · Mobile Network Code</label>
+          <input class="ops-input" id="cell-mnc" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="field__label" for="cell-lac">LAC · Location Area Code</label>
+          <input class="ops-input" id="cell-lac" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label class="field__label" for="cell-tac">TAC · Tracking Area Code</label>
+          <input class="ops-input" id="cell-tac" inputmode="numeric" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h3>Listas de control de identidades</h3>
+        <p style="font-size:12px;color:var(--ops-text-dim);line-height:1.6;margin-bottom:14px">
+          Define qué hace el sistema con cada identidad detectada. Estas listas se persisten localmente (localStorage).
+        </p>
+        <div class="metric"><span class="metric__label"><span class="cls cls--white">WHITE-LIST</span></span><span class="metric__val">equipo propio · ignorado</span></div>
+        <div class="metric"><span class="metric__label"><span class="cls cls--target">TARGET</span></span><span class="metric__val">alerta inmediata</span></div>
+        <div class="metric"><span class="metric__label"><span class="cls cls--catch">catch-all</span></span><span class="metric__val">desconocidos en radio</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FASE 2 · ESCANEO ═══════════ -->
+  <section class="phase-view" data-phase="2" role="tabpanel" aria-label="Fase 2: Escaneo y reconocimiento">
+    <div class="form-grid">
+      <div class="form-card">
+        <h3>Modo de operación</h3>
+        <div class="mode-toggle">
+          <button class="mode-opt" data-mode="passive" aria-pressed="true">
+            <div class="mode-opt__name">Pasivo</div>
+            <div class="mode-opt__desc">Solo escucha de espectro. No emite señal. Menor exposición, menor tasa de captura.</div>
+          </button>
+          <button class="mode-opt mode-opt--active" data-mode="active" aria-pressed="false">
+            <div class="mode-opt__name">Activo</div>
+            <div class="mode-opt__desc">Emisión de señal para forzar enganche. Requiere confirmación sostenida.</div>
+          </button>
+        </div>
+        <button class="hold-btn" id="hold-active" aria-label="Mantener presionado para armar modo activo">
+          <span class="hold-btn__fill"></span>
+          <span class="hold-btn__label">⏻ MANTÉN PRESIONADO — armar emisión activa</span>
+        </button>
+      </div>
+
+      <div class="form-card">
+        <h3>Acciones sensibles · confirmación en dos pasos</h3>
+        <p style="font-size:12px;color:var(--ops-text-dim);line-height:1.6;margin-bottom:14px">
+          Toda acción que altere la red exige <strong>hold-to-trigger</strong> para evitar activaciones accidentales. En este prototipo solo se simula la confirmación.
+        </p>
+        <button class="hold-btn" id="hold-downgrade" aria-label="Mantener presionado para marcar acción de degradación (simulada)">
+          <span class="hold-btn__fill"></span>
+          <span class="hold-btn__label">⏻ MANTÉN PRESIONADO — marcar acción (simulada)</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FASE 3 · CAPTURA (NÚCLEO) ═══════════ -->
+  <section class="phase-view is-active" data-phase="3" role="tabpanel" aria-label="Fase 3: Captura y monitoreo">
+    <div class="ops-grid">
+
+      <!-- PANEL A: Control e Infraestructura -->
+      <aside class="panel panel--infra">
+        <div class="panel__head">
+          <span class="panel__title">A · Infraestructura</span>
+          <span class="panel__tag">SDR online</span>
+        </div>
+        <div class="panel__body">
+          <div class="metric">
+            <span class="metric__label"><span class="dot dot--good"></span>Estado SDR</span>
+            <span class="metric__val is-good">CONECTADO</span>
+          </div>
+          <div class="metric">
+            <span class="metric__label">Temperatura</span>
+            <span class="metric__val" id="hw-temp">47 °C</span>
+          </div>
+          <div class="metric">
+            <span class="metric__label">Batería</span>
+            <span class="metric__val" id="hw-batt">88 %</span>
+          </div>
+          <div class="bar"><div class="bar__fill bar__fill--good" id="bar-batt" style="width:88%"></div></div>
+
+          <div class="metric" style="margin-top:14px">
+            <span class="metric__label">RSSI (nivel señal)</span>
+            <span class="metric__val" id="hw-rssi">-72 dBm</span>
+          </div>
+          <div class="bar"><div class="bar__fill bar__fill--good" id="bar-rssi" style="width:54%"></div></div>
+
+          <div class="metric" style="margin-top:14px">
+            <span class="metric__label">Nivel de ruido</span>
+            <span class="metric__val" id="hw-noise">28 %</span>
+          </div>
+          <div class="bar"><div class="bar__fill bar__fill--good" id="bar-noise" style="width:28%"></div></div>
+
+          <div class="field" style="margin-top:18px">
+            <label class="field__label" for="antenna-gain">Ganancia de antena</label>
+            <div class="field__row">
+              <input type="range" class="ops-range" id="antenna-gain" min="0" max="60" step="1">
+              <span class="field__val" id="gain-val">42 dB</span>
+            </div>
+          </div>
+
+          <div class="switch-row">
+            <button class="ops-switch" id="switch-silent" aria-pressed="false">
+              <span class="ops-switch__icon">🔇</span>
+              Silent Mode
+            </button>
+            <button class="ops-switch ops-switch--danger" id="switch-emergency" aria-pressed="false">
+              <span class="ops-switch__icon">⏻</span>
+              Emergency<br>Shutdown
+            </button>
+          </div>
+
+          <!-- Alerta abstraída de errores técnicos -->
+          <div class="ops-alert" id="ops-alert" role="alert">
+            <span id="ops-alert-msg"></span>
+            <button class="ops-alert__act" id="ops-alert-act" style="display:none">Ajustar</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- PANEL B: Espectro y Geolocalización -->
+      <div class="ops-center">
+        <div class="viz">
+          <div class="panel__head">
+            <span class="panel__title">B · Cascada de espectro (Waterfall)</span>
+            <span class="panel__tag">tiempo real</span>
+          </div>
+          <div class="viz__canvas-wrap">
+            <canvas class="viz__canvas" id="waterfall" height="180" aria-label="Visualización de cascada del espectro radioeléctrico (simulada)"></canvas>
+            <span class="viz__overlay">700–2600 MHz · bins 96 · sim</span>
+          </div>
+          <div class="viz__legend">
+            <span><span class="dot dot--good"></span> ocupación normal</span>
+            <span><span class="dot dot--warn"></span> pico de energía</span>
+            <span>eje X: frecuencia · eje Y: tiempo (desplaza ↓)</span>
+          </div>
+        </div>
+
+        <div class="viz">
+          <div class="panel__head">
+            <span class="panel__title">Mapa de calor · triangulación (RTT)</span>
+            <span class="panel__tag">distancia estimada</span>
+          </div>
+          <div class="viz__canvas-wrap">
+            <canvas class="viz__canvas" id="heatmap" height="220" aria-label="Mapa de calor de triangulación por distancia (simulado)"></canvas>
+          </div>
+          <div class="viz__legend">
+            <span><span class="dot dot--crit"></span> target</span>
+            <span><span class="dot" style="background:var(--ops-cyan)"></span> white-list</span>
+            <span><span class="dot dot--good"></span> catch-all</span>
+            <span>anillos = distancia desde la antena</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PANEL C: Consola de Identidades -->
+      <section class="panel panel--ident" aria-label="Consola de identidades capturadas">
+        <div class="panel__head">
+          <span class="panel__title">C · Identidades capturadas</span>
+          <span class="panel__tag" id="count-all">0</span>
+        </div>
+        <div class="ident__toolbar" role="group" aria-label="Filtros de identidades">
+          <button class="filter-chip" data-filter="all" aria-pressed="true">Todas <span class="count" id="count-all-2"></span></button>
+          <button class="filter-chip" data-filter="target" aria-pressed="false">Target <span class="count">(<span id="count-target">0</span>)</span></button>
+          <button class="filter-chip" data-filter="white" aria-pressed="false">White <span class="count">(<span id="count-white">0</span>)</span></button>
+          <button class="filter-chip" data-filter="catch" aria-pressed="false">Catch-all <span class="count">(<span id="count-catch">0</span>)</span></button>
+          <span class="freeze-note" id="freeze-note">❄ fila fijada — inspección</span>
+        </div>
+        <div class="ident__table-wrap">
+          <table class="ident">
+            <thead>
+              <tr>
+                <th scope="col">Clase</th>
+                <th scope="col">IMSI</th>
+                <th scope="col">IMEI</th>
+                <th scope="col">TMSI</th>
+                <th scope="col">País · Operador</th>
+                <th scope="col">Distancia (dBm)</th>
+                <th scope="col">RAT</th>
+                <th scope="col">Modelo</th>
+              </tr>
+            </thead>
+            <tbody id="ident-body"></tbody>
+          </table>
+        </div>
+        <div class="sr-only" id="ident-live" aria-live="assertive" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></div>
+      </section>
+
+    </div>
+  </section>
+
+  <!-- ═══════════ FASE 4 · ANÁLISIS / FORENSE ═══════════ -->
+  <section class="phase-view" data-phase="4" role="tabpanel" aria-label="Fase 4: Análisis y reporte">
+    <div class="form-grid">
+      <div class="form-card">
+        <h3>Exportación de logs</h3>
+        <p style="font-size:12px;color:var(--ops-text-dim);line-height:1.6">
+          Exporta los metadatos de identidades capturadas en esta sesión (data simulada). Formatos estándar para análisis posterior.
+        </p>
+        <div class="export-row">
+          <button class="btn-ops btn-ops--primary" id="exp-csv">⬇ CSV · metadatos</button>
+          <button class="btn-ops btn-ops--primary" id="exp-json">⬇ JSON · metadatos</button>
+          <button class="btn-ops" id="exp-pcap">⬇ PCAP · tráfico de red</button>
+        </div>
+      </div>
+      <div class="form-card">
+        <h3>Resumen de sesión</h3>
+        <div class="metric"><span class="metric__label">Identidades totales</span><span class="metric__val" id="sum-total">—</span></div>
+        <div class="metric"><span class="metric__label"><span class="cls cls--target">TARGET</span></span><span class="metric__val is-crit" id="sum-target">—</span></div>
+        <div class="metric"><span class="metric__label"><span class="cls cls--white">WHITE</span></span><span class="metric__val" id="sum-white">—</span></div>
+        <div class="metric"><span class="metric__label"><span class="cls cls--catch">catch-all</span></span><span class="metric__val" id="sum-catch">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="ops-foot">
+    RF Recon Console · blueprint UX de la suite uxtools — SURA Investments. Vista de diseño para ergonomía cognitiva en software táctico:
+    arquitectura de información en 4 fases, dashboard de 3 paneles, modo oscuro obligatorio, tipografía monoespaciada para identificadores,
+    confirmación en dos pasos (hold-to-trigger), abstracción de errores técnicos y persistencia de foco (freeze) en la tabla de capturas.
+    Toda la data es sintética y se procesa solo en tu navegador (localStorage). Sin backend, sin telemetría, sin captura real de RF.
+  </p>
+
+</main>
+
+<footer>
+  uxtools · RF Recon Console (blueprint) — <a href="index.html">← volver a la suite</a>
+</footer>
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   RF RECON CONSOLE — js/imsi.js
+   Blueprint UX para operación SIGINT (tipo IMSI catcher).
+
+   ⚠ IMPORTANTE: Esta es una MAQUETA / PROTOTIPO de interfaz.
+   No controla hardware SDR, no emite ni captura radiofrecuencia,
+   no intercepta comunicaciones. Toda la data (IMSI/IMEI/TMSI,
+   espectro, distancias) es SINTÉTICA, generada localmente para
+   demostrar la experiencia de usuario y las reglas de UX crítica.
+   No hay backend ni telemetría: localStorage solo en cliente.
+   ───────────────────────────────────────────────────────────── */
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'uxtools.imsi.session.v1';
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ── Estado de la misión ──────────────────────────────────── */
+  var state = {
+    phase: 3, // arranca en la consola de operación (núcleo)
+    bands: { '2G': true, '3G': true, '4G': true, '5G': false },
+    txPower: 24,      // dBm (simulado)
+    gain: 42,         // dB ganancia de antena
+    cell: { mcc: '730', mnc: '01', lac: '20451', tac: '17002' },
+    mode: 'passive',  // 'passive' | 'active'
+    silent: false,
+    captures: [],     // identidades simuladas
+    frozenId: null,
+    filter: 'all',    // all | white | target | catch
+    whitelist: ['730011234500001', '730011234500002'],
+    targets: ['730019988770100']
+  };
+
+  /* ── Catálogo de operadores (MCC/MNC → nombre) para realismo ── */
+  var OPERATORS = {
+    '730-01': { c: 'CL', n: 'Entel' },
+    '730-02': { c: 'CL', n: 'Movistar' },
+    '730-03': { c: 'CL', n: 'Claro' },
+    '730-09': { c: 'CL', n: 'WOM' },
+    '722-310': { c: 'AR', n: 'Claro AR' },
+    '724-11': { c: 'BR', n: 'Vivo BR' },
+    '310-260': { c: 'US', n: 'T-Mobile' }
+  };
+  var OPERATOR_KEYS = Object.keys(OPERATORS);
+  var DEVICE_MODELS = [
+    'Apple iPhone 14', 'Apple iPhone 15 Pro', 'Samsung Galaxy S23',
+    'Samsung A54', 'Xiaomi Redmi 12', 'Motorola G84', 'Google Pixel 8',
+    'Huawei P60', 'Oppo Reno 10', '— (no resuelto)'
+  ];
+  var RAT = ['2G', '3G', '4G', '5G'];
+
+  /* ── Helpers ──────────────────────────────────────────────── */
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function $all(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
+  function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function pick(arr) { return arr[rnd(0, arr.length - 1)]; }
+  function pad(n, len) { var s = String(n); while (s.length < len) s = '0' + s; return s; }
+
+  function genImsi() {
+    // MCC(3) + MNC(2) + MSIN(10) — totalmente aleatorio
+    return '730' + pad(rnd(1, 9), 2) + pad(rnd(0, 9999999999), 10);
+  }
+  function genImei() {
+    return pad(rnd(10000000, 99999999), 8) + pad(rnd(0, 9999999), 7);
+  }
+  function genTmsi() {
+    var hex = '0123456789ABCDEF';
+    var s = '';
+    for (var i = 0; i < 8; i++) s += hex[rnd(0, 15)];
+    return '0x' + s;
+  }
+
+  /* ── Persistencia (localStorage, fuente de verdad de config) ── */
+  function saveSession() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        bands: state.bands, txPower: state.txPower, gain: state.gain,
+        cell: state.cell, mode: state.mode, silent: state.silent,
+        whitelist: state.whitelist, targets: state.targets
+      }));
+    } catch (e) { /* storage lleno o no disponible: degradación silenciosa */ }
+  }
+  function loadSession() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var d = JSON.parse(raw);
+      if (d.bands) state.bands = d.bands;
+      if (typeof d.txPower === 'number') state.txPower = d.txPower;
+      if (typeof d.gain === 'number') state.gain = d.gain;
+      if (d.cell) state.cell = d.cell;
+      if (d.mode) state.mode = d.mode;
+      if (typeof d.silent === 'boolean') state.silent = d.silent;
+      if (Array.isArray(d.whitelist)) state.whitelist = d.whitelist;
+      if (Array.isArray(d.targets)) state.targets = d.targets;
+    } catch (e) { /* json corrupto: ignora y usa defaults */ }
+  }
+
+  /* ── Clasificación de identidad ───────────────────────────── */
+  function classify(imsi) {
+    if (state.whitelist.indexOf(imsi) !== -1) return 'white';
+    if (state.targets.indexOf(imsi) !== -1) return 'target';
+    return 'catch';
+  }
+
+  /* ── Motor de simulación de capturas ──────────────────────── */
+  var simTimer = null;
+  function spawnCapture(forceTarget) {
+    var imsi = forceTarget ? pick(state.targets) : genImsi();
+    var cls = classify(imsi);
+    var opKey = pick(OPERATOR_KEYS);
+    var op = OPERATORS[opKey];
+    var dbm = -rnd(48, 110); // -48 (cerca) a -110 (lejos)
+    var cap = {
+      id: 'c' + Date.now() + '-' + rnd(100, 999),
+      ts: Date.now(),
+      imsi: imsi,
+      imei: genImei(),
+      tmsi: genTmsi(),
+      cc: op.c,
+      op: op.n,
+      dbm: dbm,
+      rat: pick(RAT.filter(function (r) { return state.bands[r]; }).length ? RAT.filter(function (r) { return state.bands[r]; }) : RAT),
+      model: cls === 'white' ? '[EQUIPO PROPIO]' : pick(DEVICE_MODELS),
+      cls: cls
+    };
+    state.captures.unshift(cap);
+    if (state.captures.length > 200) state.captures.pop(); // cap de memoria
+    return cap;
+  }
+
+  function startSim() {
+    if (simTimer) return;
+    function tick() {
+      // En modo pasivo se capturan menos identidades que en activo.
+      var batch = state.mode === 'active' ? rnd(1, 3) : rnd(0, 1);
+      var sawTarget = false;
+      for (var i = 0; i < batch; i++) {
+        // ~4% de probabilidad de que aparezca un objetivo conocido
+        var forceTarget = state.targets.length && Math.random() < 0.04;
+        var cap = spawnCapture(forceTarget);
+        if (cap.cls === 'target') sawTarget = true;
+      }
+      renderTable();
+      updateStats();
+      if (sawTarget) raiseTargetAlert();
+      simTimer = setTimeout(tick, rnd(900, 1800));
+    }
+    tick();
+  }
+
+  /* ── Alerta de objetivo (rojo + beep opcional) ────────────── */
+  var audioCtx = null;
+  function beep() {
+    if (state.silent || reduceMotion) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.type = 'square'; o.frequency.value = 880;
+      g.gain.value = 0.04;
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start();
+      o.stop(audioCtx.currentTime + 0.12);
+    } catch (e) { /* sin contexto de audio: silencioso */ }
+  }
+  function raiseTargetAlert() {
+    var live = $('#ident-live');
+    if (live) live.textContent = '⚠ Objetivo enganchado detectado en radio de acción — ' + new Date().toLocaleTimeString();
+    beep();
+  }
+
+  /* ── Render: tabla de identidades ─────────────────────────── */
+  function dbmClass(dbm) {
+    if (dbm >= -65) return 'dbm--near';
+    if (dbm >= -90) return 'dbm--mid';
+    return 'dbm--far';
+  }
+  function distLabel(dbm) {
+    // Estimación grosera de distancia a partir de RSSI (simulada).
+    var m = Math.round(Math.pow(10, (-dbm - 40) / 22) * 10);
+    return dbm + ' dBm · ~' + m + ' m';
+  }
+  function clsBadge(cls) {
+    if (cls === 'white') return '<span class="cls cls--white">WHITE-LIST</span>';
+    if (cls === 'target') return '<span class="cls cls--target">● TARGET</span>';
+    return '<span class="cls cls--catch">catch-all</span>';
+  }
+
+  function renderTable() {
+    var tbody = $('#ident-body');
+    if (!tbody) return;
+    var rows = state.captures.filter(function (c) {
+      if (state.filter === 'all') return true;
+      if (state.filter === 'white') return c.cls === 'white';
+      if (state.filter === 'target') return c.cls === 'target';
+      if (state.filter === 'catch') return c.cls === 'catch';
+      return true;
+    });
+
+    // Si hay fila congelada, asegurarse de mantenerla visible aunque
+    // se filtre: el operador inspecciona un IMSI mientras sigue la captura.
+    var html = rows.map(function (c) {
+      var frozen = c.id === state.frozenId;
+      var trClass = 'ident__row';
+      if (c.cls === 'target') trClass += ' row--target';
+      if (frozen) trClass += ' is-frozen';
+      if (c.cls === 'target' && !frozen) trClass += ' is-alerting';
+      return '<tr class="' + trClass + '" data-id="' + c.id + '" tabindex="0" role="row" aria-label="Identidad ' + c.imsi + '">' +
+        '<td>' + clsBadge(c.cls) + '</td>' +
+        '<td>' + c.imsi + '</td>' +
+        '<td>' + c.imei + '</td>' +
+        '<td>' + c.tmsi + '</td>' +
+        '<td>' + c.cc + ' · ' + c.op + '</td>' +
+        '<td class="dbm ' + dbmClass(c.dbm) + '">' + distLabel(c.dbm) + '</td>' +
+        '<td>' + c.rat + '</td>' +
+        '<td>' + c.model + '</td>' +
+        '</tr>';
+    }).join('');
+    tbody.innerHTML = html || '<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--ops-muted)">Sin identidades capturadas. Inicia escaneo en Fase 2.</td></tr>';
+  }
+
+  /* Freeze: clic en fila fija el foco para inspección */
+  function bindTableInteraction() {
+    var tbody = $('#ident-body');
+    if (!tbody) return;
+    function toggleFreeze(id) {
+      state.frozenId = (state.frozenId === id) ? null : id;
+      var note = $('#freeze-note');
+      if (note) note.classList.toggle('is-show', !!state.frozenId);
+      renderTable();
+    }
+    tbody.addEventListener('click', function (e) {
+      var tr = e.target.closest('tr[data-id]');
+      if (tr) toggleFreeze(tr.getAttribute('data-id'));
+    });
+    tbody.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        var tr = e.target.closest('tr[data-id]');
+        if (tr) { e.preventDefault(); toggleFreeze(tr.getAttribute('data-id')); }
+      }
+    });
+  }
+
+  /* ── Stats ────────────────────────────────────────────────── */
+  function updateStats() {
+    var w = 0, t = 0, c = 0;
+    state.captures.forEach(function (x) {
+      if (x.cls === 'white') w++;
+      else if (x.cls === 'target') t++;
+      else c++;
+    });
+    setText('#count-all', state.captures.length);
+    setText('#count-white', w);
+    setText('#count-target', t);
+    setText('#count-catch', c);
+    // Resumen de Fase 4
+    setText('#sum-total', state.captures.length);
+    setText('#sum-target', t);
+    setText('#sum-white', w);
+    setText('#sum-catch', c);
+  }
+  function setText(sel, v) { var el = $(sel); if (el) el.textContent = v; }
+
+  /* ── Panel A: métricas de hardware (simuladas) ────────────── */
+  var hw = { temp: 47, batt: 88, rssi: -72, noise: 28 };
+  function tickHardware() {
+    hw.temp = clamp(hw.temp + rnd(-1, 2), 38, 92);
+    hw.batt = clamp(hw.batt - (Math.random() < 0.25 ? 1 : 0), 5, 100);
+    hw.rssi = clamp(hw.rssi + rnd(-3, 3), -110, -40);
+    // El ruido sube con la ganancia: regla física simulada.
+    hw.noise = clamp(Math.round((state.gain - 20) * 1.4) + rnd(-4, 6), 8, 100);
+
+    renderHardware();
+    // Abstracción de error: saturación de ruido en banda.
+    if (hw.noise > 78 || hw.temp > 84) {
+      var band = state.bands['4G'] ? 'B3 (1800 MHz)' : (state.bands['2G'] ? 'B8 (900 MHz)' : 'activa');
+      showAlert('crit', '[!] Saturación de ruido en banda ' + band + ' — reduce la ganancia de antena.', 'gain');
+    } else if (hw.temp > 74) {
+      showAlert('warn', '[~] Temperatura del SDR elevada (' + hw.temp + '°C) — ventila el equipo.', null);
+    } else {
+      hideAlert();
+    }
+  }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  function renderHardware() {
+    setText('#hw-temp', hw.temp + ' °C');
+    setText('#hw-batt', hw.batt + ' %');
+    setText('#hw-rssi', hw.rssi + ' dBm');
+    setText('#hw-noise', hw.noise + ' %');
+
+    grade('#hw-temp', hw.temp, [70, 84], true);
+    grade('#hw-batt', hw.batt, [20, 40], false);
+    grade('#hw-noise', hw.noise, [55, 78], true);
+
+    setBar('#bar-batt', hw.batt, hw.batt > 40 ? 'good' : hw.batt > 20 ? 'warn' : 'crit');
+    setBar('#bar-noise', hw.noise, hw.noise < 55 ? 'good' : hw.noise < 78 ? 'warn' : 'crit');
+    var rssiPct = Math.round((hw.rssi + 110) / 70 * 100);
+    setBar('#bar-rssi', rssiPct, rssiPct > 55 ? 'good' : rssiPct > 30 ? 'warn' : 'crit');
+  }
+  function grade(sel, val, thr, higherWorse) {
+    var el = $(sel); if (!el) return;
+    el.classList.remove('is-good', 'is-warn', 'is-crit');
+    var c;
+    if (higherWorse) c = val >= thr[1] ? 'is-crit' : val >= thr[0] ? 'is-warn' : 'is-good';
+    else c = val <= thr[0] ? 'is-crit' : val <= thr[1] ? 'is-warn' : 'is-good';
+    el.classList.add(c);
+  }
+  function setBar(sel, pct, kind) {
+    var el = $(sel); if (!el) return;
+    el.style.width = clamp(pct, 0, 100) + '%';
+    el.className = 'bar__fill bar__fill--' + kind;
+  }
+
+  /* ── Alertas abstraídas ───────────────────────────────────── */
+  var alertFocus = null;
+  function showAlert(kind, msg, focusField) {
+    var box = $('#ops-alert');
+    if (!box) return;
+    box.className = 'ops-alert is-show ops-alert--' + kind;
+    $('#ops-alert-msg').textContent = msg;
+    alertFocus = focusField;
+    $('#ops-alert-act').style.display = focusField ? '' : 'none';
+  }
+  function hideAlert() {
+    var box = $('#ops-alert');
+    if (box) box.className = 'ops-alert';
+  }
+
+  /* ── Waterfall del espectro (canvas) ──────────────────────── */
+  function initWaterfall() {
+    var canvas = $('#waterfall');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    function size() {
+      var w = canvas.clientWidth || 600;
+      canvas.width = w; canvas.height = 180;
+    }
+    size();
+    window.addEventListener('resize', size);
+
+    function colorFor(v) {
+      // v: 0..1 intensidad → de azul oscuro a cian a amarillo
+      if (v < 0.4) return 'rgba(0,' + Math.round(60 + v * 200) + ',' + Math.round(120 + v * 200) + ',0.9)';
+      if (v < 0.75) return 'rgba(0,' + Math.round(200 + v * 50) + ',255,0.9)';
+      return 'rgba(255,' + Math.round(220 - (v - 0.75) * 400) + ',32,0.95)';
+    }
+    function row() {
+      var w = canvas.width, h = canvas.height;
+      // desplaza hacia abajo (efecto cascada)
+      var img = ctx.getImageData(0, 0, w, h - 1);
+      ctx.putImageData(img, 0, 1);
+      // dibuja nueva línea arriba
+      var bins = 96;
+      for (var i = 0; i < bins; i++) {
+        var x0 = Math.floor(i / bins * w);
+        var x1 = Math.floor((i + 1) / bins * w);
+        // picos donde hay "celdas" activas + ruido proporcional a la ganancia
+        var base = Math.random() * (hw.noise / 100) * 0.5;
+        var peak = (i % 17 === 0 || i % 23 === 0) ? 0.5 + Math.random() * 0.5 : 0;
+        var v = clamp(base + peak, 0, 1);
+        ctx.fillStyle = colorFor(v);
+        ctx.fillRect(x0, 0, x1 - x0, 1);
+      }
+    }
+    var wfTimer = setInterval(row, reduceMotion ? 600 : 110);
+    canvas._timer = wfTimer;
+  }
+
+  /* ── Heatmap de triangulación (canvas) ────────────────────── */
+  function initHeatmap() {
+    var canvas = $('#heatmap');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    function size() {
+      var w = canvas.clientWidth || 400;
+      canvas.width = w; canvas.height = 220;
+    }
+    size();
+    window.addEventListener('resize', size);
+
+    function draw() {
+      var w = canvas.width, h = canvas.height;
+      var cx = w / 2, cy = h - 18;
+      ctx.clearRect(0, 0, w, h);
+      // anillos de distancia (RTT)
+      ctx.strokeStyle = 'rgba(33,208,122,0.18)';
+      ctx.fillStyle = 'rgba(33,208,122,0.45)';
+      ctx.font = '9px monospace';
+      for (var r = 1; r <= 4; r++) {
+        var rad = r / 4 * (h - 30);
+        ctx.beginPath();
+        ctx.arc(cx, cy, rad, Math.PI, 2 * Math.PI);
+        ctx.stroke();
+        ctx.fillText((r * 250) + 'm', cx + rad - 26, cy - 4);
+      }
+      // antena (origen)
+      ctx.fillStyle = 'rgba(0,229,255,0.95)';
+      ctx.beginPath(); ctx.arc(cx, cy, 4, 0, 2 * Math.PI); ctx.fill();
+
+      // blips de las últimas capturas
+      var recent = state.captures.slice(0, 40);
+      recent.forEach(function (c) {
+        var norm = clamp((-c.dbm - 40) / 70, 0.05, 1); // 0 cerca .. 1 lejos
+        var rad = norm * (h - 34);
+        var ang = Math.PI + (Math.abs(hashAngle(c.id)) % 1000) / 1000 * Math.PI;
+        var x = cx + Math.cos(ang) * rad;
+        var y = cy + Math.sin(ang) * rad;
+        var col = c.cls === 'target' ? 'rgba(255,59,48,0.95)'
+          : c.cls === 'white' ? 'rgba(0,229,255,0.85)'
+            : 'rgba(33,208,122,0.65)';
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(x, y, c.cls === 'target' ? 5 : 3, 0, 2 * Math.PI);
+        ctx.fill();
+        if (c.cls === 'target') {
+          ctx.strokeStyle = 'rgba(255,59,48,0.5)';
+          ctx.beginPath(); ctx.arc(x, y, 9, 0, 2 * Math.PI); ctx.stroke();
+        }
+      });
+    }
+    function hashAngle(id) { var h = 0; for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0; return h; }
+    setInterval(draw, reduceMotion ? 800 : 400);
+  }
+
+  /* ── Hold-to-trigger (confirmación física de acción sensible) ─ */
+  function bindHold(btn, onComplete) {
+    if (!btn) return;
+    var holdMs = 1200, raf = null, start = 0, fill = btn.querySelector('.hold-btn__fill');
+    function step(ts) {
+      if (!start) start = ts;
+      var pct = Math.min((ts - start) / holdMs, 1);
+      if (fill) fill.style.width = (pct * 100) + '%';
+      if (pct >= 1) { finish(true); return; }
+      raf = requestAnimationFrame(step);
+    }
+    function finish(ok) {
+      cancelAnimationFrame(raf); raf = null; start = 0;
+      btn.removeAttribute('data-armed');
+      if (fill) fill.style.width = '0%';
+      if (ok) onComplete();
+    }
+    function down(e) { e.preventDefault(); btn.setAttribute('data-armed', 'true'); raf = requestAnimationFrame(step); }
+    function up() { if (raf) finish(false); }
+    btn.addEventListener('pointerdown', down);
+    btn.addEventListener('pointerup', up);
+    btn.addEventListener('pointerleave', up);
+    btn.addEventListener('pointercancel', up);
+    // Accesible por teclado: requiere mantener Enter/Espacio
+    btn.addEventListener('keydown', function (e) {
+      if ((e.key === 'Enter' || e.key === ' ') && !raf) { e.preventDefault(); down(e); }
+    });
+    btn.addEventListener('keyup', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') up();
+    });
+  }
+
+  /* ── Export forense (CSV / JSON reales desde data simulada) ── */
+  function download(filename, text, mime) {
+    var blob = new Blob([text], { type: mime || 'text/plain' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  function exportCSV() {
+    var head = 'timestamp,clasificacion,imsi,imei,tmsi,pais,operador,rssi_dbm,rat,modelo\n';
+    var rows = state.captures.map(function (c) {
+      return [new Date(c.ts).toISOString(), c.cls, c.imsi, c.imei, c.tmsi, c.cc, c.op, c.dbm, c.rat, '"' + c.model + '"'].join(',');
+    }).join('\n');
+    download('recon-identidades-' + Date.now() + '.csv', head + rows, 'text/csv');
+  }
+  function exportJSON() {
+    var payload = {
+      _nota: 'PROTOTIPO UX — data simulada, sin captura real de RF',
+      generado: new Date().toISOString(),
+      mision: { bandas: state.bands, modo: state.mode, celda: state.cell, txPower: state.txPower },
+      identidades: state.captures
+    };
+    download('recon-metadata-' + Date.now() + '.json', JSON.stringify(payload, null, 2), 'application/json');
+  }
+
+  /* ── Phase navigation ─────────────────────────────────────── */
+  function setPhase(n) {
+    state.phase = n;
+    $all('.phase').forEach(function (p) {
+      p.setAttribute('aria-selected', String(Number(p.getAttribute('data-phase')) === n));
+    });
+    $all('.phase-view').forEach(function (v) {
+      v.classList.toggle('is-active', Number(v.getAttribute('data-phase')) === n);
+    });
+  }
+
+  /* ── Wire-up de controles ─────────────────────────────────── */
+  function bindControls() {
+    // Fases
+    $all('.phase').forEach(function (p) {
+      p.addEventListener('click', function () { setPhase(Number(p.getAttribute('data-phase'))); });
+    });
+
+    // Bandas (Fase 1)
+    $all('.band-toggle').forEach(function (b) {
+      var band = b.getAttribute('data-band');
+      b.setAttribute('aria-pressed', String(!!state.bands[band]));
+      b.addEventListener('click', function () {
+        state.bands[band] = !state.bands[band];
+        b.setAttribute('aria-pressed', String(state.bands[band]));
+        saveSession();
+      });
+    });
+
+    // Celda MCC/MNC/LAC/TAC
+    ['mcc', 'mnc', 'lac', 'tac'].forEach(function (k) {
+      var el = $('#cell-' + k);
+      if (!el) return;
+      el.value = state.cell[k];
+      el.addEventListener('input', function () { state.cell[k] = el.value; saveSession(); });
+    });
+
+    // Tx power + gain
+    var tx = $('#tx-power');
+    if (tx) {
+      tx.value = state.txPower;
+      setText('#tx-power-val', state.txPower + ' dBm');
+      tx.addEventListener('input', function () { state.txPower = Number(tx.value); setText('#tx-power-val', state.txPower + ' dBm'); saveSession(); });
+    }
+    var gain = $('#antenna-gain');
+    if (gain) {
+      gain.value = state.gain;
+      setText('#gain-val', state.gain + ' dB');
+      gain.addEventListener('input', function () { state.gain = Number(gain.value); setText('#gain-val', state.gain + ' dB'); saveSession(); });
+    }
+
+    // Modo pasivo/activo (Fase 2)
+    $all('.mode-opt').forEach(function (m) {
+      var mode = m.getAttribute('data-mode');
+      m.setAttribute('aria-pressed', String(state.mode === mode));
+      m.addEventListener('click', function () {
+        if (mode === 'active') {
+          // El modo activo (emisión) requiere confirmación: no se activa con un clic.
+          showAlert('warn', 'Modo activo (emisión) requiere confirmación sostenida abajo ↓ — fuerza enganche de terminales.', null);
+        } else {
+          state.mode = 'passive';
+          syncModeUI();
+          saveSession();
+        }
+      });
+    });
+    bindHold($('#hold-active'), function () {
+      state.mode = 'active';
+      syncModeUI();
+      saveSession();
+      showAlert('warn', 'SIMULACIÓN: modo activo armado. En un sistema real esto emitiría señal. Aquí solo aumenta la tasa de capturas sintéticas.', null);
+    });
+
+    // Hold para "downgrade" simulado (regla de UX: dos pasos)
+    bindHold($('#hold-downgrade'), function () {
+      showAlert('crit', 'SIMULACIÓN: acción de degradación marcada. No se ejecuta ninguna operación real de radio en este prototipo.', null);
+    });
+
+    // Switches críticos: Silent / Emergency
+    var silentBtn = $('#switch-silent');
+    if (silentBtn) {
+      silentBtn.setAttribute('aria-pressed', String(state.silent));
+      silentBtn.addEventListener('click', function () {
+        state.silent = !state.silent;
+        silentBtn.setAttribute('aria-pressed', String(state.silent));
+        saveSession();
+      });
+    }
+    var emBtn = $('#switch-emergency');
+    if (emBtn) {
+      emBtn.addEventListener('click', function () {
+        // Apagado de emergencia: detiene simulación y limpia visualización.
+        if (simTimer) { clearTimeout(simTimer); simTimer = null; }
+        showAlert('crit', 'APAGADO DE EMERGENCIA (simulado): captura detenida. Recarga la página para reanudar.', null);
+        emBtn.setAttribute('aria-pressed', 'true');
+      });
+    }
+
+    // Filtros de la consola de identidades
+    $all('.filter-chip').forEach(function (f) {
+      f.addEventListener('click', function () {
+        state.filter = f.getAttribute('data-filter');
+        $all('.filter-chip').forEach(function (x) { x.setAttribute('aria-pressed', String(x === f)); });
+        renderTable();
+      });
+    });
+
+    // Alert action → enfoca el campo problemático
+    var alertAct = $('#ops-alert-act');
+    if (alertAct) alertAct.addEventListener('click', function () {
+      if (alertFocus === 'gain') { setPhase(1); var g = $('#antenna-gain'); if (g) g.focus(); }
+    });
+
+    // Export
+    var cCSV = $('#exp-csv'); if (cCSV) cCSV.addEventListener('click', exportCSV);
+    var cJSON = $('#exp-json'); if (cJSON) cJSON.addEventListener('click', exportJSON);
+    var cPCAP = $('#exp-pcap');
+    if (cPCAP) cPCAP.addEventListener('click', function () {
+      showAlert('warn', 'PCAP de tráfico requiere captura real de red — no disponible en el prototipo. Exporta metadatos en CSV/JSON.', null);
+    });
+  }
+
+  function syncModeUI() {
+    $all('.mode-opt').forEach(function (m) {
+      m.setAttribute('aria-pressed', String(m.getAttribute('data-mode') === state.mode));
+    });
+    setText('#mode-tag', state.mode === 'active' ? 'ACTIVO' : 'PASIVO');
+    var tag = $('#mode-tag');
+    if (tag) tag.style.color = state.mode === 'active' ? 'var(--ops-amber)' : 'var(--ops-green)';
+  }
+
+  /* ── Reloj de sesión ──────────────────────────────────────── */
+  function startClock() {
+    var el = $('#ops-clock');
+    if (!el) return;
+    function t() { el.textContent = new Date().toLocaleTimeString('es-CL', { hour12: false }); }
+    t(); setInterval(t, 1000);
+  }
+
+  /* ── Init ─────────────────────────────────────────────────── */
+  function init() {
+    loadSession();
+    bindControls();
+    bindTableInteraction();
+    syncModeUI();
+    renderHardware();
+    setPhase(state.phase);
+    startClock();
+    initWaterfall();
+    initHeatmap();
+
+    // Semilla inicial de capturas para que la consola no arranque vacía
+    for (var i = 0; i < 8; i++) spawnCapture(false);
+    renderTable();
+    updateStats();
+
+    startSim();
+    setInterval(tickHardware, 1500);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
+</script>
+</body>
+</html>
