@@ -52,7 +52,9 @@ js/
   admin.js          → Content manager: dimensiones, sesiones y export
   uxflow.js         → Motor de generación, clipboard, historial
   eisenhower.js     → Motor de scoring, clasificación Eisenhower y gestión de fricciones
-  imsi.js           → Simulación de capturas, waterfall/heatmap, hold-to-trigger, export forense
+  imsi.js           → Simulación de capturas, waterfall/heatmap, hold-to-trigger,
+                      export forense (CSV/JSON) y ficha de infraestructura en PDF
+                      (generador vanilla base-14, sin dependencias)
 ```
 
 ## Deploy
