@@ -646,7 +646,7 @@
 
     var blocks = [
       { t: 'title', v: 'Ficha de Infraestructura — RF Recon Console' },
-      { t: 'small', v: 'Blueprint UX · SURA Investments · uxtools' },
+      { t: 'small', v: 'Blueprint UX · suite uxtools' },
       { t: 'small', v: 'Generado: ' + new Date().toLocaleString('es-CL', { hour12: false }) + ' · documento de diseño, no operativo' },
       { t: 'rule' },
 
