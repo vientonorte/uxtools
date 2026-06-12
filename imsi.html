@@ -118,6 +118,91 @@
         <div class="metric"><span class="metric__label"><span class="cls cls--catch">catch-all</span></span><span class="metric__val">desconocidos en radio</span></div>
       </div>
     </div>
+
+    <!-- BLUEPRINT · cadena de señal física ↔ mapeo de interfaz -->
+    <section class="blueprint" aria-labelledby="bp-title">
+      <div class="panel__head">
+        <span class="panel__title" id="bp-title">Blueprint · cadena de señal y mapeo de UI</span>
+        <span class="panel__tag">conceptual · simulado</span>
+      </div>
+      <p class="blueprint__intro">
+        Recorrido de la señal a través de cada componente físico y cómo la interfaz lo representa.
+        Los valores son sintéticos y se actualizan en vivo desde el estado de la maqueta.
+      </p>
+      <ol class="blueprint__chain">
+
+        <li class="bp-node">
+          <span class="bp-node__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22V8"/><circle cx="12" cy="5" r="2.2"/>
+              <path d="M6 9a7 7 0 0 1 0-6"/><path d="M18 3a7 7 0 0 1 0 6"/>
+            </svg>
+          </span>
+          <h4 class="bp-node__name">1 · Antena multibanda</h4>
+          <p class="bp-node__role">Elemento receptor multibanda. Su sensibilidad se ajusta con la ganancia (simulada).</p>
+          <div class="bp-node__map">
+            <span class="bp-node__map-label">Lo opera en la UI</span>
+            <span class="bp-node__map-ctrl">Control «Ganancia de antena» (slider)</span>
+            <span class="bp-node__map-val" id="bp-gain">42 dB</span>
+          </div>
+        </li>
+
+        <li class="bp-node">
+          <span class="bp-node__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="8" width="16" height="8" rx="1.5"/>
+              <path d="M8 8V5M16 8V5M8 19v-3M16 19v-3M4 12H1.5M22.5 12H20"/>
+            </svg>
+          </span>
+          <h4 class="bp-node__name">2 · Front-end RF</h4>
+          <p class="bp-node__role">Cadena de recepción (filtro + amplificación). En la maqueta se reduce a indicadores de nivel y ruido.</p>
+          <div class="bp-node__map">
+            <span class="bp-node__map-label">Lo opera en la UI</span>
+            <span class="bp-node__map-ctrl">Barras «RSSI» y «Nivel de ruido» (Panel A)</span>
+            <span class="bp-node__map-val"><span id="bp-rssi">-72 dBm</span> · ruido <span id="bp-noise">28 %</span></span>
+          </div>
+        </li>
+
+        <li class="bp-node">
+          <span class="bp-node__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+              <path d="M6 14c1-3 2-3 3 0s2 3 3 0 2-3 3 0"/>
+              <path d="M18 8h0"/>
+            </svg>
+          </span>
+          <h4 class="bp-node__name">3 · SDR (radio definida por software)</h4>
+          <p class="bp-node__role">Nodo que digitaliza el espectro. La UI expone su estado de salud operativa.</p>
+          <div class="bp-node__map">
+            <span class="bp-node__map-label">Lo opera en la UI</span>
+            <span class="bp-node__map-ctrl">Métricas «Estado / Temperatura / Batería» (Panel A)</span>
+            <span class="bp-node__map-val"><span id="bp-sdr">CONECTADO</span> · <span id="bp-temp">47 °C</span> · <span id="bp-batt">88 %</span></span>
+          </div>
+        </li>
+
+        <li class="bp-node">
+          <span class="bp-node__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="13" rx="2"/><path d="M3 8h18"/>
+              <circle cx="6" cy="6" r="0.4" fill="currentColor"/>
+              <path d="M9 21h6M12 17v4"/>
+            </svg>
+          </span>
+          <h4 class="bp-node__name">4 · Consola de control</h4>
+          <p class="bp-node__role">Esta interfaz web (cliente, sin backend). Orquesta la operación y muestra los resultados.</p>
+          <div class="bp-node__map">
+            <span class="bp-node__map-label">Lo opera en la UI</span>
+            <span class="bp-node__map-ctrl">Fases, modo y tabla de identidades</span>
+            <span class="bp-node__map-val">modo <span id="bp-mode">PASIVO</span> · <span id="bp-bands">3 bandas</span></span>
+          </div>
+        </li>
+
+      </ol>
+      <p class="blueprint__foot">
+        Diagrama de diseño: representa el flujo de señal de forma conceptual. No hay hardware ni captura real de RF;
+        ningún bloque se conecta con el teléfono de una persona.
+      </p>
+    </section>
   </section>
 
   <!-- ═══════════ FASE 2 · ESCANEO ═══════════ -->

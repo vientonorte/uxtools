@@ -298,6 +298,7 @@
     setBar('#bar-noise', hw.noise, hw.noise < 55 ? 'good' : hw.noise < 78 ? 'warn' : 'crit');
     var rssiPct = Math.round((hw.rssi + 110) / 70 * 100);
     setBar('#bar-rssi', rssiPct, rssiPct > 55 ? 'good' : rssiPct > 30 ? 'warn' : 'crit');
+    renderBlueprint();
   }
   function grade(sel, val, thr, higherWorse) {
     var el = $(sel); if (!el) return;
@@ -311,6 +312,19 @@
     var el = $(sel); if (!el) return;
     el.style.width = clamp(pct, 0, 100) + '%';
     el.className = 'bar__fill bar__fill--' + kind;
+  }
+
+  /* ── Blueprint (Fase 1): refleja en vivo cada componente físico ── */
+  function renderBlueprint() {
+    setText('#bp-gain', state.gain + ' dB');
+    setText('#bp-rssi', hw.rssi + ' dBm');
+    setText('#bp-noise', hw.noise + ' %');
+    setText('#bp-sdr', 'CONECTADO');
+    setText('#bp-temp', hw.temp + ' °C');
+    setText('#bp-batt', hw.batt + ' %');
+    setText('#bp-mode', state.mode === 'active' ? 'ACTIVO' : 'PASIVO');
+    var nb = Object.keys(state.bands).filter(function (k) { return state.bands[k]; }).length;
+    setText('#bp-bands', nb + (nb === 1 ? ' banda' : ' bandas'));
   }
 
   /* ── Alertas abstraídas ───────────────────────────────────── */
@@ -717,6 +731,7 @@
       b.addEventListener('click', function () {
         state.bands[band] = !state.bands[band];
         b.setAttribute('aria-pressed', String(state.bands[band]));
+        renderBlueprint();
         saveSession();
       });
     });
@@ -740,7 +755,7 @@
     if (gain) {
       gain.value = state.gain;
       setText('#gain-val', state.gain + ' dB');
-      gain.addEventListener('input', function () { state.gain = Number(gain.value); setText('#gain-val', state.gain + ' dB'); saveSession(); });
+      gain.addEventListener('input', function () { state.gain = Number(gain.value); setText('#gain-val', state.gain + ' dB'); renderBlueprint(); saveSession(); });
     }
 
     // Modo pasivo/activo (Fase 2)
@@ -822,6 +837,7 @@
     setText('#mode-tag', state.mode === 'active' ? 'ACTIVO' : 'PASIVO');
     var tag = $('#mode-tag');
     if (tag) tag.style.color = state.mode === 'active' ? 'var(--ops-amber)' : 'var(--ops-green)';
+    renderBlueprint();
   }
 
   /* ── Reloj de sesión ──────────────────────────────────────── */

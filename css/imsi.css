@@ -478,6 +478,114 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
 
 .export-row { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
 
+/* ── Blueprint de la cadena RF (Fase 1) ── */
+.blueprint {
+  margin-top: var(--space-4);
+  background: var(--ops-panel);
+  border: 1px solid var(--ops-line);
+  border-radius: var(--ops-radius);
+  overflow: hidden;
+}
+.blueprint__intro,
+.blueprint__foot {
+  padding: 12px 16px;
+  font-family: var(--ops-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--ops-text-dim);
+}
+.blueprint__foot {
+  border-top: 1px solid var(--ops-line);
+  color: var(--ops-muted);
+}
+.blueprint__chain {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  padding: 8px 16px 4px;
+  margin: 0;
+}
+.bp-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--ops-panel-2);
+  border: 1px solid var(--ops-line-2);
+  border-radius: var(--ops-radius-sm);
+}
+/* Conector: chevron que apunta al siguiente componente (horizontal) */
+.bp-node:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(-1 * var(--space-5) / 2 - 5px);
+  width: 9px;
+  height: 9px;
+  border-top: 2px solid var(--ops-cyan);
+  border-right: 2px solid var(--ops-cyan);
+  transform: translateY(-50%) rotate(45deg);
+  opacity: 0.65;
+}
+.bp-node__icon {
+  width: 34px;
+  height: 34px;
+  color: var(--ops-cyan);
+}
+.bp-node__icon svg { display: block; width: 100%; height: 100%; }
+.bp-node__name {
+  font-family: var(--ops-mono);
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: #EAF1FB;
+  margin: 0;
+}
+.bp-node__role {
+  font-size: 11px;
+  color: var(--ops-text-dim);
+  line-height: 1.5;
+  flex: 1;
+  margin: 0;
+}
+.bp-node__map {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 9px;
+  border-top: 1px dashed var(--ops-line-2);
+}
+.bp-node__map-label {
+  font-family: var(--ops-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ops-muted);
+}
+.bp-node__map-ctrl { font-size: 11px; color: var(--ops-text-dim); line-height: 1.4; }
+.bp-node__map-val { font-family: var(--ops-mono); font-size: 12.5px; color: var(--ops-cyan); }
+
+@media (max-width: 1024px) {
+  .blueprint__chain { grid-template-columns: 1fr 1fr; }
+  /* En 2 columnas el chevron horizontal solo aplica a la columna izquierda */
+  .bp-node:nth-child(even)::after { display: none; }
+}
+@media (max-width: 620px) {
+  .blueprint__chain { grid-template-columns: 1fr; gap: var(--space-4); }
+  .bp-node:nth-child(even)::after { display: block; }
+  /* Apila vertical: el chevron apunta hacia abajo */
+  .bp-node:not(:last-child)::after {
+    top: auto;
+    bottom: calc(-1 * var(--space-4) / 2 - 5px);
+    right: 50%;
+    transform: translateX(50%) rotate(135deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bp-node__map-val { transition: none; }
+}
+
 /* ── Tabs de fase: visibilidad ── */
 .phase-view { display: none; }
 .phase-view.is-active { display: block; }
