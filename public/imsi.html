@@ -762,6 +762,114 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
 
 .export-row { display: flex; gap: var(--space-3); flex-wrap: wrap; margin-top: var(--space-4); }
 
+/* ── Blueprint de la cadena RF (Fase 1) ── */
+.blueprint {
+  margin-top: var(--space-4);
+  background: var(--ops-panel);
+  border: 1px solid var(--ops-line);
+  border-radius: var(--ops-radius);
+  overflow: hidden;
+}
+.blueprint__intro,
+.blueprint__foot {
+  padding: 12px 16px;
+  font-family: var(--ops-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--ops-text-dim);
+}
+.blueprint__foot {
+  border-top: 1px solid var(--ops-line);
+  color: var(--ops-muted);
+}
+.blueprint__chain {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  padding: 8px 16px 4px;
+  margin: 0;
+}
+.bp-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  background: var(--ops-panel-2);
+  border: 1px solid var(--ops-line-2);
+  border-radius: var(--ops-radius-sm);
+}
+/* Conector: chevron que apunta al siguiente componente (horizontal) */
+.bp-node:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(-1 * var(--space-5) / 2 - 5px);
+  width: 9px;
+  height: 9px;
+  border-top: 2px solid var(--ops-cyan);
+  border-right: 2px solid var(--ops-cyan);
+  transform: translateY(-50%) rotate(45deg);
+  opacity: 0.65;
+}
+.bp-node__icon {
+  width: 34px;
+  height: 34px;
+  color: var(--ops-cyan);
+}
+.bp-node__icon svg { display: block; width: 100%; height: 100%; }
+.bp-node__name {
+  font-family: var(--ops-mono);
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: #EAF1FB;
+  margin: 0;
+}
+.bp-node__role {
+  font-size: 11px;
+  color: var(--ops-text-dim);
+  line-height: 1.5;
+  flex: 1;
+  margin: 0;
+}
+.bp-node__map {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 9px;
+  border-top: 1px dashed var(--ops-line-2);
+}
+.bp-node__map-label {
+  font-family: var(--ops-mono);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ops-muted);
+}
+.bp-node__map-ctrl { font-size: 11px; color: var(--ops-text-dim); line-height: 1.4; }
+.bp-node__map-val { font-family: var(--ops-mono); font-size: 12.5px; color: var(--ops-cyan); }
+
+@media (max-width: 1024px) {
+  .blueprint__chain { grid-template-columns: 1fr 1fr; }
+  /* En 2 columnas el chevron horizontal solo aplica a la columna izquierda */
+  .bp-node:nth-child(even)::after { display: none; }
+}
+@media (max-width: 620px) {
+  .blueprint__chain { grid-template-columns: 1fr; gap: var(--space-4); }
+  .bp-node:nth-child(even)::after { display: block; }
+  /* Apila vertical: el chevron apunta hacia abajo */
+  .bp-node:not(:last-child)::after {
+    top: auto;
+    bottom: calc(-1 * var(--space-4) / 2 - 5px);
+    right: 50%;
+    transform: translateX(50%) rotate(135deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bp-node__map-val { transition: none; }
+}
+
 /* ── Tabs de fase: visibilidad ── */
 .phase-view { display: none; }
 .phase-view.is-active { display: block; }
@@ -913,6 +1021,91 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
         <div class="metric"><span class="metric__label"><span class="cls cls--catch">catch-all</span></span><span class="metric__val">desconocidos en radio</span></div>
       </div>
     </div>
+
+    <!-- BLUEPRINT · cadena de señal física ↔ mapeo de interfaz -->
+    <section class="blueprint" aria-labelledby="bp-title">
+      <div class="panel__head">
+        <span class="panel__title" id="bp-title">Blueprint · cadena de señal y mapeo de UI</span>
+        <span class="panel__tag">conceptual · simulado</span>
+      </div>
+      <p class="blueprint__intro">
+        Recorrido de la señal a través de cada componente físico y cómo la interfaz lo representa.
+        Los valores son sintéticos y se actualizan en vivo desde el estado de la maqueta.
+      </p>
+      <ol class="blueprint__chain">
+
+        <li class="bp-node">
+          <span class="bp-node__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22V8"/><circle cx="12" cy="5" r="2.2"/>
+              <path d="M6 9a7 7 0 0 1 0-6"/><path d="M18 3a7 7 0 0 1 0 6"/>
+            </svg>
+          </span>
+          <h4 class="bp-node__name">1 · Antena multibanda</h4>
+          <p class="bp-node__role">Elemento receptor multibanda. Su sensibilidad se ajusta con la ganancia (simulada).</p>
+          <div class="bp-node__map">
+            <span class="bp-node__map-label">Lo opera en la UI</span>
+            <span class="bp-node__map-ctrl">Control «Ganancia de antena» (slider)</span>
+            <span class="bp-node__map-val" id="bp-gain">42 dB</span>
+          </div>
+        </li>
+
+        <li class="bp-node">
+          <span class="bp-node__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="8" width="16" height="8" rx="1.5"/>
+              <path d="M8 8V5M16 8V5M8 19v-3M16 19v-3M4 12H1.5M22.5 12H20"/>
+            </svg>
+          </span>
+          <h4 class="bp-node__name">2 · Front-end RF</h4>
+          <p class="bp-node__role">Cadena de recepción (filtro + amplificación). En la maqueta se reduce a indicadores de nivel y ruido.</p>
+          <div class="bp-node__map">
+            <span class="bp-node__map-label">Lo opera en la UI</span>
+            <span class="bp-node__map-ctrl">Barras «RSSI» y «Nivel de ruido» (Panel A)</span>
+            <span class="bp-node__map-val"><span id="bp-rssi">-72 dBm</span> · ruido <span id="bp-noise">28 %</span></span>
+          </div>
+        </li>
+
+        <li class="bp-node">
+          <span class="bp-node__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+              <path d="M6 14c1-3 2-3 3 0s2 3 3 0 2-3 3 0"/>
+              <path d="M18 8h0"/>
+            </svg>
+          </span>
+          <h4 class="bp-node__name">3 · SDR (radio definida por software)</h4>
+          <p class="bp-node__role">Nodo que digitaliza el espectro. La UI expone su estado de salud operativa.</p>
+          <div class="bp-node__map">
+            <span class="bp-node__map-label">Lo opera en la UI</span>
+            <span class="bp-node__map-ctrl">Métricas «Estado / Temperatura / Batería» (Panel A)</span>
+            <span class="bp-node__map-val"><span id="bp-sdr">CONECTADO</span> · <span id="bp-temp">47 °C</span> · <span id="bp-batt">88 %</span></span>
+          </div>
+        </li>
+
+        <li class="bp-node">
+          <span class="bp-node__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="13" rx="2"/><path d="M3 8h18"/>
+              <circle cx="6" cy="6" r="0.4" fill="currentColor"/>
+              <path d="M9 21h6M12 17v4"/>
+            </svg>
+          </span>
+          <h4 class="bp-node__name">4 · Consola de control</h4>
+          <p class="bp-node__role">Esta interfaz web (cliente, sin backend). Orquesta la operación y muestra los resultados.</p>
+          <div class="bp-node__map">
+            <span class="bp-node__map-label">Lo opera en la UI</span>
+            <span class="bp-node__map-ctrl">Fases, modo y tabla de identidades</span>
+            <span class="bp-node__map-val">modo <span id="bp-mode">PASIVO</span> · <span id="bp-bands">3 bandas</span></span>
+          </div>
+        </li>
+
+      </ol>
+      <p class="blueprint__foot">
+        Diagrama de diseño: representa el flujo de señal de forma conceptual. No hay hardware ni captura real de RF;
+        ningún bloque se conecta con el teléfono de una persona.
+      </p>
+    </section>
   </section>
 
   <!-- ═══════════ FASE 2 · ESCANEO ═══════════ -->
@@ -1431,6 +1624,7 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
     setBar('#bar-noise', hw.noise, hw.noise < 55 ? 'good' : hw.noise < 78 ? 'warn' : 'crit');
     var rssiPct = Math.round((hw.rssi + 110) / 70 * 100);
     setBar('#bar-rssi', rssiPct, rssiPct > 55 ? 'good' : rssiPct > 30 ? 'warn' : 'crit');
+    renderBlueprint();
   }
   function grade(sel, val, thr, higherWorse) {
     var el = $(sel); if (!el) return;
@@ -1444,6 +1638,19 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
     var el = $(sel); if (!el) return;
     el.style.width = clamp(pct, 0, 100) + '%';
     el.className = 'bar__fill bar__fill--' + kind;
+  }
+
+  /* ── Blueprint (Fase 1): refleja en vivo cada componente físico ── */
+  function renderBlueprint() {
+    setText('#bp-gain', state.gain + ' dB');
+    setText('#bp-rssi', hw.rssi + ' dBm');
+    setText('#bp-noise', hw.noise + ' %');
+    setText('#bp-sdr', 'CONECTADO');
+    setText('#bp-temp', hw.temp + ' °C');
+    setText('#bp-batt', hw.batt + ' %');
+    setText('#bp-mode', state.mode === 'active' ? 'ACTIVO' : 'PASIVO');
+    var nb = Object.keys(state.bands).filter(function (k) { return state.bands[k]; }).length;
+    setText('#bp-bands', nb + (nb === 1 ? ' banda' : ' bandas'));
   }
 
   /* ── Alertas abstraídas ───────────────────────────────────── */
@@ -1850,6 +2057,7 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
       b.addEventListener('click', function () {
         state.bands[band] = !state.bands[band];
         b.setAttribute('aria-pressed', String(state.bands[band]));
+        renderBlueprint();
         saveSession();
       });
     });
@@ -1873,7 +2081,7 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
     if (gain) {
       gain.value = state.gain;
       setText('#gain-val', state.gain + ' dB');
-      gain.addEventListener('input', function () { state.gain = Number(gain.value); setText('#gain-val', state.gain + ' dB'); saveSession(); });
+      gain.addEventListener('input', function () { state.gain = Number(gain.value); setText('#gain-val', state.gain + ' dB'); renderBlueprint(); saveSession(); });
     }
 
     // Modo pasivo/activo (Fase 2)
@@ -1955,6 +2163,7 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
     setText('#mode-tag', state.mode === 'active' ? 'ACTIVO' : 'PASIVO');
     var tag = $('#mode-tag');
     if (tag) tag.style.color = state.mode === 'active' ? 'var(--ops-amber)' : 'var(--ops-green)';
+    renderBlueprint();
   }
 
   /* ── Reloj de sesión ──────────────────────────────────────── */
