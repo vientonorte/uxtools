@@ -66,6 +66,10 @@
       <span class="phase__num">4</span>
       <span class="phase__label">Análisis<small>Forense · export de logs</small></span>
     </button>
+    <button class="phase" role="tab" data-phase="5" aria-selected="false">
+      <span class="phase__num">5</span>
+      <span class="phase__label">Defensa<small>Detección de celdas falsas</small></span>
+    </button>
   </nav>
 
   <!-- ═══════════ FASE 1 · CONFIGURACIÓN ═══════════ -->
@@ -405,6 +409,76 @@
         <div class="metric"><span class="metric__label"><span class="cls cls--catch">catch-all</span></span><span class="metric__val" id="sum-catch">—</span></div>
       </div>
     </div>
+  </section>
+
+  <!-- ═══════════ FASE 5 · DEFENSA / PROTECCIÓN ═══════════ -->
+  <section class="phase-view" data-phase="5" role="tabpanel" aria-label="Fase 5: Defensa y protección frente a celdas falsas">
+
+    <div class="def-head">
+      <div class="def-shield" id="def-shield" data-level="ok">
+        <span class="def-shield__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </span>
+        <div>
+          <div class="def-shield__state" id="def-shield-state">ENTORNO SEGURO</div>
+          <div class="def-shield__sub" id="def-shield-sub" aria-live="polite">No se detectan señales de interceptación.</div>
+        </div>
+      </div>
+      <div class="def-scenario" role="group" aria-label="Escenario de demostración">
+        <span class="def-scenario__label">Escenario (demo)</span>
+        <button class="def-scenario__opt" data-scenario="normal" aria-pressed="true">Entorno normal</button>
+        <button class="def-scenario__opt" data-scenario="sospecha" aria-pressed="false">Bajo sospecha</button>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-card def-card--checks">
+        <h3>Señales de detección</h3>
+        <p class="def-intro">
+          Indicadores que tu propio teléfono puede observar para sospechar de una celda falsa (IMSI catcher).
+          Datos simulados con fines educativos.
+        </p>
+        <ul class="def-list" id="def-list"></ul>
+      </div>
+
+      <div class="form-card">
+        <h3>Cómo protegerte</h3>
+        <ul class="def-tips">
+          <li class="def-tip">
+            <span class="def-tip__name">Bloquea 2G</span>
+            <span class="def-tip__desc">Un atacante suele degradarte a 2G (sin autenticación mutua). En Android: Ajustes → Red móvil → desactiva 2G. En iOS: activa el Modo Aislamiento (Lockdown).</span>
+          </li>
+          <li class="def-tip">
+            <span class="def-tip__name">Prefiere 4G / 5G</span>
+            <span class="def-tip__desc">Fija el tipo de red preferido en LTE/5G donde el sistema lo permita: estas redes exigen que la antena se autentique.</span>
+          </li>
+          <li class="def-tip">
+            <span class="def-tip__name">Usa cifrado de extremo a extremo</span>
+            <span class="def-tip__desc">Signal, WhatsApp o iMessage cifran el contenido. Aunque capten metadatos de red, no pueden leer tus mensajes ni escuchar tus llamadas.</span>
+          </li>
+          <li class="def-tip">
+            <span class="def-tip__name">Desconfía de caídas súbitas</span>
+            <span class="def-tip__desc">Perder 4G/5G sin motivo en una zona con buena cobertura, o reconexiones repetidas, es una señal de alerta.</span>
+          </li>
+          <li class="def-tip">
+            <span class="def-tip__name">Modo avión en zonas sensibles</span>
+            <span class="def-tip__desc">Corta el enganche a cualquier celda. Útil si sospechas de vigilancia en un lugar concreto.</span>
+          </li>
+          <li class="def-tip">
+            <span class="def-tip__name">Mantén el sistema actualizado</span>
+            <span class="def-tip__desc">Los parches del fabricante cierran fallos de banda base que facilitan estos ataques.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="def-foot">
+      Enfoque defensivo: esta vista enseña a <strong>reconocer y mitigar</strong> señales de interceptación desde el lado del usuario.
+      No emula ni opera ningún equipo; toda la data es sintética y se procesa en tu navegador.
+    </p>
   </section>
 
   <p class="ops-foot">

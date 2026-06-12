@@ -398,7 +398,7 @@ body.ops .btn-nav:hover {
 /* ── Stepper de fases ── */
 .phases {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--space-2);
   margin-bottom: var(--space-5);
   border: 1px solid var(--ops-line);
@@ -870,6 +870,98 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
   .bp-node__map-val { transition: none; }
 }
 
+/* ── Fase 5 · Defensa / protección ── */
+.def-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+.def-shield {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 14px 18px;
+  border-radius: var(--ops-radius);
+  border: 1px solid var(--ops-line-2);
+  background: var(--ops-panel);
+  flex: 1 1 320px;
+}
+.def-shield__icon { width: 34px; height: 34px; flex: 0 0 34px; color: var(--ops-green); }
+.def-shield__icon svg { display: block; width: 100%; height: 100%; }
+.def-shield__state { font-family: var(--ops-mono); font-size: 14px; letter-spacing: 0.5px; color: #EAF1FB; }
+.def-shield__sub { font-size: 12px; color: var(--ops-text-dim); margin-top: 3px; }
+.def-shield[data-level="ok"]   { border-color: rgba(33,208,122,0.4);  background: var(--ops-green-dim); }
+.def-shield[data-level="ok"]   .def-shield__icon { color: var(--ops-green); }
+.def-shield[data-level="warn"] { border-color: rgba(255,176,32,0.45); background: var(--ops-amber-dim); }
+.def-shield[data-level="warn"] .def-shield__icon { color: var(--ops-amber); }
+.def-shield[data-level="warn"] .def-shield__state { color: var(--ops-amber); }
+.def-shield[data-level="crit"] { border-color: rgba(255,59,48,0.5);   background: var(--ops-red-dim); }
+.def-shield[data-level="crit"] .def-shield__icon { color: var(--ops-red); }
+.def-shield[data-level="crit"] .def-shield__state { color: #FF8A82; }
+
+.def-scenario {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.def-scenario__label {
+  font-family: var(--ops-mono); font-size: 10px; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--ops-muted); margin-right: 4px;
+}
+.def-scenario__opt {
+  font-family: var(--ops-mono); font-size: 11px;
+  padding: 7px 13px; border-radius: 100px;
+  border: 1px solid var(--ops-line-2); background: transparent;
+  color: var(--ops-text-dim); cursor: pointer; min-height: 34px;
+  transition: all var(--duration-fast);
+}
+.def-scenario__opt[aria-pressed="true"] { color: #EAF1FB; border-color: var(--ops-cyan); background: var(--ops-cyan-dim); }
+
+.def-intro, .def-foot {
+  font-size: 12px; color: var(--ops-text-dim); line-height: 1.6;
+}
+.def-intro { margin-bottom: var(--space-4); }
+.def-foot {
+  margin-top: var(--space-4); padding-top: var(--space-4);
+  border-top: 1px solid var(--ops-line);
+  font-family: var(--ops-mono); font-size: 10.5px; color: var(--ops-muted);
+}
+
+.def-list, .def-tips { list-style: none; margin: 0; padding: 0; }
+.def-item {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: 12px 0; border-bottom: 1px solid var(--ops-line);
+}
+.def-item:last-child { border-bottom: none; }
+.def-item__dot { margin-top: 5px; flex: 0 0 8px; }
+.def-item__body { flex: 1; min-width: 0; }
+.def-item__name { font-size: 13px; color: var(--ops-text); }
+.def-item__state { font-family: var(--ops-mono); font-size: 12px; margin: 2px 0 4px; }
+.def-item--ok   .def-item__state { color: var(--ops-green); }
+.def-item--warn .def-item__state { color: var(--ops-amber); }
+.def-item--crit .def-item__state { color: #FF8A82; }
+.def-item__note { font-size: 11px; color: var(--ops-text-dim); line-height: 1.5; }
+.def-item__badge {
+  flex: 0 0 auto; align-self: center;
+  font-family: var(--ops-mono); font-size: 9.5px; letter-spacing: 0.6px;
+  padding: 3px 9px; border-radius: 100px; white-space: nowrap;
+}
+.def-item__badge--ok   { color: var(--ops-green); background: var(--ops-green-dim); border: 1px solid rgba(33,208,122,0.3); }
+.def-item__badge--warn { color: var(--ops-amber); background: var(--ops-amber-dim); border: 1px solid rgba(255,176,32,0.35); }
+.def-item__badge--crit { color: var(--ops-red);   background: var(--ops-red-dim);   border: 1px solid rgba(255,59,48,0.4); }
+
+.def-tip { padding: 11px 0; border-bottom: 1px solid var(--ops-line); }
+.def-tip:last-child { border-bottom: none; }
+.def-tip__name {
+  display: block; font-family: var(--ops-mono); font-size: 12px;
+  letter-spacing: 0.3px; color: var(--ops-cyan); margin-bottom: 4px;
+}
+.def-tip__desc { display: block; font-size: 11.5px; color: var(--ops-text-dim); line-height: 1.55; }
+
 /* ── Tabs de fase: visibilidad ── */
 .phase-view { display: none; }
 .phase-view.is-active { display: block; }
@@ -968,6 +1060,10 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
     <button class="phase" role="tab" data-phase="4" aria-selected="false">
       <span class="phase__num">4</span>
       <span class="phase__label">Análisis<small>Forense · export de logs</small></span>
+    </button>
+    <button class="phase" role="tab" data-phase="5" aria-selected="false">
+      <span class="phase__num">5</span>
+      <span class="phase__label">Defensa<small>Detección de celdas falsas</small></span>
     </button>
   </nav>
 
@@ -1308,6 +1404,76 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
         <div class="metric"><span class="metric__label"><span class="cls cls--catch">catch-all</span></span><span class="metric__val" id="sum-catch">—</span></div>
       </div>
     </div>
+  </section>
+
+  <!-- ═══════════ FASE 5 · DEFENSA / PROTECCIÓN ═══════════ -->
+  <section class="phase-view" data-phase="5" role="tabpanel" aria-label="Fase 5: Defensa y protección frente a celdas falsas">
+
+    <div class="def-head">
+      <div class="def-shield" id="def-shield" data-level="ok">
+        <span class="def-shield__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3z"/>
+            <path d="M9 12l2 2 4-4"/>
+          </svg>
+        </span>
+        <div>
+          <div class="def-shield__state" id="def-shield-state">ENTORNO SEGURO</div>
+          <div class="def-shield__sub" id="def-shield-sub" aria-live="polite">No se detectan señales de interceptación.</div>
+        </div>
+      </div>
+      <div class="def-scenario" role="group" aria-label="Escenario de demostración">
+        <span class="def-scenario__label">Escenario (demo)</span>
+        <button class="def-scenario__opt" data-scenario="normal" aria-pressed="true">Entorno normal</button>
+        <button class="def-scenario__opt" data-scenario="sospecha" aria-pressed="false">Bajo sospecha</button>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-card def-card--checks">
+        <h3>Señales de detección</h3>
+        <p class="def-intro">
+          Indicadores que tu propio teléfono puede observar para sospechar de una celda falsa (IMSI catcher).
+          Datos simulados con fines educativos.
+        </p>
+        <ul class="def-list" id="def-list"></ul>
+      </div>
+
+      <div class="form-card">
+        <h3>Cómo protegerte</h3>
+        <ul class="def-tips">
+          <li class="def-tip">
+            <span class="def-tip__name">Bloquea 2G</span>
+            <span class="def-tip__desc">Un atacante suele degradarte a 2G (sin autenticación mutua). En Android: Ajustes → Red móvil → desactiva 2G. En iOS: activa el Modo Aislamiento (Lockdown).</span>
+          </li>
+          <li class="def-tip">
+            <span class="def-tip__name">Prefiere 4G / 5G</span>
+            <span class="def-tip__desc">Fija el tipo de red preferido en LTE/5G donde el sistema lo permita: estas redes exigen que la antena se autentique.</span>
+          </li>
+          <li class="def-tip">
+            <span class="def-tip__name">Usa cifrado de extremo a extremo</span>
+            <span class="def-tip__desc">Signal, WhatsApp o iMessage cifran el contenido. Aunque capten metadatos de red, no pueden leer tus mensajes ni escuchar tus llamadas.</span>
+          </li>
+          <li class="def-tip">
+            <span class="def-tip__name">Desconfía de caídas súbitas</span>
+            <span class="def-tip__desc">Perder 4G/5G sin motivo en una zona con buena cobertura, o reconexiones repetidas, es una señal de alerta.</span>
+          </li>
+          <li class="def-tip">
+            <span class="def-tip__name">Modo avión en zonas sensibles</span>
+            <span class="def-tip__desc">Corta el enganche a cualquier celda. Útil si sospechas de vigilancia en un lugar concreto.</span>
+          </li>
+          <li class="def-tip">
+            <span class="def-tip__name">Mantén el sistema actualizado</span>
+            <span class="def-tip__desc">Los parches del fabricante cierran fallos de banda base que facilitan estos ataques.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="def-foot">
+      Enfoque defensivo: esta vista enseña a <strong>reconocer y mitigar</strong> señales de interceptación desde el lado del usuario.
+      No emula ni opera ningún equipo; toda la data es sintética y se procesa en tu navegador.
+    </p>
   </section>
 
   <p class="ops-foot">
@@ -2032,6 +2198,94 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
     downloadBytes('recon-infraestructura-' + Date.now() + '.pdf', bytes, 'application/pdf');
   }
 
+  /* ── Fase 5 · Defensa: detección educativa de celdas falsas ──
+     Modelo puramente informativo y simulado: enseña qué señales puede
+     observar el propio teléfono para sospechar de un IMSI catcher y cómo
+     mitigarlo. No emula ni opera ningún equipo. ─────────────────────── */
+  var defScenario = 'normal'; // 'normal' | 'sospecha'
+  var DEF_CHECKS = [
+    {
+      name: 'Tecnología de red',
+      note: 'Las redes 4G/5G exigen que la antena se autentique. Un equipo suplantador suele forzar la conexión a 2G, que no tiene autenticación mutua.',
+      normal:   { level: 'ok',   state: '5G / 4G (NR n78 · LTE B3)' },
+      sospecha: { level: 'crit', state: 'Forzada a 2G (GSM) sin motivo' }
+    },
+    {
+      name: 'Cifrado del enlace',
+      note: 'La señalización debería viajar cifrada (A5/3). Sin cifrado (A5/0) queda expuesta a quien esté en el medio.',
+      normal:   { level: 'ok',   state: 'A5/3 — cifrado activo' },
+      sospecha: { level: 'crit', state: 'A5/0 — sin cifrado' }
+    },
+    {
+      name: 'Lista de celdas vecinas',
+      note: 'Una antena legítima anuncia sus celdas vecinas. Una celda falsa frecuentemente llega con la lista vacía.',
+      normal:   { level: 'ok',   state: '12 vecinas anunciadas' },
+      sospecha: { level: 'warn', state: '0 vecinas — lista vacía' }
+    },
+    {
+      name: 'Consistencia LAC / TAC',
+      note: 'Un cambio de área (LAC/TAC) sin que te muevas puede ser un intento de provocar un re-registro que expone tu identidad.',
+      normal:   { level: 'ok',   state: 'Estable (LAC 20451 · TAC 17002)' },
+      sospecha: { level: 'warn', state: 'Salto anómalo sin desplazamiento' }
+    },
+    {
+      name: 'Autenticación de la red',
+      note: 'La red debe demostrar que es legítima frente a tu teléfono. Si no lo hace, podría ser un intermediario.',
+      normal:   { level: 'ok',   state: 'Mutua — verificada' },
+      sospecha: { level: 'crit', state: 'Ausente / rechazada' }
+    },
+    {
+      name: 'Potencia de la celda',
+      note: 'Una celda falsa transmite muy fuerte para que tu teléfono la prefiera frente a las antenas reales.',
+      normal:   { level: 'ok',   state: '-72 dBm (rango normal)' },
+      sospecha: { level: 'warn', state: '-41 dBm (anómalamente alta)' }
+    }
+  ];
+  var DEF_BADGE = { ok: 'OK', warn: 'REVISA', crit: 'ALERTA' };
+  var DEF_DOT = { ok: 'good', warn: 'warn', crit: 'crit' };
+  var DEF_RANK = { ok: 0, warn: 1, crit: 2 };
+  var DEF_SHIELD = {
+    ok:   ['ENTORNO SEGURO', 'No se detectan señales de interceptación.'],
+    warn: ['SEÑALES SOSPECHOSAS', 'Hay indicios compatibles con una celda falsa. Revisa las recomendaciones.'],
+    crit: ['ALERTA — POSIBLE CELDA FALSA', 'Varias señales fuertes de interceptación. Aplica las protecciones de inmediato.']
+  };
+
+  function renderDefense() {
+    var list = $('#def-list');
+    if (!list) return;
+    var worst = 'ok';
+    list.innerHTML = DEF_CHECKS.map(function (c) {
+      var d = c[defScenario];
+      if (DEF_RANK[d.level] > DEF_RANK[worst]) worst = d.level;
+      return '<li class="def-item def-item--' + d.level + '">' +
+        '<span class="def-item__dot dot dot--' + DEF_DOT[d.level] + '"></span>' +
+        '<div class="def-item__body">' +
+          '<div class="def-item__name">' + c.name + '</div>' +
+          '<div class="def-item__state">' + d.state + '</div>' +
+          '<div class="def-item__note">' + c.note + '</div>' +
+        '</div>' +
+        '<span class="def-item__badge def-item__badge--' + d.level + '">' + DEF_BADGE[d.level] + '</span>' +
+      '</li>';
+    }).join('');
+
+    var shield = $('#def-shield');
+    if (shield) shield.setAttribute('data-level', worst);
+    setText('#def-shield-state', DEF_SHIELD[worst][0]);
+    setText('#def-shield-sub', DEF_SHIELD[worst][1]);
+  }
+
+  function bindDefense() {
+    $all('.def-scenario__opt').forEach(function (b) {
+      b.addEventListener('click', function () {
+        defScenario = b.getAttribute('data-scenario');
+        $all('.def-scenario__opt').forEach(function (x) {
+          x.setAttribute('aria-pressed', String(x === b));
+        });
+        renderDefense();
+      });
+    });
+  }
+
   /* ── Phase navigation ─────────────────────────────────────── */
   function setPhase(n) {
     state.phase = n;
@@ -2179,6 +2433,8 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
     loadSession();
     bindControls();
     bindTableInteraction();
+    bindDefense();
+    renderDefense();
     syncModeUI();
     renderHardware();
     setPhase(state.phase);

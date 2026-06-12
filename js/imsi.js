@@ -706,6 +706,94 @@
     downloadBytes('recon-infraestructura-' + Date.now() + '.pdf', bytes, 'application/pdf');
   }
 
+  /* ── Fase 5 · Defensa: detección educativa de celdas falsas ──
+     Modelo puramente informativo y simulado: enseña qué señales puede
+     observar el propio teléfono para sospechar de un IMSI catcher y cómo
+     mitigarlo. No emula ni opera ningún equipo. ─────────────────────── */
+  var defScenario = 'normal'; // 'normal' | 'sospecha'
+  var DEF_CHECKS = [
+    {
+      name: 'Tecnología de red',
+      note: 'Las redes 4G/5G exigen que la antena se autentique. Un equipo suplantador suele forzar la conexión a 2G, que no tiene autenticación mutua.',
+      normal:   { level: 'ok',   state: '5G / 4G (NR n78 · LTE B3)' },
+      sospecha: { level: 'crit', state: 'Forzada a 2G (GSM) sin motivo' }
+    },
+    {
+      name: 'Cifrado del enlace',
+      note: 'La señalización debería viajar cifrada (A5/3). Sin cifrado (A5/0) queda expuesta a quien esté en el medio.',
+      normal:   { level: 'ok',   state: 'A5/3 — cifrado activo' },
+      sospecha: { level: 'crit', state: 'A5/0 — sin cifrado' }
+    },
+    {
+      name: 'Lista de celdas vecinas',
+      note: 'Una antena legítima anuncia sus celdas vecinas. Una celda falsa frecuentemente llega con la lista vacía.',
+      normal:   { level: 'ok',   state: '12 vecinas anunciadas' },
+      sospecha: { level: 'warn', state: '0 vecinas — lista vacía' }
+    },
+    {
+      name: 'Consistencia LAC / TAC',
+      note: 'Un cambio de área (LAC/TAC) sin que te muevas puede ser un intento de provocar un re-registro que expone tu identidad.',
+      normal:   { level: 'ok',   state: 'Estable (LAC 20451 · TAC 17002)' },
+      sospecha: { level: 'warn', state: 'Salto anómalo sin desplazamiento' }
+    },
+    {
+      name: 'Autenticación de la red',
+      note: 'La red debe demostrar que es legítima frente a tu teléfono. Si no lo hace, podría ser un intermediario.',
+      normal:   { level: 'ok',   state: 'Mutua — verificada' },
+      sospecha: { level: 'crit', state: 'Ausente / rechazada' }
+    },
+    {
+      name: 'Potencia de la celda',
+      note: 'Una celda falsa transmite muy fuerte para que tu teléfono la prefiera frente a las antenas reales.',
+      normal:   { level: 'ok',   state: '-72 dBm (rango normal)' },
+      sospecha: { level: 'warn', state: '-41 dBm (anómalamente alta)' }
+    }
+  ];
+  var DEF_BADGE = { ok: 'OK', warn: 'REVISA', crit: 'ALERTA' };
+  var DEF_DOT = { ok: 'good', warn: 'warn', crit: 'crit' };
+  var DEF_RANK = { ok: 0, warn: 1, crit: 2 };
+  var DEF_SHIELD = {
+    ok:   ['ENTORNO SEGURO', 'No se detectan señales de interceptación.'],
+    warn: ['SEÑALES SOSPECHOSAS', 'Hay indicios compatibles con una celda falsa. Revisa las recomendaciones.'],
+    crit: ['ALERTA — POSIBLE CELDA FALSA', 'Varias señales fuertes de interceptación. Aplica las protecciones de inmediato.']
+  };
+
+  function renderDefense() {
+    var list = $('#def-list');
+    if (!list) return;
+    var worst = 'ok';
+    list.innerHTML = DEF_CHECKS.map(function (c) {
+      var d = c[defScenario];
+      if (DEF_RANK[d.level] > DEF_RANK[worst]) worst = d.level;
+      return '<li class="def-item def-item--' + d.level + '">' +
+        '<span class="def-item__dot dot dot--' + DEF_DOT[d.level] + '"></span>' +
+        '<div class="def-item__body">' +
+          '<div class="def-item__name">' + c.name + '</div>' +
+          '<div class="def-item__state">' + d.state + '</div>' +
+          '<div class="def-item__note">' + c.note + '</div>' +
+        '</div>' +
+        '<span class="def-item__badge def-item__badge--' + d.level + '">' + DEF_BADGE[d.level] + '</span>' +
+      '</li>';
+    }).join('');
+
+    var shield = $('#def-shield');
+    if (shield) shield.setAttribute('data-level', worst);
+    setText('#def-shield-state', DEF_SHIELD[worst][0]);
+    setText('#def-shield-sub', DEF_SHIELD[worst][1]);
+  }
+
+  function bindDefense() {
+    $all('.def-scenario__opt').forEach(function (b) {
+      b.addEventListener('click', function () {
+        defScenario = b.getAttribute('data-scenario');
+        $all('.def-scenario__opt').forEach(function (x) {
+          x.setAttribute('aria-pressed', String(x === b));
+        });
+        renderDefense();
+      });
+    });
+  }
+
   /* ── Phase navigation ─────────────────────────────────────── */
   function setPhase(n) {
     state.phase = n;
@@ -853,6 +941,8 @@
     loadSession();
     bindControls();
     bindTableInteraction();
+    bindDefense();
+    renderDefense();
     syncModeUI();
     renderHardware();
     setPhase(state.phase);

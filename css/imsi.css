@@ -114,7 +114,7 @@ body.ops .btn-nav:hover {
 /* ── Stepper de fases ── */
 .phases {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: var(--space-2);
   margin-bottom: var(--space-5);
   border: 1px solid var(--ops-line);
@@ -585,6 +585,98 @@ table.ident tbody tr.row--target.is-alerting { animation: targetBlink 1s steps(1
 @media (prefers-reduced-motion: reduce) {
   .bp-node__map-val { transition: none; }
 }
+
+/* ── Fase 5 · Defensa / protección ── */
+.def-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+.def-shield {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: 14px 18px;
+  border-radius: var(--ops-radius);
+  border: 1px solid var(--ops-line-2);
+  background: var(--ops-panel);
+  flex: 1 1 320px;
+}
+.def-shield__icon { width: 34px; height: 34px; flex: 0 0 34px; color: var(--ops-green); }
+.def-shield__icon svg { display: block; width: 100%; height: 100%; }
+.def-shield__state { font-family: var(--ops-mono); font-size: 14px; letter-spacing: 0.5px; color: #EAF1FB; }
+.def-shield__sub { font-size: 12px; color: var(--ops-text-dim); margin-top: 3px; }
+.def-shield[data-level="ok"]   { border-color: rgba(33,208,122,0.4);  background: var(--ops-green-dim); }
+.def-shield[data-level="ok"]   .def-shield__icon { color: var(--ops-green); }
+.def-shield[data-level="warn"] { border-color: rgba(255,176,32,0.45); background: var(--ops-amber-dim); }
+.def-shield[data-level="warn"] .def-shield__icon { color: var(--ops-amber); }
+.def-shield[data-level="warn"] .def-shield__state { color: var(--ops-amber); }
+.def-shield[data-level="crit"] { border-color: rgba(255,59,48,0.5);   background: var(--ops-red-dim); }
+.def-shield[data-level="crit"] .def-shield__icon { color: var(--ops-red); }
+.def-shield[data-level="crit"] .def-shield__state { color: #FF8A82; }
+
+.def-scenario {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.def-scenario__label {
+  font-family: var(--ops-mono); font-size: 10px; letter-spacing: 0.8px;
+  text-transform: uppercase; color: var(--ops-muted); margin-right: 4px;
+}
+.def-scenario__opt {
+  font-family: var(--ops-mono); font-size: 11px;
+  padding: 7px 13px; border-radius: 100px;
+  border: 1px solid var(--ops-line-2); background: transparent;
+  color: var(--ops-text-dim); cursor: pointer; min-height: 34px;
+  transition: all var(--duration-fast);
+}
+.def-scenario__opt[aria-pressed="true"] { color: #EAF1FB; border-color: var(--ops-cyan); background: var(--ops-cyan-dim); }
+
+.def-intro, .def-foot {
+  font-size: 12px; color: var(--ops-text-dim); line-height: 1.6;
+}
+.def-intro { margin-bottom: var(--space-4); }
+.def-foot {
+  margin-top: var(--space-4); padding-top: var(--space-4);
+  border-top: 1px solid var(--ops-line);
+  font-family: var(--ops-mono); font-size: 10.5px; color: var(--ops-muted);
+}
+
+.def-list, .def-tips { list-style: none; margin: 0; padding: 0; }
+.def-item {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: 12px 0; border-bottom: 1px solid var(--ops-line);
+}
+.def-item:last-child { border-bottom: none; }
+.def-item__dot { margin-top: 5px; flex: 0 0 8px; }
+.def-item__body { flex: 1; min-width: 0; }
+.def-item__name { font-size: 13px; color: var(--ops-text); }
+.def-item__state { font-family: var(--ops-mono); font-size: 12px; margin: 2px 0 4px; }
+.def-item--ok   .def-item__state { color: var(--ops-green); }
+.def-item--warn .def-item__state { color: var(--ops-amber); }
+.def-item--crit .def-item__state { color: #FF8A82; }
+.def-item__note { font-size: 11px; color: var(--ops-text-dim); line-height: 1.5; }
+.def-item__badge {
+  flex: 0 0 auto; align-self: center;
+  font-family: var(--ops-mono); font-size: 9.5px; letter-spacing: 0.6px;
+  padding: 3px 9px; border-radius: 100px; white-space: nowrap;
+}
+.def-item__badge--ok   { color: var(--ops-green); background: var(--ops-green-dim); border: 1px solid rgba(33,208,122,0.3); }
+.def-item__badge--warn { color: var(--ops-amber); background: var(--ops-amber-dim); border: 1px solid rgba(255,176,32,0.35); }
+.def-item__badge--crit { color: var(--ops-red);   background: var(--ops-red-dim);   border: 1px solid rgba(255,59,48,0.4); }
+
+.def-tip { padding: 11px 0; border-bottom: 1px solid var(--ops-line); }
+.def-tip:last-child { border-bottom: none; }
+.def-tip__name {
+  display: block; font-family: var(--ops-mono); font-size: 12px;
+  letter-spacing: 0.3px; color: var(--ops-cyan); margin-bottom: 4px;
+}
+.def-tip__desc { display: block; font-size: 11.5px; color: var(--ops-text-dim); line-height: 1.55; }
 
 /* ── Tabs de fase: visibilidad ── */
 .phase-view { display: none; }
