@@ -483,6 +483,215 @@
     download('recon-metadata-' + Date.now() + '.json', JSON.stringify(payload, null, 2), 'application/json');
   }
 
+  /* ── Export PDF · ficha de infraestructura (vanilla, sin deps) ──
+     Genera un PDF real (fuentes base-14, sin embeber) que documenta el
+     MODELO de infraestructura/antena que muestra la maqueta. Todo el
+     contenido es de nivel diseño con datos simulados: no es una lista de
+     materiales ni una guía de despliegue de un sistema real. ───────── */
+  function downloadBytes(filename, bytes, mime) {
+    var blob = new Blob([bytes], { type: mime || 'application/octet-stream' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  // Encodea un string a bytes WinAnsi (Windows-1252) para los fonts base-14.
+  function winAnsi(str) {
+    var sub = { 0x2014: 0x97, 0x2013: 0x96, 0x2022: 0x95, 0x2018: 0x91, 0x2019: 0x92, 0x201C: 0x93, 0x201D: 0x94, 0x2026: 0x85 };
+    var out = [];
+    for (var i = 0; i < str.length; i++) {
+      var cp = str.charCodeAt(i);
+      if (cp <= 0xFF) out.push(cp);
+      else if (sub[cp] != null) out.push(sub[cp]);
+      else out.push(0x3F); // '?' para lo no representable
+    }
+    return out;
+  }
+
+  // Construye un PDF de una o varias páginas A4 a partir de "bloques".
+  function buildInfraPDF(blocks) {
+    var PAGE_W = 595.28, PAGE_H = 841.89;
+    var ML = 54, MR = 54, MT = 792, MB = 60;
+    var usableW = PAGE_W - ML - MR;
+    var NAVY = [0, 0.10, 0.447], ACCENT = [0, 0.71, 0.886], GRAY = [0.29, 0.33, 0.41], INK = [0.10, 0.10, 0.12], RULE = [0.78, 0.82, 0.88];
+
+    var pages = [[]], y = MT;
+    function cur() { return pages[pages.length - 1]; }
+    function newPage() { pages.push([]); y = MT; }
+    function ensure(h) { if (y - h < MB) newPage(); }
+    function charW(size, mono) { return (mono ? 0.6 : 0.52) * size; }
+    function approxW(text, size, mono) { return String(text).length * charW(size, mono); }
+
+    function wrap(text, size, mono, indent) {
+      var max = Math.max(8, Math.floor((usableW - (indent || 0)) / charW(size, mono)));
+      var words = String(text).split(/\s+/), lines = [], line = '';
+      for (var i = 0; i < words.length; i++) {
+        var w = words[i];
+        if (!line) line = w;
+        else if ((line + ' ' + w).length <= max) line += ' ' + w;
+        else { lines.push(line); line = w; }
+        while (line.length > max) { lines.push(line.slice(0, max)); line = line.slice(max); }
+      }
+      if (line) lines.push(line);
+      return lines.length ? lines : [''];
+    }
+
+    function text(str, opt) {
+      opt = opt || {};
+      var size = opt.size || 10, font = opt.font || 'F1', mono = font === 'F3';
+      var color = opt.color || INK, indent = opt.indent || 0, lead = size * 1.45;
+      var x = ML + indent;
+      wrap(str, size, mono, indent).forEach(function (ln) {
+        ensure(lead);
+        cur().push({ x: x, y: y, size: size, font: font, color: color, text: ln });
+        y -= lead;
+      });
+    }
+    function gap(h) { ensure(h); y -= h; }
+    function rule() {
+      ensure(12); y -= 4;
+      cur().push({ rule: true, x0: ML, x1: PAGE_W - MR, y: y, color: RULE });
+      y -= 8;
+    }
+    function kv(label, value) {
+      var size = 10, lead = size * 1.45, lw = approxW(label, size, false);
+      // Si etiqueta + valor no caben en una línea, apila el valor indentado.
+      if (lw + 6 + approxW(value, size, true) > usableW) {
+        text(label, { size: size, font: 'F2', color: NAVY });
+        text(value, { size: size, font: 'F3', color: INK, indent: 12 });
+        return;
+      }
+      ensure(lead);
+      cur().push({ x: ML, y: y, size: size, font: 'F2', color: NAVY, text: label });
+      cur().push({ x: ML + lw + 6, y: y, size: size, font: 'F3', color: INK, text: value });
+      y -= lead;
+    }
+
+    // Renderiza la lista de bloques (DSL declarativo).
+    blocks.forEach(function (b) {
+      if (b.t === 'title') { text(b.v, { size: 19, font: 'F2', color: NAVY }); }
+      else if (b.t === 'h2') { gap(8); text(b.v, { size: 13, font: 'F2', color: NAVY }); gap(2); }
+      else if (b.t === 'small') { text(b.v, { size: 8.5, font: 'F1', color: GRAY }); }
+      else if (b.t === 'p') { text(b.v, { size: 10, font: 'F1', color: INK }); gap(2); }
+      else if (b.t === 'kv') { kv(b.k, b.v); }
+      else if (b.t === 'li') { text('•  ' + b.v, { size: 10, font: 'F1', color: INK, indent: 10 }); }
+      else if (b.t === 'rule') { rule(); }
+      else if (b.t === 'gap') { gap(b.v || 8); }
+    });
+
+    // ── Serializa a bytes PDF ──
+    var out = [], offsets = [];
+    function w(str) { var b = winAnsi(str); for (var i = 0; i < b.length; i++) out.push(b[i]); }
+    function obj(n) { offsets[n] = out.length; w(n + ' 0 obj\n'); }
+    function num(v) { return (Math.round(v * 100) / 100).toString(); }
+    function esc(s) { return s.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)'); }
+
+    w('%PDF-1.4\n%âãÏÓ\n');
+
+    // 1 Catalog, 2 Pages, 3-5 Fonts
+    obj(1); w('<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+
+    var next = 6, pageNums = [], contentNums = [];
+    for (var p = 0; p < pages.length; p++) { contentNums.push(next++); pageNums.push(next++); }
+
+    obj(2);
+    w('<< /Type /Pages /Count ' + pages.length + ' /Kids [');
+    w(pageNums.map(function (n) { return n + ' 0 R'; }).join(' '));
+    w('] >>\nendobj\n');
+
+    obj(3); w('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>\nendobj\n');
+    obj(4); w('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>\nendobj\n');
+    obj(5); w('<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>\nendobj\n');
+
+    for (var pi = 0; pi < pages.length; pi++) {
+      var stream = '';
+      pages[pi].forEach(function (r) {
+        var c = r.color || INK;
+        if (r.rule) {
+          stream += 'q 0.6 w ' + num(c[0]) + ' ' + num(c[1]) + ' ' + num(c[2]) + ' RG ' +
+            num(r.x0) + ' ' + num(r.y) + ' m ' + num(r.x1) + ' ' + num(r.y) + ' l S Q\n';
+        } else {
+          stream += 'BT /' + r.font + ' ' + num(r.size) + ' Tf ' +
+            num(c[0]) + ' ' + num(c[1]) + ' ' + num(c[2]) + ' rg ' +
+            num(r.x) + ' ' + num(r.y) + ' Td (' + esc(r.text) + ') Tj ET\n';
+        }
+      });
+      obj(contentNums[pi]);
+      w('<< /Length ' + winAnsi(stream).length + ' >>\nstream\n' + stream + 'endstream\nendobj\n');
+
+      obj(pageNums[pi]);
+      w('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + num(PAGE_W) + ' ' + num(PAGE_H) + '] ' +
+        '/Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> ' +
+        '/Contents ' + contentNums[pi] + ' 0 R >>\nendobj\n');
+    }
+
+    var xrefAt = out.length, count = next; // objetos 0..next-1
+    function pad(v, len) { var s = String(v); while (s.length < len) s = '0' + s; return s; }
+    w('xref\n0 ' + count + '\n0000000000 65535 f\r\n');
+    for (var o = 1; o < count; o++) w(pad(offsets[o] || 0, 10) + ' 00000 n\r\n');
+    w('trailer\n<< /Size ' + count + ' /Root 1 0 R >>\nstartxref\n' + xrefAt + '\n%%EOF');
+
+    return new Uint8Array(out);
+  }
+
+  // Arma el contenido de la ficha desde el estado simulado actual.
+  function exportInfraPDF() {
+    var BAND_LABELS = { '2G': '2G · GSM 900', '3G': '3G · UMTS 2100', '4G': '4G · LTE B3', '5G': '5G · NR n78' };
+    var enabled = Object.keys(state.bands).filter(function (k) { return state.bands[k]; })
+      .map(function (k) { return BAND_LABELS[k] || k; });
+    var modo = state.mode === 'active' ? 'ACTIVO (emisión, simulado)' : 'PASIVO (solo escucha, simulado)';
+
+    var blocks = [
+      { t: 'title', v: 'Ficha de Infraestructura — RF Recon Console' },
+      { t: 'small', v: 'Blueprint UX · SURA Investments · uxtools' },
+      { t: 'small', v: 'Generado: ' + new Date().toLocaleString('es-CL', { hour12: false }) + ' · documento de diseño, no operativo' },
+      { t: 'rule' },
+
+      { t: 'h2', v: 'Aviso — prototipo con datos simulados' },
+      { t: 'p', v: 'Este documento describe el MODELO de infraestructura representado en la maqueta de interfaz RF Recon Console. Los valores, antenas y componentes son representaciones de diseño con datos sintéticos. La página no controla hardware, no emite ni capta radiofrecuencia y no intercepta comunicaciones. No constituye una guía de despliegue ni una lista de materiales para construir un sistema real.' },
+      { t: 'rule' },
+
+      { t: 'h2', v: '1. Estación de la maqueta (Panel A)' },
+      { t: 'p', v: 'Indicadores de estado que la interfaz muestra al operador. Todos los valores son sintéticos y se actualizan en el cliente.' },
+      { t: 'kv', k: 'Estado SDR:', v: 'CONECTADO (simulado)' },
+      { t: 'kv', k: 'Temperatura del equipo:', v: hw.temp + ' °C' },
+      { t: 'kv', k: 'Batería:', v: hw.batt + ' %' },
+      { t: 'kv', k: 'RSSI (nivel de señal):', v: hw.rssi + ' dBm' },
+      { t: 'kv', k: 'Nivel de ruido:', v: hw.noise + ' %' },
+      { t: 'p', v: 'Regla de UX simulada: el nivel de ruido sube con la ganancia de antena; al saturar, la interfaz abstrae el error técnico en una alerta accionable.' },
+
+      { t: 'h2', v: '2. Antena y cadena de RF (modelo de UI)' },
+      { t: 'p', v: 'Parámetros que la maqueta expone como controles. Son abstracciones de diseño, sin especificación física real.' },
+      { t: 'kv', k: 'Ganancia de antena:', v: state.gain + ' dB (rango configurable 0–60 dB)' },
+      { t: 'kv', k: 'Potencia de transmisión (Tx):', v: state.txPower + ' dBm (rango 0–43 dBm)' },
+      { t: 'kv', k: 'Modo de operación:', v: modo },
+      { t: 'gap', v: 4 },
+      { t: 'p', v: 'Componentes representados en la interfaz (nivel conceptual):' },
+      { t: 'li', v: 'Antena multibanda (representación de UI): elemento receptor con ganancia ajustable simulada.' },
+      { t: 'li', v: 'Cadena de recepción / front-end RF: bloque conceptual reducido en la maqueta a indicadores de RSSI y ruido.' },
+      { t: 'li', v: 'SDR (Software Defined Radio): nodo de UI con estado simulado — conexión, temperatura y batería.' },
+      { t: 'li', v: 'Consola de control: la propia interfaz web de esta página (cliente, sin backend).' },
+
+      { t: 'h2', v: '3. Bandas y celda (parámetros de la maqueta)' },
+      { t: 'kv', k: 'Bandas habilitadas:', v: enabled.length ? enabled.join('  ·  ') : '— (ninguna)' },
+      { t: 'kv', k: 'MCC · Mobile Country Code:', v: state.cell.mcc || '—' },
+      { t: 'kv', k: 'MNC · Mobile Network Code:', v: state.cell.mnc || '—' },
+      { t: 'kv', k: 'LAC · Location Area Code:', v: state.cell.lac || '—' },
+      { t: 'kv', k: 'TAC · Tracking Area Code:', v: state.cell.tac || '—' },
+
+      { t: 'h2', v: '4. Topología web ↔ móvil (conceptual)' },
+      { t: 'p', v: 'En este blueprint, la "web" es la consola del operador y el "móvil" aparece únicamente como identidades sintéticas en la tabla de capturas. No existe ningún enlace real con el teléfono de ninguna persona: no hay emparejamiento, ni captura, ni canal de datos hacia dispositivos externos. La topología se documenta solo como diagrama de diseño de la experiencia.' },
+      { t: 'rule' },
+      { t: 'small', v: 'Documento generado en el navegador (cliente). Sin telemetría. Datos sintéticos. No apto para uso operativo.' }
+    ];
+
+    var bytes = buildInfraPDF(blocks);
+    downloadBytes('recon-infraestructura-' + Date.now() + '.pdf', bytes, 'application/pdf');
+  }
+
   /* ── Phase navigation ─────────────────────────────────────── */
   function setPhase(n) {
     state.phase = n;
@@ -599,6 +808,7 @@
     // Export
     var cCSV = $('#exp-csv'); if (cCSV) cCSV.addEventListener('click', exportCSV);
     var cJSON = $('#exp-json'); if (cJSON) cJSON.addEventListener('click', exportJSON);
+    var cPDF = $('#exp-pdf'); if (cPDF) cPDF.addEventListener('click', exportInfraPDF);
     var cPCAP = $('#exp-pcap');
     if (cPCAP) cPCAP.addEventListener('click', function () {
       showAlert('warn', 'PCAP de tráfico requiere captura real de red — no disponible en el prototipo. Exporta metadatos en CSV/JSON.', null);
