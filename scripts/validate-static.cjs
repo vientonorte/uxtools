@@ -74,10 +74,12 @@ function validateCriticalFiles() {
 function validateProductionIndex() {
   var html = read(path.join(ROOT, 'index.html'));
   if (/src\/main\.tsx/i.test(html)) {
-    fail('index.html must not reference src/main.tsx — use static hub or app.html for React');
+    fail('index.html must not reference src/main.tsx — run npm run publish:legacy');
   }
-  if (!/<main\b/i.test(html)) {
-    fail('index.html must contain a static <main> hub for GitHub Pages legacy deploy');
+  var isReactDashboard = /id=["']root["']/.test(html);
+  var isStaticHub = /<main\b/i.test(html);
+  if (!isReactDashboard && !isStaticHub) {
+    fail('index.html must be a React dashboard (#root) or static hub (<main>)');
   }
 }
 
