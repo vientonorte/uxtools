@@ -8,7 +8,6 @@ var ROOT = path.join(__dirname, '..');
 var DIST = path.join(ROOT, 'dist');
 
 var STATIC_HTML = [
-  'index.html',
   'benchmark.html',
   'uxflow.html',
   'eisenhower.html',
@@ -37,6 +36,15 @@ function copyDir(srcDir, destDir) {
 console.log('Building React app (app.html)...');
 execSync('npm run build', { cwd: ROOT, stdio: 'inherit' });
 
+var builtApp = path.join(DIST, 'app.html');
+if (!fs.existsSync(builtApp)) {
+  console.error('ERROR: dist/app.html not found after build');
+  process.exit(1);
+}
+
+console.log('Publishing Vite build as index.html...');
+copyFile(builtApp, path.join(DIST, 'index.html'));
+
 console.log('Merging static suite into dist/...');
 STATIC_HTML.forEach(function (file) {
   copyFile(path.join(ROOT, file), path.join(DIST, file));
@@ -54,6 +62,27 @@ var indexHtml = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
 if (/src\/main\.tsx/i.test(indexHtml)) {
   console.error('ERROR: dist/index.html still references src/main.tsx');
   process.exit(1);
+}
+if (!/id=["']root["']/.test(indexHtml)) {
+  console.error('ERROR: dist/index.html missing React root');
+  process.exit(1);
+}
+
+var VITE_BASE = '/uxtools/';
+var assetRegex = /(?:src|href)=["']([^"']+)["']/gi;
+var match;
+while ((match = assetRegex.exec(indexHtml))) {
+  var assetPath = match[1];
+  if (/^(https?:)?\/\//i.test(assetPath)) continue;
+  var localPath = assetPath.startsWith(VITE_BASE)
+    ? assetPath.slice(VITE_BASE.length)
+    : assetPath.replace(/^\//, '');
+  if (!localPath.startsWith('assets/')) continue;
+  var target = path.join(DIST, localPath);
+  if (!fs.existsSync(target)) {
+    console.error('ERROR: dist/index.html references missing asset: ' + assetPath);
+    process.exit(1);
+  }
 }
 
 console.log('Pages build ready in dist/');
