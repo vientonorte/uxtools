@@ -18,6 +18,7 @@ export interface ScoreEntry {
 export interface BenchmarkSession {
   id: number;
   nombre: string;
+  version?: number;
   analista: string;
   fecha: string;
   dimensiones: Dimension[];

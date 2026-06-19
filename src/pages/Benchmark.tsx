@@ -1,13 +1,18 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useBenchmark } from '../contexts/BenchmarkContext';
 import { RadarChart } from '../components/benchmark/RadarChart';
+import { BenchmarkSidebar } from '../components/benchmark/BenchmarkSidebar';
 import { useToast } from '../hooks/useToast';
 import { ToastContainer } from '../components/Toast';
 import { COLORES } from '../types/benchmark';
 import type { Product, ScoreEntry } from '../types/benchmark';
 
 /* ─── Step 1: Config + Products ──────────────────────────── */
-function Step1() {
+function Step1({
+  advanceValidateRef,
+}: {
+  advanceValidateRef: React.MutableRefObject<() => boolean>;
+}) {
   const { state, dimensiones, setConfig, setProductos, setPaso } = useBenchmark();
   const [nombre, setNombre] = useState(state.config.nombre);
   const [analista, setAnalista] = useState(state.config.analista);
@@ -28,11 +33,26 @@ function Step1() {
   const removeProducto = (id: number) =>
     setLocalProductos((prev) => prev.filter((p) => p.id !== id));
 
-  const handleContinuar = () => {
-    if (!nombre.trim()) { alert('El nombre del benchmark es requerido.'); return; }
-    if (productos.length < 2) { alert('Agrega al menos 2 productos para comparar.'); return; }
+  const validateAndSync = () => {
+    if (!nombre.trim()) {
+      alert('El nombre del benchmark es requerido.');
+      return false;
+    }
+    if (productos.length < 2) {
+      alert('Agrega al menos 2 productos para comparar.');
+      return false;
+    }
     setConfig({ nombre: nombre.trim(), analista: analista.trim() });
     setProductos(productos);
+    return true;
+  };
+
+  useEffect(() => {
+    advanceValidateRef.current = validateAndSync;
+  });
+
+  const handleContinuar = () => {
+    if (!validateAndSync()) return;
     setPaso(2);
   };
 
@@ -154,8 +174,8 @@ function Step2() {
   };
 
   const handleGuardar = () => {
-    guardarSesion();
-    showToast('✓ Sesión guardada en el historial');
+    const version = guardarSesion();
+    showToast(`✓ Sesión guardada en el historial (v${version})`);
     setPaso(3);
   };
 
@@ -183,7 +203,6 @@ function Step2() {
         </span>
       </div>
 
-      {/* Dimension tabs */}
       <div className="dim-tabs" role="tablist" aria-label="Dimensiones">
         {activeDims.map((dim, i) => {
           const filled = state.productos.filter(
@@ -209,7 +228,6 @@ function Step2() {
         })}
       </div>
 
-      {/* Evaluation panel */}
       <div className="eval-panel" role="tabpanel" aria-label={currentDim.label}>
         <h3 className="eval-dim-title">{currentDim.label}</h3>
         <div className="eval-products">
@@ -324,7 +342,6 @@ function Step3() {
       </div>
 
       <div className="results-grid">
-        {/* Radar chart */}
         <div className="results-chart-wrap">
           <RadarChart
             dimensiones={dimensiones}
@@ -332,7 +349,6 @@ function Step3() {
             scores={state.scores}
             size={280}
           />
-          {/* Legend */}
           <div className="radar-legend" aria-label="Leyenda del radar">
             {state.productos.map((prod, idx) => (
               <div key={prod.id} className="legend-item">
@@ -347,7 +363,6 @@ function Step3() {
           </div>
         </div>
 
-        {/* Ranking table */}
         <div className="results-table-wrap">
           <table className="results-table" aria-label="Ranking de productos">
             <thead>
@@ -383,24 +398,6 @@ function Step3() {
         </div>
       </div>
 
-      {/* Previous sessions */}
-      {state.historial.length > 0 && (
-        <section className="bm-historial" aria-label="Historial de benchmarks">
-          <h3 className="bm-historial-title">Benchmarks guardados</h3>
-          <div className="historial-list">
-            {state.historial.map((s) => (
-              <div key={s.id} className="historial-item">
-                <div className="historial-item-body">
-                  <strong>{s.nombre}</strong>
-                  <span className="historial-meta">{s.analista && `${s.analista} · `}{s.fecha}</span>
-                </div>
-                <span className="historial-badge">{s.productos.length} prod</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       <div className="bm-step-actions">
         <button className="btn-outline" onClick={() => setPaso(2)} type="button">
           ← Volver a evaluación
@@ -412,26 +409,52 @@ function Step3() {
 
 /* ─── Main Benchmark page ─────────────────────────────────── */
 export default function Benchmark() {
-  const { state } = useBenchmark();
+  const { state, setPaso } = useBenchmark();
+  const advanceRef = useRef<() => boolean>(() => false);
+
+  const handleAdvance = () => {
+    if (state.paso === 1) {
+      if (!advanceRef.current()) return false;
+    }
+    return true;
+  };
+
+  const stepLabel = ['Configuración', 'Evaluación', 'Resultados'][state.paso - 1];
+  const today = new Date().toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 
   return (
-    <main className="bm-main" id="main" tabIndex={-1}>
-      {/* Progress bar */}
-      <div className="bm-progress" role="progressbar" aria-valuenow={state.paso} aria-valuemin={1} aria-valuemax={3} aria-label="Progreso del benchmark">
-        {([1, 2, 3] as const).map((step) => (
-          <div key={step} className={`bm-progress-step${state.paso >= step ? ' done' : ''}${state.paso === step ? ' active' : ''}`}>
-            <div className="bm-progress-dot">{step}</div>
-            <div className="bm-progress-label">
-              {step === 1 ? 'Configuración' : step === 2 ? 'Evaluación' : 'Resultados'}
-            </div>
-          </div>
-        ))}
-        <div className="bm-progress-line" style={{ width: `${((state.paso - 1) / 2) * 100}%` }} aria-hidden="true" />
-      </div>
+    <div className="bm-app-shell">
+      <BenchmarkSidebar onAdvance={handleAdvance} />
 
-      {state.paso === 1 && <Step1 />}
-      {state.paso === 2 && <Step2 />}
-      {state.paso === 3 && <Step3 />}
-    </main>
+      <main className="bm-canvas" id="main" tabIndex={-1}>
+        <div className="bm-canvas-header">
+          <div className="bm-canvas-meta">
+            <span className="bm-status-dot" aria-hidden="true" />
+            Paso {state.paso} de 3 — {stepLabel}
+          </div>
+          <div className="bm-canvas-meta">{today}</div>
+        </div>
+
+        <div className="bm-progress" role="progressbar" aria-valuenow={state.paso} aria-valuemin={1} aria-valuemax={3} aria-label="Progreso del benchmark">
+          {([1, 2, 3] as const).map((step) => (
+            <div key={step} className={`bm-progress-step${state.paso >= step ? ' done' : ''}${state.paso === step ? ' active' : ''}`}>
+              <div className="bm-progress-dot">{step}</div>
+              <div className="bm-progress-label">
+                {step === 1 ? 'Configuración' : step === 2 ? 'Evaluación' : 'Resultados'}
+              </div>
+            </div>
+          ))}
+          <div className="bm-progress-line" style={{ width: `${((state.paso - 1) / 2) * 100}%` }} aria-hidden="true" />
+        </div>
+
+        {state.paso === 1 && <Step1 advanceValidateRef={advanceRef} />}
+        {state.paso === 2 && <Step2 />}
+        {state.paso === 3 && <Step3 />}
+      </main>
+    </div>
   );
 }

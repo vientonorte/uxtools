@@ -21,7 +21,7 @@ interface BenchmarkContextValue {
   setProductos: (productos: Product[]) => void;
   setScore: (dimId: string, prodId: number, entry: ScoreEntry) => void;
   setNota: (dimId: string, prodId: number, nota: string) => void;
-  guardarSesion: () => void;
+  guardarSesion: () => number;
   cargarSesion: (session: BenchmarkSession) => void;
   nuevoBenchmark: () => void;
   eliminarSesion: (id: number) => void;
@@ -83,9 +83,13 @@ export function BenchmarkProvider({ children }: { children: ReactNode }) {
       month: 'short',
       year: 'numeric',
     });
+    const nombre = state.config.nombre || 'Benchmark sin título';
+    const version =
+      state.historial.filter((h) => h.nombre === nombre).length + 1;
     const session: BenchmarkSession = {
       id: now.getTime(),
-      nombre: state.config.nombre || 'Benchmark sin título',
+      nombre,
+      version,
       analista: state.config.analista,
       fecha,
       dimensiones: dimensiones.filter((d) => d.active),
@@ -95,19 +99,20 @@ export function BenchmarkProvider({ children }: { children: ReactNode }) {
     };
     setState((s) => ({
       ...s,
-      historial: [session, ...s.historial],
+      historial: [session, ...s.historial].slice(0, 10),
     }));
+    return version;
   }, [state, dimensiones, setState]);
 
   const cargarSesion = useCallback(
     (session: BenchmarkSession) => {
       setState((s) => ({
         ...s,
-        paso: 3,
+        paso: 1,
         config: { nombre: session.nombre, analista: session.analista },
         productos: session.productos,
         scores: session.scores,
-        notas: session.notas,
+        notas: session.notas ?? {},
       }));
     },
     [setState]
