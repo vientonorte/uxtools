@@ -1,6 +1,6 @@
 import { buildFlowModel } from './uxflow-engine';
-import { UXFLOW_STORAGE_KEY } from '../types/uxflow';
-import type { FlowModel, UxflowSession } from '../types/uxflow';
+import { UXFLOW_STORAGE_KEY, UXFLOW_TEMPLATES_KEY } from '../types/uxflow';
+import type { Criterion, EdgeCase, FlowModel, FlowStep, UxflowSession, UxflowTemplate } from '../types/uxflow';
 
 export const UXFLOW_HISTORY_LIMIT = 20;
 
@@ -23,6 +23,111 @@ type LegacyFlow = Partial<FlowModel> & {
   criteria?: FlowModel['criteria'];
   edgeCases?: FlowModel['edgeCases'];
 };
+
+function normalizeSteps(steps: unknown[], actor: string, goal: string): FlowStep[] {
+  return steps.map((raw, index) => {
+    if (raw && typeof raw === 'object' && 'action' in raw) {
+      const step = raw as FlowStep;
+      return {
+        id: Number(step.id) || index + 1,
+        actor: String(step.actor ?? actor),
+        action: String(step.action ?? goal),
+        channel: String(step.channel ?? 'UI'),
+        decision: String(step.decision ?? '—'),
+      };
+    }
+
+    const legacy = raw as { label?: string; detail?: string };
+    return {
+      id: index + 1,
+      actor,
+      action: String(legacy.detail ?? legacy.label ?? `Paso ${index + 1}`),
+      channel: 'UI',
+      decision: String(legacy.label ?? '—'),
+    };
+  });
+}
+
+function normalizeCriteria(criteria: unknown[]): Criterion[] {
+  return criteria
+    .map((raw, index) => {
+      if (typeof raw === 'string') {
+        return { id: index + 1, category: 'UX', description: raw };
+      }
+      if (!raw || typeof raw !== 'object') return null;
+      const criterion = raw as Criterion;
+      const description = String(criterion.description ?? '').trim();
+      if (!description) return null;
+      return {
+        id: Number(criterion.id) || index + 1,
+        category: String(criterion.category ?? 'UX'),
+        description,
+      };
+    })
+    .filter((item): item is Criterion => Boolean(item));
+}
+
+function normalizeEdgeCases(edgeCases: unknown[]): EdgeCase[] {
+  return edgeCases.map((raw, index) => {
+    if (typeof raw === 'string') {
+      return {
+        id: index + 1,
+        trigger: raw,
+        impact: 'medio',
+        mitigation: 'Definir manejo en diseño y validar en QA',
+      };
+    }
+
+    const edgeCase = (raw ?? {}) as Partial<EdgeCase>;
+    const impact =
+      edgeCase.impact === 'alto' || edgeCase.impact === 'medio' || edgeCase.impact === 'bajo'
+        ? edgeCase.impact
+        : 'medio';
+
+    return {
+      id: Number(edgeCase.id) || index + 1,
+      trigger: String(edgeCase.trigger ?? 'Caso borde'),
+      impact,
+      mitigation: String(edgeCase.mitigation ?? 'Definir manejo en diseño y validar en QA'),
+    };
+  });
+}
+
+function normalizeFlowModel(
+  flow: LegacyFlow,
+  entry: Record<string, unknown>,
+  model: Record<string, unknown> | undefined,
+  prompt: string,
+  linea: string
+): FlowModel {
+  const actor = String(flow.actor ?? model?.actor ?? 'Usuario autenticado');
+  const goal = String(flow.goal ?? model?.goal ?? extractGoalFallback(prompt));
+  const steps = Array.isArray(flow.steps) && flow.steps.length
+    ? normalizeSteps(flow.steps, actor, goal)
+    : [];
+  const criteria = Array.isArray(flow.criteria) && flow.criteria.length
+    ? normalizeCriteria(flow.criteria)
+    : [];
+  const edgeCases = Array.isArray(flow.edgeCases)
+    ? normalizeEdgeCases(flow.edgeCases)
+    : [];
+
+  if (steps.length && criteria.length) {
+    return {
+      actor,
+      goal,
+      linea,
+      countries: parseCountries(entry, flow),
+      steps,
+      criteria,
+      edgeCases,
+    };
+  }
+
+  const rebuilt = buildFlowModel(prompt, linea, String(entry.paises ?? ''));
+  rebuilt.linea = linea;
+  return rebuilt;
+}
 
 function parseCountries(entry: Record<string, unknown>, flow: LegacyFlow): string[] {
   if (Array.isArray(flow.countries) && flow.countries.length) return flow.countries;
@@ -53,15 +158,7 @@ export function sanitizeUxflowSession(entry: unknown): UxflowSession | null {
     legacyFlow.steps.length &&
     Array.isArray(legacyFlow.criteria)
   ) {
-    flow = {
-      actor: String(legacyFlow.actor ?? model?.actor ?? 'Usuario autenticado'),
-      goal: String(legacyFlow.goal ?? model?.goal ?? extractGoalFallback(prompt)),
-      linea,
-      countries: parseCountries(e, legacyFlow),
-      steps: legacyFlow.steps,
-      criteria: legacyFlow.criteria,
-      edgeCases: Array.isArray(legacyFlow.edgeCases) ? legacyFlow.edgeCases : [],
-    };
+    flow = normalizeFlowModel(legacyFlow, e, model, prompt, linea);
   } else if (prompt) {
     flow = buildFlowModel(prompt, linea, String(e.paises ?? ''));
     flow.linea = linea;
@@ -83,6 +180,31 @@ export function sanitizeUxflowSession(entry: unknown): UxflowSession | null {
 
 function extractGoalFallback(prompt: string): string {
   return prompt.slice(0, 80) || 'Flujo UX';
+}
+
+export function loadUxflowTemplates(): UxflowTemplate[] {
+  try {
+    const raw = localStorage.getItem(UXFLOW_TEMPLATES_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((entry) => {
+        if (!entry || typeof entry !== 'object') return null;
+        const template = entry as Partial<UxflowTemplate>;
+        const prompt = String(template.prompt ?? '').trim();
+        if (!prompt) return null;
+        return {
+          id: Number(template.id) || Date.now(),
+          nombre: String(template.nombre ?? 'Template').trim() || 'Template',
+          prompt,
+          fecha: String(template.fecha ?? ''),
+        };
+      })
+      .filter((item): item is UxflowTemplate => Boolean(item));
+  } catch {
+    return [];
+  }
 }
 
 export function loadUxflowSessions(): UxflowSession[] {

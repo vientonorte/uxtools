@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useToast } from '../hooks/useToast';
 import { ToastContainer } from '../components/Toast';
 import { buildFlowModel, extractGoal } from '../lib/uxflow-engine';
 import {
   loadUxflowSessions,
+  loadUxflowTemplates,
   persistUxflowSessions,
   nextUxflowSessionId,
   UXFLOW_HISTORY_LIMIT,
@@ -131,8 +131,8 @@ function FlowDocument({ flow, titulo }: { flow: FlowModel; titulo: string }) {
                 <tr><th>Categoría</th><th>Criterio</th></tr>
               </thead>
               <tbody>
-                {flow.criteria.map((c) => (
-                  <tr key={c.id}>
+                {flow.criteria.map((c, index) => (
+                  <tr key={c.id ?? index}>
                     <td><span className="criterion-cat">{c.category}</span></td>
                     <td>{c.description}</td>
                   </tr>
@@ -144,15 +144,18 @@ function FlowDocument({ flow, titulo }: { flow: FlowModel; titulo: string }) {
 
         {activeTab === 'analytics' && (
           <div className="flow-edge-cases">
-            {flow.edgeCases.map((ec) => (
-              <div key={ec.id} className={`edge-case impact-${ec.impact}`}>
-                <div className="edge-case-header">
-                  <strong>{ec.trigger}</strong>
-                  <span className={`impact-badge ${ec.impact}`}>{ec.impact.toUpperCase()}</span>
+            {flow.edgeCases.map((ec, index) => {
+              const impact = ec.impact ?? 'medio';
+              return (
+                <div key={ec.id ?? index} className={`edge-case impact-${impact}`}>
+                  <div className="edge-case-header">
+                    <strong>{ec.trigger}</strong>
+                    <span className={`impact-badge ${impact}`}>{impact.toUpperCase()}</span>
+                  </div>
+                  <p className="edge-case-mitigation">Mitigación: {ec.mitigation ?? 'Definir en diseño'}</p>
                 </div>
-                <p className="edge-case-mitigation">Mitigación: {ec.mitigation}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -216,7 +219,7 @@ function HistoryGrid({
 /* ─── Main UxFlow page ────────────────────────────────────── */
 export default function UxFlow() {
   const [sessions, setSessions] = useState<UxflowSession[]>(() => loadUxflowSessions());
-  const [templates, setTemplates] = useLocalStorage<UxflowTemplate[]>(UXFLOW_TEMPLATES_KEY, []);
+  const [templates, setTemplates] = useState<UxflowTemplate[]>(() => loadUxflowTemplates());
   const { showToast, toasts, dismissToast } = useToast();
 
   const [prompt, setPrompt] = useState('');
@@ -269,7 +272,13 @@ export default function UxFlow() {
       prompt,
       fecha: new Date().toLocaleDateString('es-CL'),
     };
-    setTemplates((prev) => [t, ...prev]);
+    const next = [t, ...templates];
+    setTemplates(next);
+    try {
+      localStorage.setItem(UXFLOW_TEMPLATES_KEY, JSON.stringify(next));
+    } catch {
+      // quota exceeded
+    }
     showToast('✓ Template guardado');
   };
 

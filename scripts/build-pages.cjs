@@ -16,6 +16,7 @@ var STATIC_HTML = [
 ];
 
 var STATIC_DIRS = ['css', 'js'];
+var STATIC_FILES = ['sw.js', 'manifest.json'];
 
 function copyFile(src, dest) {
   fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -52,6 +53,11 @@ STATIC_HTML.forEach(function (file) {
 
 STATIC_DIRS.forEach(function (dir) {
   copyDir(path.join(ROOT, dir), path.join(DIST, dir));
+});
+
+STATIC_FILES.forEach(function (file) {
+  var src = path.join(ROOT, file);
+  if (fs.existsSync(src)) copyFile(src, path.join(DIST, file));
 });
 
 if (fs.existsSync(path.join(ROOT, '.nojekyll'))) {
