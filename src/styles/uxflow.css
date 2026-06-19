@@ -220,18 +220,147 @@
 .impact-badge.bajo { background: rgba(42,154,90,0.2); color: var(--score-hi); }
 .edge-case-mitigation { font-size: 13px; color: rgba(255,255,255,0.6); line-height: 1.5; }
 
-/* ── HISTORY ─────────────────────────────────────────────── */
-.uxflow-history { display: flex; flex-direction: column; gap: var(--space-3); }
-.history-item {
-  display: flex; align-items: center; gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
-  background: var(--surface-glass);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+/* ── MODE BANNER ─────────────────────────────────────────── */
+.uxflow-mode-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
   flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-5);
+  background: rgba(0,181,226,0.08);
+  border: 1px solid rgba(0,181,226,0.22);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
 }
-.history-item-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.history-item-actions { display: flex; gap: var(--space-2); }
+.uxflow-mode-link {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cyan);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.uxflow-mode-link:hover { text-decoration: underline; }
+
+.uxflow-screenshot-preview,
+.uxflow-screenshot-display {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.uxflow-screenshot-preview img,
+.uxflow-screenshot-display img {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+/* ── HISTORY (shared with uxflow.html) ─────────────────── */
+.history-section { margin-top: var(--space-8); }
+.history-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.history-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+}
+.history-shared-note {
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  text-transform: none;
+  color: rgba(255,255,255,0.45);
+  font-weight: 400;
+}
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+.history-card-wrap {
+  position: relative;
+}
+.history-card {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  color: inherit;
+}
+.history-card:hover {
+  background: rgba(0,181,226,0.07);
+  border-color: rgba(0,181,226,0.3);
+}
+.history-card-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 4px;
+}
+.history-card-date {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+.history-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.history-chip {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+.history-card-delete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.35);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+.history-card-delete:hover {
+  color: var(--error);
+  border-color: rgba(255,107,107,0.4);
+}
+.empty-history {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  padding: 8px 0;
+}
 
 @media (max-width: 900px) {
   .uxflow-body { grid-template-columns: 1fr; }

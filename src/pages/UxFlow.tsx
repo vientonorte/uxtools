@@ -2,116 +2,23 @@ import { useState } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useToast } from '../hooks/useToast';
 import { ToastContainer } from '../components/Toast';
+import { buildFlowModel, extractGoal } from '../lib/uxflow-engine';
+import {
+  loadUxflowSessions,
+  persistUxflowSessions,
+  nextUxflowSessionId,
+  UXFLOW_HISTORY_LIMIT,
+} from '../lib/uxflow-storage';
 import {
   LINEA_OPTIONS,
   COUNTRY_FLAGS,
   COUNTRY_PHONES,
-  UXFLOW_STORAGE_KEY,
   UXFLOW_TEMPLATES_KEY,
 } from '../types/uxflow';
-import type { FlowModel, FlowStep, Criterion, EdgeCase, UxflowSession, UxflowTemplate } from '../types/uxflow';
+import type { FlowModel, UxflowSession, UxflowTemplate } from '../types/uxflow';
 
-/* ─── Parsing helpers ─────────────────────────────────────── */
-const COUNTRIES = Object.keys(COUNTRY_FLAGS);
-
-function extractActor(prompt: string): string {
-  const m = prompt.match(/(?:usuario|cliente|usuario\s+\w+|investor|ejecutivo)\s+(\w+)/i);
-  if (m) return m[0];
-  if (/wealth/i.test(prompt)) return 'Cliente Wealth Management';
-  if (/corporate/i.test(prompt)) return 'Ejecutivo corporativo';
-  if (/investment/i.test(prompt)) return 'Investor';
-  return 'Usuario autenticado';
-}
-
-function extractGoal(prompt: string): string {
-  const m = prompt.match(/(?:quiere?|necesita?|busca?|desea?)\s+(.+?)(?:\.|,|$)/i);
-  return m ? m[1].trim() : prompt.trim().slice(0, 80);
-}
-
-function inferLinea(prompt: string): string {
-  if (/wealth/i.test(prompt)) return 'Wealth Management';
-  if (/corporate/i.test(prompt)) return 'Corporate Solutions';
-  if (/investment/i.test(prompt)) return 'Investment Management';
-  return 'Otro';
-}
-
-function inferCountries(prompt: string): string[] {
-  const found = COUNTRIES.filter((c) => new RegExp(c, 'i').test(prompt));
-  return found.length > 0 ? found : ['Chile'];
-}
-
-function detectEdgeCases(prompt: string): EdgeCase[] {
-  const cases: EdgeCase[] = [];
-  if (/biométr|faceid|touch id/i.test(prompt))
-    cases.push({ id: 1, trigger: 'Fallo de biometría', impact: 'alto', mitigation: 'Fallback a PIN/contraseña' });
-  if (/sesión|session|token/i.test(prompt))
-    cases.push({ id: 2, trigger: 'Sesión expirada', impact: 'medio', mitigation: 'Redirigir al login con mensaje claro' });
-  if (/document|pdf|adjunto/i.test(prompt))
-    cases.push({ id: 3, trigger: 'Error de carga de documento', impact: 'alto', mitigation: 'Reintentar con feedback visual' });
-  if (/conexión|offline|red/i.test(prompt))
-    cases.push({ id: 4, trigger: 'Sin conexión a internet', impact: 'alto', mitigation: 'Modo offline con caché y banner de estado' });
-  if (/celular|phone|sms|otp/i.test(prompt))
-    cases.push({ id: 5, trigger: 'Número de teléfono null o inválido', impact: 'medio', mitigation: 'Mostrar lista de países disponibles; Perú sin formato definido' });
-  if (cases.length === 0)
-    cases.push({ id: 1, trigger: 'Error de validación de datos', impact: 'medio', mitigation: 'Mensajes inline con foco en el campo incorrecto' });
-  return cases;
-}
-
-function detectSteps(prompt: string, actor: string, linea: string): FlowStep[] {
-  const steps: FlowStep[] = [
-    { id: 1, actor, action: `Accede a la funcionalidad de ${extractGoal(prompt)}`, channel: 'Web / App móvil', decision: 'Autenticado' },
-    { id: 2, actor: 'Sistema', action: 'Valida sesión activa y permisos', channel: 'Backend', decision: 'Sesión válida → continúa; Expirada → login' },
-    { id: 3, actor, action: 'Completa formulario o selección requerida', channel: 'UI', decision: 'Datos válidos' },
-    { id: 4, actor: 'Sistema', action: `Procesa solicitud en plataforma ${linea}`, channel: 'API', decision: 'Exitoso → confirmación; Error → rollback' },
-    { id: 5, actor, action: 'Recibe confirmación y puede descargar o exportar', channel: 'UI / Email', decision: 'Fin del flujo' },
-  ];
-
-  if (/docum|pdf|adjunt/i.test(prompt)) {
-    steps.splice(3, 0, {
-      id: 35,
-      actor,
-      action: 'Adjunta documentos requeridos',
-      channel: 'UI — file upload',
-      decision: 'Formato válido (PDF, JPG ≤ 10MB)',
-    });
-  }
-  if (/otp|sms|2fa/i.test(prompt)) {
-    steps.splice(2, 0, {
-      id: 25,
-      actor,
-      action: 'Ingresa código OTP recibido por SMS',
-      channel: 'App móvil',
-      decision: 'Código válido → continúa; Expirado → reenviar',
-    });
-  }
-
-  return steps.map((s, i) => ({ ...s, id: i + 1 }));
-}
-
-function buildCriteria(prompt: string, linea: string): Criterion[] {
-  const base: Criterion[] = [
-    { id: 1, category: 'Funcional', description: `El flujo completo se ejecuta sin errores en plataforma ${linea}` },
-    { id: 2, category: 'Accesibilidad', description: 'WCAG 2.2 AA: foco visible, etiquetas ARIA, contraste ≥ 4.5:1' },
-    { id: 3, category: 'Performance', description: 'Carga inicial < 3s en 4G; LCP < 2.5s' },
-    { id: 4, category: 'UX', description: 'Tiempo en tarea ≤ 5 min para usuario objetivo; tasa de error < 5%' },
-  ];
-  if (/mobil|cel/i.test(prompt))
-    base.push({ id: 5, category: 'Mobile', description: 'Touch targets ≥ 44px; funcional desde 360px sin scroll horizontal' });
-  if (/segur|auth|login/i.test(prompt))
-    base.push({ id: 6, category: 'Seguridad', description: 'Tokens de sesión con expiración; sin datos sensibles en localStorage' });
-  return base;
-}
-
-function buildFlowModel(prompt: string): FlowModel {
-  const actor = extractActor(prompt);
-  const goal = extractGoal(prompt);
-  const linea = inferLinea(prompt);
-  const countries = inferCountries(prompt);
-  const steps = detectSteps(prompt, actor, linea);
-  const criteria = buildCriteria(prompt, linea);
-  const edgeCases = detectEdgeCases(prompt);
-  return { actor, goal, linea, countries, steps, criteria, edgeCases };
-}
+const STATIC_UXFLOW_URL = 'uxflow.html#historial';
+const UXFLOW_SCREENSHOT_MAX_DIM = 1200;
 
 /* ─── Flow Document component ─────────────────────────────── */
 function FlowDocument({ flow, titulo }: { flow: FlowModel; titulo: string }) {
@@ -253,25 +160,87 @@ function FlowDocument({ flow, titulo }: { flow: FlowModel; titulo: string }) {
   );
 }
 
+function HistoryGrid({
+  sessions,
+  onLoad,
+  onDelete,
+}: {
+  sessions: UxflowSession[];
+  onLoad: (s: UxflowSession) => void;
+  onDelete: (id: number) => void;
+}) {
+  if (!sessions.length) {
+    return (
+      <div className="empty-history">
+        Sin activos guardados aún. Genera y guarda tu primer documento.
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {sessions.map((s) => {
+        const steps = s.flow?.steps?.length ?? 0;
+        const edgeCases = s.flow?.edgeCases?.length ?? 0;
+        return (
+          <div key={s.id} className="history-card-wrap">
+            <button
+              type="button"
+              className="history-card"
+              onClick={() => onLoad(s)}
+              title={`Cargar: ${s.titulo}`}
+            >
+              <div className="history-card-title">{s.titulo}</div>
+              <div className="history-card-date">{s.linea} · {s.fecha}</div>
+              <div className="history-card-meta">
+                <span className="history-chip">{steps} pasos</span>
+                <span className="history-chip">{edgeCases} casos borde</span>
+                {s.screenshot && <span className="history-chip">📷 captura</span>}
+              </div>
+            </button>
+            <button
+              type="button"
+              className="history-card-delete"
+              onClick={() => onDelete(s.id)}
+              aria-label={`Eliminar ${s.titulo}`}
+            >
+              ×
+            </button>
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 /* ─── Main UxFlow page ────────────────────────────────────── */
 export default function UxFlow() {
-  const [sessions, setSessions] = useLocalStorage<UxflowSession[]>(UXFLOW_STORAGE_KEY, []);
+  const [sessions, setSessions] = useState<UxflowSession[]>(() => loadUxflowSessions());
   const [templates, setTemplates] = useLocalStorage<UxflowTemplate[]>(UXFLOW_TEMPLATES_KEY, []);
   const { showToast, toasts, dismissToast } = useToast();
 
   const [prompt, setPrompt] = useState('');
   const [titulo, setTitulo] = useState('');
   const [linea, setLinea] = useState<string>(LINEA_OPTIONS[0]);
+  const [paises, setPaises] = useState('Chile, Colombia, México, Perú');
+  const [screenshot, setScreenshot] = useState<string | null>(null);
   const [currentFlow, setCurrentFlow] = useState<FlowModel | null>(null);
-  const [view, setView] = useState<'form' | 'result' | 'history'>('form');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
 
+  const updateSessions = (next: UxflowSession[]) => {
+    const capped = next.slice(0, UXFLOW_HISTORY_LIMIT);
+    setSessions(capped);
+    persistUxflowSessions(capped);
+  };
+
   const handleGenerar = () => {
-    if (!prompt.trim()) { showToast('Escribe un prompt para generar el flujo.'); return; }
-    const flow = buildFlowModel(prompt);
-    flow.linea = linea;
+    if (!prompt.trim()) {
+      showToast('Escribe un prompt para generar el flujo.');
+      return;
+    }
+    const flow = buildFlowModel(prompt, linea, paises);
     setCurrentFlow(flow);
-    setView('result');
+    showToast('⚡ Documentación generada');
   };
 
   const handleGuardar = () => {
@@ -279,15 +248,17 @@ export default function UxFlow() {
     const now = new Date();
     const fecha = now.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' });
     const session: UxflowSession = {
-      id: now.getTime(),
+      id: nextUxflowSessionId(sessions),
       titulo: titulo.trim() || extractGoal(prompt).slice(0, 60),
-      linea,
+      linea: currentFlow.linea,
       fecha,
       prompt,
+      paises,
+      screenshot,
       flow: currentFlow,
     };
-    setSessions((prev) => [session, ...prev]);
-    showToast('✓ Documento UXFlow guardado');
+    updateSessions([session, ...sessions]);
+    showToast('💾 Activo guardado en historial');
   };
 
   const handleGuardarTemplate = () => {
@@ -304,7 +275,10 @@ export default function UxFlow() {
 
   const handleLoadTemplate = (id: string) => {
     const t = templates.find((x) => String(x.id) === id);
-    if (t) { setPrompt(t.prompt); setSelectedTemplate(''); }
+    if (t) {
+      setPrompt(t.prompt);
+      setSelectedTemplate('');
+    }
   };
 
   const handleLoadSession = (s: UxflowSession) => {
@@ -312,159 +286,205 @@ export default function UxFlow() {
     setTitulo(s.titulo);
     setLinea(s.linea);
     setPrompt(s.prompt);
-    setView('result');
+    setPaises(s.paises ?? s.flow.countries.join(', '));
+    setScreenshot(s.screenshot ?? null);
+    showToast(`📂 Flujo restaurado: ${s.titulo}`);
+    document.getElementById('editor')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleScreenshot = (file: File | undefined) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(1, UXFLOW_SCREENSHOT_MAX_DIM / Math.max(img.width, img.height));
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setScreenshot(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const scrollToHistorial = () => {
+    document.getElementById('historial')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
     <main className="uxflow-main" id="main" tabIndex={-1}>
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
+      <div className="uxflow-mode-banner" role="note">
+        <span>
+          <strong>UXFLOW React</strong> — editor rápido integrado en el hub.
+          Comparte historial con la versión estática.
+        </span>
+        <a className="uxflow-mode-link" href={STATIC_UXFLOW_URL}>
+          Abrir editor completo (PNG/PDF) →
+        </a>
+      </div>
+
       <div className="uxflow-header">
         <div>
           <h1 className="uxflow-title">UXFLOW — Auto-Doc Engine</h1>
-          <p className="uxflow-sub">Describe el flujo en lenguaje natural y genera documentación técnica UX lista para QA y Figma.</p>
+          <p className="uxflow-sub">
+            Describe el flujo en lenguaje natural y genera documentación técnica UX lista para QA y Figma.
+          </p>
         </div>
         <div className="uxflow-header-actions">
-          <button
-            className={`tab-pill${view === 'form' || view === 'result' ? ' active' : ''}`}
-            onClick={() => setView('form')}
-            type="button"
-          >
+          <button className="tab-pill active" type="button">
             Nuevo flujo
           </button>
-          <button
-            className={`tab-pill${view === 'history' ? ' active' : ''}`}
-            onClick={() => setView('history')}
-            type="button"
-          >
+          <button className="tab-pill" onClick={scrollToHistorial} type="button">
             Historial ({sessions.length})
           </button>
         </div>
       </div>
 
-      {(view === 'form' || view === 'result') && (
-        <div className="uxflow-body">
-          <div className="uxflow-form-col">
-            <div className="form-group">
-              <label htmlFor="ux-titulo" className="form-label">Título del documento</label>
-              <input
-                id="ux-titulo"
-                type="text"
-                className="form-input"
-                value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
-                placeholder="Ej: Onboarding Investor Digital"
-              />
-            </div>
+      <div className="uxflow-body" id="editor">
+        <div className="uxflow-form-col">
+          <div className="form-group">
+            <label htmlFor="ux-titulo" className="form-label">Título del documento</label>
+            <input
+              id="ux-titulo"
+              type="text"
+              className="form-input"
+              value={titulo}
+              onChange={(e) => setTitulo(e.target.value)}
+              placeholder="Ej: Onboarding Investor Digital"
+            />
+          </div>
 
+          <div className="form-group">
+            <label htmlFor="ux-linea" className="form-label">Línea de negocio</label>
+            <select
+              id="ux-linea"
+              className="form-input"
+              value={linea}
+              onChange={(e) => setLinea(e.target.value)}
+            >
+              {LINEA_OPTIONS.map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="ux-paises" className="form-label">Países activos (separados por coma)</label>
+            <input
+              id="ux-paises"
+              type="text"
+              className="form-input"
+              value={paises}
+              onChange={(e) => setPaises(e.target.value)}
+              placeholder="Chile, Colombia, México"
+            />
+          </div>
+
+          {templates.length > 0 && (
             <div className="form-group">
-              <label htmlFor="ux-linea" className="form-label">Línea de negocio</label>
+              <label htmlFor="ux-template" className="form-label">Cargar template</label>
               <select
-                id="ux-linea"
+                id="ux-template"
                 className="form-input"
-                value={linea}
-                onChange={(e) => setLinea(e.target.value)}
+                value={selectedTemplate}
+                onChange={(e) => { setSelectedTemplate(e.target.value); handleLoadTemplate(e.target.value); }}
               >
-                {LINEA_OPTIONS.map((l) => (
-                  <option key={l} value={l}>{l}</option>
+                <option value="">— seleccionar —</option>
+                {templates.map((t) => (
+                  <option key={t.id} value={String(t.id)}>{t.nombre}</option>
                 ))}
               </select>
             </div>
+          )}
 
-            {templates.length > 0 && (
-              <div className="form-group">
-                <label htmlFor="ux-template" className="form-label">Cargar template</label>
-                <select
-                  id="ux-template"
-                  className="form-input"
-                  value={selectedTemplate}
-                  onChange={(e) => { setSelectedTemplate(e.target.value); handleLoadTemplate(e.target.value); }}
-                >
-                  <option value="">— seleccionar —</option>
-                  {templates.map((t) => (
-                    <option key={t.id} value={String(t.id)}>{t.nombre}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div className="form-group">
-              <label htmlFor="ux-prompt" className="form-label">Prompt del flujo *</label>
-              <textarea
-                id="ux-prompt"
-                className="form-input form-textarea"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Ej: Un cliente Wealth Management en Chile quiere completar su onboarding digital con validación biométrica y firma electrónica de documentos PDF..."
-                rows={6}
-              />
-            </div>
-
-            <div className="form-actions-row">
-              <button className="btn-cyan" onClick={handleGenerar} type="button">
-                ⚡ Generar documentación
-              </button>
-              <button className="btn-outline btn-sm" onClick={handleGuardarTemplate} type="button">
-                Guardar como template
-              </button>
-            </div>
+          <div className="form-group">
+            <label htmlFor="ux-prompt" className="form-label">Criterios de aceptación (prompt) *</label>
+            <textarea
+              id="ux-prompt"
+              className="form-input form-textarea"
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Ej: Yo como negocio quiero actualizar la presentación del contacto filtrando por línea de negocio y país..."
+              rows={6}
+            />
           </div>
 
-          <div className="uxflow-result-col">
-            {currentFlow ? (
-              <>
-                <FlowDocument flow={currentFlow} titulo={titulo || extractGoal(prompt)} />
-                <div className="form-actions-row" style={{ marginTop: 16 }}>
-                  <button className="btn-cyan" onClick={handleGuardar} type="button">
-                    💾 Guardar documento
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="flow-empty">
-                <div className="flow-empty-icon" aria-hidden="true">⚡</div>
-                <p>Describe el flujo y presiona <strong>Generar documentación</strong>.</p>
+          <div className="form-group">
+            <label htmlFor="ux-screenshot" className="form-label">Captura de pantalla del flujo</label>
+            <input
+              id="ux-screenshot"
+              type="file"
+              accept="image/*"
+              className="form-input"
+              onChange={(e) => handleScreenshot(e.target.files?.[0])}
+            />
+            {screenshot && (
+              <div className="uxflow-screenshot-preview">
+                <img src={screenshot} alt="Vista previa de captura del flujo" />
+                <button type="button" className="btn-outline btn-sm" onClick={() => setScreenshot(null)}>
+                  Quitar captura
+                </button>
               </div>
             )}
+          </div>
+
+          <div className="form-actions-row">
+            <button className="btn-cyan" onClick={handleGenerar} type="button">
+              ⚡ Generar documentación
+            </button>
+            <button className="btn-outline btn-sm" onClick={handleGuardarTemplate} type="button">
+              Guardar como template
+            </button>
           </div>
         </div>
-      )}
 
-      {view === 'history' && (
-        <div className="uxflow-history">
-          {sessions.length === 0 ? (
-            <div className="flow-empty">
-              <p>Sin documentos guardados aún.</p>
-            </div>
-          ) : (
-            sessions.map((s) => (
-              <div key={s.id} className="history-item">
-                <div className="history-item-body">
-                  <strong>{s.titulo}</strong>
-                  <span className="historial-meta">{s.linea} · {s.fecha}</span>
+        <div className="uxflow-result-col">
+          {currentFlow ? (
+            <>
+              <FlowDocument flow={currentFlow} titulo={titulo || extractGoal(prompt)} />
+              {screenshot && (
+                <div className="uxflow-screenshot-display">
+                  <img src={screenshot} alt="Captura adjunta al documento" />
                 </div>
-                <div className="history-item-actions">
-                  <button
-                    className="btn-outline btn-sm"
-                    onClick={() => handleLoadSession(s)}
-                    type="button"
-                  >
-                    Ver →
-                  </button>
-                  <button
-                    className="btn-danger btn-sm"
-                    onClick={() => setSessions((prev) => prev.filter((x) => x.id !== s.id))}
-                    type="button"
-                    aria-label={`Eliminar ${s.titulo}`}
-                  >
-                    ×
-                  </button>
-                </div>
+              )}
+              <div className="form-actions-row" style={{ marginTop: 16 }}>
+                <button className="btn-cyan" onClick={handleGuardar} type="button">
+                  💾 Guardar en historial
+                </button>
               </div>
-            ))
+            </>
+          ) : (
+            <div className="flow-empty">
+              <div className="flow-empty-icon" aria-hidden="true">⚡</div>
+              <p>Describe el flujo y presiona <strong>Generar documentación</strong>.</p>
+            </div>
           )}
         </div>
-      )}
+      </div>
+
+      <section className="history-section" id="historial" aria-labelledby="historial-heading">
+        <div className="history-label" id="historial-heading">
+          Historial de activos
+          <span className="history-shared-note">compartido con uxflow.html</span>
+        </div>
+        <div className="history-grid">
+          <HistoryGrid
+            sessions={sessions}
+            onLoad={handleLoadSession}
+            onDelete={(id) => {
+              updateSessions(sessions.filter((s) => s.id !== id));
+              showToast('🗑 Documento eliminado');
+            }}
+          />
+        </div>
+      </section>
     </main>
   );
 }

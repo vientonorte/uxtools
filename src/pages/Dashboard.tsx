@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BENCHMARK_STORAGE_KEY, DIMENSIONES_DEFAULT } from '../types/benchmark';
 import type { BenchmarkState, BenchmarkSession } from '../types/benchmark';
-import { UXFLOW_STORAGE_KEY } from '../types/uxflow';
+import { loadUxflowSessions } from '../lib/uxflow-storage';
 import type { UxflowSession } from '../types/uxflow';
 
 function readStorage<T>(key: string, fallback: T): T {
@@ -87,7 +87,7 @@ export default function Dashboard() {
   const bmState = readStorage<BenchmarkState>(BENCHMARK_STORAGE_KEY, {
     paso: 1, config: { nombre: '', analista: '' }, productos: [], scores: {}, notas: {}, historial: [],
   });
-  const uxList = readStorage<UxflowSession[]>(UXFLOW_STORAGE_KEY, []);
+  const uxList = loadUxflowSessions();
 
   const bmSessions = Array.isArray(bmState.historial) ? bmState.historial : [];
   const lastAnalista = bmState.config?.analista ||
@@ -270,7 +270,7 @@ export default function Dashboard() {
             </div>
             <div className="module-card-footer">
               <Link className="btn-module-open" to="/uxflow">Abrir UXFLOW →</Link>
-              <a className="btn-module-ghost" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">Código ↗</a>
+              <a className="btn-module-ghost" href="uxflow.html#historial">Editor completo ↗</a>
             </div>
           </article>
 

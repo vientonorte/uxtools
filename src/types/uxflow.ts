@@ -35,6 +35,8 @@ export interface UxflowSession {
   linea: string;
   fecha: string;
   prompt: string;
+  paises?: string;
+  screenshot?: string | null;
   flow: FlowModel;
 }
 

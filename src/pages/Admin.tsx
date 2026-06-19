@@ -8,10 +8,8 @@ import {
   DIMENSIONES_DEFAULT,
 } from '../types/benchmark';
 import type { BenchmarkState, Dimension, BenchmarkSession } from '../types/benchmark';
-import {
-  UXFLOW_STORAGE_KEY,
-  UXFLOW_TEMPLATES_KEY,
-} from '../types/uxflow';
+import { loadUxflowSessions, persistUxflowSessions } from '../lib/uxflow-storage';
+import { UXFLOW_TEMPLATES_KEY } from '../types/uxflow';
 import type { UxflowSession, UxflowTemplate } from '../types/uxflow';
 
 const MIN_DIMENSIONS = 2;
@@ -28,7 +26,14 @@ export default function Admin() {
   const [dimensiones, setDimensiones] = useLocalStorage<Dimension[]>(
     DIMENSIONES_STORAGE_KEY, DIMENSIONES_DEFAULT
   );
-  const [uxSessions, setUxSessions] = useLocalStorage<UxflowSession[]>(UXFLOW_STORAGE_KEY, []);
+  const [uxSessions, setUxSessions] = useState<UxflowSession[]>(() => loadUxflowSessions());
+  const updateUxSessions = (next: UxflowSession[] | ((prev: UxflowSession[]) => UxflowSession[])) => {
+    setUxSessions((prev) => {
+      const resolved = typeof next === 'function' ? next(prev) : next;
+      persistUxflowSessions(resolved);
+      return resolved;
+    });
+  };
   const [templates, setTemplates] = useLocalStorage<UxflowTemplate[]>(UXFLOW_TEMPLATES_KEY, []);
 
   /* ── Dimensiones ──────────────────────────────────────────── */
@@ -80,7 +85,7 @@ export default function Admin() {
 
   /* ── UX History ──────────────────────────────────────────── */
   const eliminarUxDoc = (id: number) => {
-    setUxSessions((prev) => prev.filter((s) => s.id !== id));
+    updateUxSessions((prev) => prev.filter((s) => s.id !== id));
     showToast('Documento eliminado');
   };
 
