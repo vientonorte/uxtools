@@ -13,22 +13,10 @@
   <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
+<a href="#main" class="vn-skip-link">Saltar al contenido principal</a>
+<nav data-suite-nav data-module="admin"></nav>
 
-<!-- NAV -->
-<nav aria-label="Navegación">
-  <a class="nav-brand" href="index.html" aria-label="Volver al Dashboard">
-    <div class="nav-logo" aria-hidden="true">UXT</div>
-    <span class="nav-title">UX Tools</span>
-    <span class="nav-badge">Admin</span>
-  </a>
-  <div class="nav-actions">
-    <a class="nav-link" href="benchmark.html">Benchmark</a>
-    <a class="nav-link" href="uxflow.html">UXFlow</a>
-    <a class="btn-nav" href="index.html">← Dashboard</a>
-  </div>
-</nav>
-
-<div class="admin-shell">
+<div class="admin-shell" id="main" tabindex="-1">
 
   <!-- HEADER -->
   <header class="admin-header">
@@ -224,6 +212,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/utils.js"></script>
+<script src="js/suite-nav.js"></script>
 <script src="js/admin.js"></script>
 </body>
 </html>

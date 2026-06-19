@@ -1,29 +1,218 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="UX Tools — Suite de herramientas UX. ID Medicinal: carnet digital de paciente de cannabis bajo Ley 20.000." />
-    <title>UX Tools · ID Medicinal</title>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="UX Tools — Suite de herramientas UX. Benchmark comparativo, documentación automatizada de flujos, matriz Eisenhower y mapa vocacional.">
+  <title>UX Tools · Suite</title>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=dm-mono:400,500|space-grotesk:300,400,500,600,700|inter:400,500" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+<a href="#main" class="vn-skip-link">Saltar al contenido principal</a>
+<nav data-suite-nav data-module="suite"></nav>
 
-    <!-- PWA -->
-    <link rel="manifest" href="/uxtools/manifest.json" />
-    <meta name="theme-color" content="#000D3A" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="ID Medicinal" />
-    <link rel="apple-touch-icon" href="/uxtools/icons/apple-touch-icon.png" />
+<header class="dash-header">
+  <div class="dash-header-inner">
+    <div class="dash-greeting-col">
+      <div class="dash-eyebrow" id="dash-eyebrow">UX Tools Suite · vientonorte</div>
+      <h1 class="dash-title" id="dash-greeting">Bienvenido al dashboard</h1>
+      <p class="dash-sub">Hub de instrumentos UX: benchmark comparativo, documentación automatizada de flujos, priorización DX y exploración vocacional.</p>
+    </div>
+    <div class="dash-search-col">
+      <div class="dash-search" role="search" aria-label="Búsqueda de módulos">
+        <span class="dash-search-icon" aria-hidden="true">⌕</span>
+        <input type="search" class="dash-search-input" id="dash-search" placeholder="Buscar módulo o sesión…" autocomplete="off" aria-label="Buscar módulo o sesión">
+      </div>
+    </div>
+  </div>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <div class="kpi-row" role="list" aria-label="Métricas del sistema" id="kpi-row">
+    <div class="kpi-card" role="listitem">
+      <div class="kpi-value" id="kpi-benchmarks">—</div>
+      <div class="kpi-label">Benchmarks guardados</div>
+    </div>
+    <div class="kpi-card" role="listitem">
+      <div class="kpi-value" id="kpi-uxflow">—</div>
+      <div class="kpi-label">Documentos UXFlow</div>
+    </div>
+    <div class="kpi-card" role="listitem">
+      <div class="kpi-value" id="kpi-analista">—</div>
+      <div class="kpi-label">Último analista</div>
+    </div>
+    <div class="kpi-card kpi-status" role="listitem">
+      <div class="kpi-value"><span class="kpi-live-dot" aria-hidden="true"></span>LIVE</div>
+      <div class="kpi-label">Estado del sistema</div>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main" id="main" tabindex="-1">
+
+  <div class="dash-section-label fade-up">Instrumentos UX</div>
+
+  <div class="modules-grid fade-up delay-1">
+
+    <article class="module-card" id="mod-benchmark">
+      <div class="module-card-inner">
+        <div class="module-top">
+          <div class="module-icon-wrap" aria-hidden="true">📊</div>
+          <span class="badge badge-live module-badge">LIVE</span>
+        </div>
+        <h2 class="module-title">UX Benchmark</h2>
+        <p class="module-desc">Análisis comparativo de experiencia de usuario para productos digitales.</p>
+        <div class="module-meta" id="meta-benchmark">
+          <span class="module-meta-item"><span class="module-meta-icon">💾</span><span id="meta-bm-sessions">0 sesiones</span></span>
+          <span class="module-meta-sep" aria-hidden="true">·</span>
+          <span class="module-meta-item"><span class="module-meta-icon">🕐</span><span id="meta-bm-last">Sin actividad</span></span>
+        </div>
+        <div class="module-tags" aria-label="Tecnologías">
+          <span class="mod-tag">UX Research</span>
+          <span class="mod-tag">Figma</span>
+          <span class="mod-tag">PDF Export</span>
+        </div>
+      </div>
+      <div class="module-card-footer">
+        <a class="btn-module-open" href="benchmark.html">Abrir Benchmark →</a>
+      </div>
+    </article>
+
+    <article class="module-card" id="mod-uxflow">
+      <div class="module-card-inner">
+        <div class="module-top">
+          <div class="module-icon-wrap" aria-hidden="true">⚡</div>
+          <span class="badge badge-live module-badge">LIVE</span>
+        </div>
+        <h2 class="module-title">UXFLOW — Auto-Doc Engine</h2>
+        <p class="module-desc">Motor de documentación técnica UX: flujos, criterios de aceptación y export.</p>
+        <div class="module-meta" id="meta-uxflow">
+          <span class="module-meta-item"><span class="module-meta-icon">💾</span><span id="meta-ux-docs">0 documentos</span></span>
+          <span class="module-meta-sep" aria-hidden="true">·</span>
+          <span class="module-meta-item"><span class="module-meta-icon">🕐</span><span id="meta-ux-last">Sin actividad</span></span>
+        </div>
+        <div class="module-tags" aria-label="Tecnologías">
+          <span class="mod-tag">localStorage</span>
+          <span class="mod-tag">PDF Export</span>
+        </div>
+      </div>
+      <div class="module-card-footer">
+        <a class="btn-module-open" href="uxflow.html">Abrir UXFLOW →</a>
+      </div>
+    </article>
+
+    <article class="module-card" id="mod-eisenhower">
+      <div class="module-card-inner">
+        <div class="module-top">
+          <div class="module-icon-wrap" aria-hidden="true">🎯</div>
+          <span class="badge badge-live module-badge">LIVE</span>
+        </div>
+        <h2 class="module-title">Operating Model DX</h2>
+        <p class="module-desc">Matriz Eisenhower para priorización de fricciones Digital Experience.</p>
+        <div class="module-meta">
+          <span class="module-meta-item"><span class="module-meta-icon">📋</span><span id="meta-dx-frictions">0 fricciones</span></span>
+          <span class="module-meta-sep" aria-hidden="true">·</span>
+          <span class="module-meta-item"><span class="module-meta-icon">🕐</span><span id="meta-dx-last">Sin actividad</span></span>
+        </div>
+        <div class="module-tags" aria-label="Funciones">
+          <span class="mod-tag">Eisenhower</span>
+          <span class="mod-tag">CSV Export</span>
+        </div>
+      </div>
+      <div class="module-card-footer">
+        <a class="btn-module-open" href="eisenhower.html">Abrir DX →</a>
+      </div>
+    </article>
+
+    <article class="module-card" id="mod-voc">
+      <div class="module-card-inner">
+        <div class="module-top">
+          <div class="module-icon-wrap" aria-hidden="true">✦</div>
+          <span class="badge badge-live module-badge">LIVE</span>
+        </div>
+        <h2 class="module-title">Mapa Vocacional</h2>
+        <p class="module-desc">Exploración vocacional interactiva con inferencia semántica local.</p>
+        <div class="module-meta">
+          <span class="module-meta-item"><span class="module-meta-icon">🧭</span>8 preguntas · 24 áreas</span>
+        </div>
+        <div class="module-tags" aria-label="Funciones">
+          <span class="mod-tag">Offline</span>
+          <span class="mod-tag">JSON Export</span>
+        </div>
+      </div>
+      <div class="module-card-footer">
+        <a class="btn-module-open" href="voc.html">Abrir Mapa →</a>
+      </div>
+    </article>
+
+    <article class="module-card module-card-admin" id="mod-admin">
+      <div class="module-card-inner">
+        <div class="module-top">
+          <div class="module-icon-wrap" aria-hidden="true">⚙️</div>
+          <span class="badge badge-admin module-badge">ADMIN</span>
+        </div>
+        <h2 class="module-title">Content Manager</h2>
+        <p class="module-desc">Dimensiones, templates, sesiones y export CSV/JSON.</p>
+        <div class="module-meta">
+          <span class="module-meta-item"><span class="module-meta-icon">🗂</span>Dimensiones · Templates · Datos</span>
+        </div>
+      </div>
+      <div class="module-card-footer">
+        <a class="btn-module-open" href="admin.html">Abrir Admin →</a>
+      </div>
+    </article>
+
+  </div>
+
+  <section class="workspace-section fade-up delay-2" aria-label="Workspace operativo">
+    <div class="dash-section-label">Workspace operativo</div>
+    <div class="workspace-grid">
+      <article class="workspace-card workspace-card-primary">
+        <div class="workspace-card-top">
+          <div class="workspace-icon" aria-hidden="true">⌘</div>
+          <span class="workspace-badge">FOCO</span>
+        </div>
+        <h3 class="workspace-title">Atajos del sprint</h3>
+        <p class="workspace-desc">Abre el flujo principal sin perder tiempo entre módulos.</p>
+        <div class="workspace-actions">
+          <a class="workspace-action primary" href="benchmark.html">Nuevo benchmark</a>
+          <a class="workspace-action ghost" href="uxflow.html">Nuevo UXFlow</a>
+          <a class="workspace-action ghost" href="admin.html">Abrir admin</a>
+        </div>
+      </article>
+
+      <article class="workspace-card">
+        <div class="workspace-card-top">
+          <div class="workspace-icon" aria-hidden="true">◉</div>
+          <span class="workspace-badge">LIVE</span>
+        </div>
+        <h3 class="workspace-title">Artefactos recientes</h3>
+        <p class="workspace-desc">Sesiones y documentos más recientes para retomar trabajo.</p>
+        <div class="recent-artifacts" id="workspace-recent-list" aria-live="polite">
+          <div class="activity-empty">Sin artefactos recientes aún.</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="activity-section fade-up delay-3" aria-label="Actividad reciente">
+    <div class="dash-section-label">Actividad reciente</div>
+    <div class="activity-list" id="activity-list" role="log" aria-live="polite">
+      <div class="activity-empty">Sin actividad registrada aún.</div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  UX Tools Suite · 2026 · <a href="https://vientonorte.github.io/" rel="noopener noreferrer">vientonorte</a>
+</footer>
+
+<script src="js/utils.js"></script>
+<script src="js/suite-nav.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
 </html>

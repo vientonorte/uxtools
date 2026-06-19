@@ -71,7 +71,18 @@ function validateCriticalFiles() {
   });
 }
 
+function validateProductionIndex() {
+  var html = read(path.join(ROOT, 'index.html'));
+  if (/src\/main\.tsx/i.test(html)) {
+    fail('index.html must not reference src/main.tsx — use static hub or app.html for React');
+  }
+  if (!/<main\b/i.test(html)) {
+    fail('index.html must contain a static <main> hub for GitHub Pages legacy deploy');
+  }
+}
+
 validateCriticalFiles();
+validateProductionIndex();
 HTML_FILES.forEach(validateHtmlAssets);
 validateJavaScriptSyntax();
 

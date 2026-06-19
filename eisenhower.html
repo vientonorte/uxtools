@@ -13,24 +13,11 @@
   <link rel="stylesheet" href="css/eisenhower.css">
 </head>
 <body>
-
-<!-- NAV -->
-<nav aria-label="Navegación principal">
-  <a class="nav-brand" href="index.html" aria-label="Operating Model DX — Inicio">
-    <div class="nav-logo" aria-hidden="true">DX</div>
-    <span class="nav-title">Operating Model DX</span>
-    <span class="nav-badge">v1.0</span>
-  </a>
-  <div class="nav-actions">
-    <span class="nav-save-status" id="save-status" title="Estado del guardado" style="display:none">● Guardado</span>
-    <a class="nav-link nav-link-admin" href="admin.html">⚙ Admin</a>
-    <a class="nav-link" href="index.html">← uxtools</a>
-    <a class="btn-nav" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">GitHub</a>
-  </div>
-</nav>
+<a href="#main" class="vn-skip-link">Saltar al contenido principal</a>
+<nav data-suite-nav data-module="eisenhower" data-save-status="true"></nav>
 
 <!-- HERO -->
-<header class="hero">
+<header class="hero" id="main" tabindex="-1">
   <div class="hero-eyebrow">Operating Model DX · SURA Investments · 2026</div>
   <h1>Matriz Eisenhower<br><span class="accent">para DX.</span></h1>
   <p class="hero-sub">Pipeline de priorización ejecutiva: transforma señales dispersas de Jira, Miro, Figma y Teams en decisiones priorizadas con scoring automático.</p>
@@ -317,6 +304,7 @@
 </footer>
 
 <script src="js/utils.js"></script>
+<script src="js/suite-nav.js"></script>
 <script src="js/eisenhower.js"></script>
 </body>
 </html>

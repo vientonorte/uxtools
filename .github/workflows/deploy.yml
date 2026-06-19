@@ -59,8 +59,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build
-        run: npm run build
+      - name: Build static suite + React app
+        run: npm run build:pages
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

@@ -117,6 +117,175 @@ nav {
   box-shadow: 2px 2px 0 var(--ink);
 }
 
+.nav-modules-desktop {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.nav-link.active { color: var(--accent); font-weight: 600; }
+.nav-link-utility { display: none; }
+
+.nav-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 2px 2px 0 var(--accent);
+}
+.nav-menu-icon {
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+  position: relative;
+  display: block;
+}
+.nav-menu-icon::before,
+.nav-menu-icon::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+}
+.nav-menu-icon::before { top: -6px; }
+.nav-menu-icon::after { top: 6px; }
+
+.nav-drawer[hidden] { display: none !important; }
+.nav-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+}
+.nav-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(14, 20, 36, 0.55);
+  cursor: pointer;
+}
+.nav-drawer-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(100%, 320px);
+  height: 100%;
+  background: var(--paper);
+  border-left: 2px solid var(--ink);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-shadow: -6px 0 0 var(--accent);
+}
+.nav-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.nav-drawer-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  color: var(--ink);
+}
+.nav-drawer-close {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px;
+}
+.nav-drawer-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+}
+.nav-drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  color: var(--ink-soft);
+  border: 2px solid transparent;
+}
+.nav-drawer-link:hover,
+.nav-drawer-link:focus-visible,
+.nav-drawer-link.active {
+  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--highlight);
+}
+.nav-drawer-link-logo {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--ink);
+  background: var(--accent);
+  color: var(--paper);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-size: 11px;
+  font-weight: 700;
+}
+.nav-drawer-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 2px dashed var(--line);
+}
+.nav-drawer-utility {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink-soft);
+  text-decoration: none;
+  padding: 8px 12px;
+}
+.nav-drawer-utility:hover { color: var(--accent); }
+
+.vn-skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  padding: 8px 16px;
+  background: var(--focus);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  z-index: 9999;
+  text-decoration: none;
+}
+.vn-skip-link:focus { top: 16px; }
+
+@media (min-width: 769px) {
+  .nav-modules-desktop { display: flex; }
+  .nav-link-utility { display: inline-flex; }
+  .nav-menu-btn { display: none; }
+}
+
 /* ===== FOCUS VISIBLE ===== */
 :focus-visible {
   outline: 3px solid var(--focus);
@@ -1207,18 +1376,8 @@ h1 {
 </style>
 </head>
 <body>
-
-<!-- NAV -->
-<nav aria-label="Navegación principal">
-  <a class="nav-brand" href="index.html" aria-label="Vocational Explorer — Inicio">
-    <div class="nav-logo" aria-hidden="true">VOC</div>
-    <span class="nav-title">Mapa Vocacional</span>
-    <span class="nav-badge">v2</span>
-  </a>
-  <div class="nav-actions">
-    <a class="nav-link" href="index.html">← uxtools</a>
-  </div>
-</nav>
+<a href="#main" class="vn-skip-link">Saltar al contenido principal</a>
+<nav data-suite-nav data-theme="voc" data-module="voc"></nav>
 
 <!-- Onboarding overlay -->
 <div class="onboarding" id="onboarding" role="dialog" aria-modal="true" aria-labelledby="onb-titulo">
@@ -1236,7 +1395,7 @@ h1 {
   </div>
 </div>
 
-<main>
+<main id="main" tabindex="-1">
 
 <header>
   <div class="title-eyebrow">Para Martina</div>
@@ -1546,6 +1705,7 @@ h1 {
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<script src="js/suite-nav.js"></script>
 <script type="module">
 // =========================================================================
 // IMPORTS (Transformers.js desde CDN)

@@ -14,20 +14,8 @@
   <link rel="stylesheet" href="css/print.css">
 </head>
 <body>
-
-<nav aria-label="Navegación principal">
-  <a class="nav-brand" href="index.html" aria-label="UX Benchmark — Inicio">
-    <div class="nav-logo" aria-hidden="true">BM</div>
-    <span class="nav-title">UX Benchmark</span>
-    <span class="nav-badge">v2.0</span>
-  </a>
-  <div class="nav-actions">
-    <span class="nav-save-status" id="save-status" title="Estado del guardado automático">● Auto-guardado</span>
-    <a class="nav-link nav-link-admin" href="admin.html">⚙ Admin</a>
-    <a class="nav-link" href="index.html">← uxtools</a>
-    <a class="btn-nav" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">GitHub</a>
-  </div>
-</nav>
+<a href="#main" class="vn-skip-link">Saltar al contenido principal</a>
+<nav data-suite-nav data-module="benchmark" data-save-status="true"></nav>
 
 <div class="app-shell" id="app">
 
@@ -77,7 +65,7 @@
   </aside>
 
   <!-- ── CANVAS ──────────────────────────────────────── -->
-  <div class="canvas-area">
+  <div class="canvas-area" id="main" tabindex="-1">
     <div class="canvas-header">
       <div class="canvas-meta">
         <span class="status-dot live" aria-hidden="true"></span>
@@ -153,6 +141,7 @@
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/utils.js"></script>
+<script src="js/suite-nav.js"></script>
 <script src="js/benchmark.js"></script>
 </body>
 </html>

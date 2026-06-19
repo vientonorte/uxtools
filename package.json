@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --open /app.html",
     "build": "tsc --noEmit && vite build",
+    "build:pages": "node scripts/build-pages.cjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx"

@@ -381,7 +381,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="module-card-footer">
-              <a className="btn-module-open" href="/uxtools/voc.html">Abrir Mapa →</a>
+              <a className="btn-module-open" href="voc.html">Abrir Mapa →</a>
               <a className="btn-module-ghost" href="https://github.com/vientonorte/uxtools" target="_blank" rel="noopener noreferrer">Código ↗</a>
             </div>
           </article>
