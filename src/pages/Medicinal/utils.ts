@@ -1,4 +1,3 @@
-import { MEDICINAL_PUBLIC_URL } from '../../config/medicinal';
 import type { MedicinalIdData } from '../../types/medicinal';
 
 // ── Date helpers ──────────────────────────────────────────────
@@ -29,11 +28,6 @@ export function isVigente(fechaReceta: string, vigenciaMeses: number): boolean {
   if (isNaN(venc.getTime())) return false;
   venc.setMonth(venc.getMonth() + vigenciaMeses);
   return new Date() <= venc;
-}
-
-/** URL de reenvío para pacientes — destino canónico del carnet digital. */
-export function buildQrUrl(): string {
-  return MEDICINAL_PUBLIC_URL;
 }
 
 export function buildQrText(data: MedicinalIdData): string {

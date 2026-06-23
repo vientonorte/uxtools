@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BENCHMARK_STORAGE_KEY, DIMENSIONES_DEFAULT } from '../types/benchmark';
 import type { BenchmarkState, BenchmarkSession } from '../types/benchmark';
-import { MEDICINAL_PUBLIC_URL } from '../config/medicinal';
 import { loadUxflowSessions } from '../lib/uxflow-storage';
 import type { UxflowSession } from '../types/uxflow';
 
@@ -339,11 +338,7 @@ export default function Dashboard() {
               </div>
               <h2 className="module-title">ID Medicinal</h2>
               <p className="module-desc">
-                Carnet digital de paciente medicinal bajo Ley 20.000. Acceso directo en{' '}
-                <a href={MEDICINAL_PUBLIC_URL} target="_blank" rel="noopener noreferrer">
-                  {MEDICINAL_PUBLIC_URL.replace('https://', '')}
-                </a>
-                {' '}— privado, offline y sin terceros.
+                Carnet digital de paciente medicinal de cannabis bajo Ley 20.000. Accesible, privado y offline — tus datos nunca salen de tu dispositivo.
               </p>
               <div className="module-meta">
                 <span className="module-meta-item">
