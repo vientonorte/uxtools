@@ -6,6 +6,7 @@ import { MEDICINAL_DEFAULT, MEDICINAL_STORAGE_KEY } from '../../types/medicinal'
 import { IdCard } from './IdCard';
 import { EditModal } from './EditModal';
 import { FaqAutodefensa } from './FaqAutodefensa';
+import { PatientAccess } from './PatientAccess';
 import { PrivacyToggle } from './atoms';
 import { buildShareText } from './utils';
 
@@ -220,6 +221,8 @@ export default function Medicinal() {
           )}
 
           <FaqAutodefensa />
+
+          <PatientAccess />
 
           <section className="med-license" aria-label="Licencia">
             <p>
