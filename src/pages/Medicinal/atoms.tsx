@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import QRCode from 'qrcode';
 
 // ── QR display ───────────────────────────────────────────────
 
 export function QrDisplay({ text }: { text: string }) {
   const [src, setSrc] = useState('');
+  const descriptionId = useId();
 
   useEffect(() => {
     if (!text) { setSrc(''); return; }
@@ -26,13 +27,19 @@ export function QrDisplay({ text }: { text: string }) {
   }
 
   return (
-    <img
-      src={src}
-      alt="Código QR con datos del carnet medicinal"
-      width={160}
-      height={160}
-      className="med-qr-img"
-    />
+    <>
+      <img
+        src={src}
+        alt=""
+        width={160}
+        height={160}
+        className="med-qr-img"
+        aria-describedby={descriptionId}
+      />
+      <p id={descriptionId} className="med-sr-only">
+        Datos del carnet para validación: {text}
+      </p>
+    </>
   );
 }
 
