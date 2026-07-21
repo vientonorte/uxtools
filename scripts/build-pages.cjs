@@ -13,6 +13,8 @@ var STATIC_HTML = [
   'eisenhower.html',
   'voc.html',
   'admin.html',
+  'hub.html',
+  'imsi.html',
 ];
 
 var STATIC_DIRS = ['css', 'js'];
