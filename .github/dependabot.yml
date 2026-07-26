@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      production-minor-patch:
+        dependency-type: production
+        update-types:
+          - "minor"
+          - "patch"
+      dev-deps:
+        dependency-type: development
+    ignore:
+      # majors need intentional PR with green CI
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
