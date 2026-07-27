@@ -1,0 +1,5 @@
+# GitHub Packages = org design system / core
+# https://github.com/vientonorte?tab=packages
+# Secret: VN_PACKAGES_TOKEN (read:packages)
+@vientonorte:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
