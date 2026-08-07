@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react';
 import { MrButton } from '../components/metodo-ro/MrButton';
 import { MrCard } from '../components/metodo-ro/MrCard';
+import { MrConfirmModal } from '../components/metodo-ro/MrConfirmModal';
+import { MrExportModal } from '../components/metodo-ro/MrExportModal';
 import { MrField } from '../components/metodo-ro/MrField';
+import { MrImportModal } from '../components/metodo-ro/MrImportModal';
 import { MrScorePills } from '../components/metodo-ro/MrScorePills';
 import { MrTabs } from '../components/metodo-ro/MrTabs';
 import { RadarSvg } from '../components/metodo-ro/RadarSvg';
 import { ToastContainer } from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import {
-  downloadJson,
   loadSelfradarSessions,
   MR_LIMITS,
   saveSelfradarSessions,
@@ -50,6 +52,9 @@ export default function Selfradar() {
   const lista = sessions.length ? sessions : [createSelfradarSession()];
   const [activeId, setActiveId] = useState(lista[0].id);
   const [tab, setTab] = useState('radar');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const { toasts, showToast, dismissToast } = useToast();
 
   const active = lista.find((s) => s.id === activeId) ?? lista[0];
@@ -109,11 +114,8 @@ export default function Selfradar() {
     showToast('Nueva sesión Selfradar');
   }
 
-  function eliminar() {
-    const ok = window.confirm(
-      '¿Eliminar esta sesión de Selfradar? Esta acción no se puede deshacer.'
-    );
-    if (!ok) return;
+  function doEliminar() {
+    setConfirmDelete(false);
     if (lista.length <= 1) {
       const s = createSelfradarSession();
       commitSessions([s]);
@@ -127,9 +129,18 @@ export default function Selfradar() {
     showToast('Sesión eliminada');
   }
 
-  function exportJson() {
-    downloadJson(`selfradar-${active.date || 'sesion'}.json`, active);
-    showToast('JSON exportado (solo este dispositivo)');
+  function handleImport(data: unknown) {
+    const session = sanitizeSelfradarSession(data);
+    if (!session) {
+      showToast('Sesión Selfradar inválida o corrupta');
+      return;
+    }
+    session.id = createSelfradarSession().id;
+    session.updatedAt = Date.now();
+    commitSessions([session, ...lista].slice(0, MR_LIMITS.sessions));
+    setActiveId(session.id);
+    setTab('radar');
+    showToast('Sesión importada');
   }
 
   const bajos = useMemo(() => lowAxes(active), [active]);
@@ -149,9 +160,10 @@ export default function Selfradar() {
         <MrButton variant="primary" onClick={nueva}>
           Nueva sesión
         </MrButton>
-        <MrButton onClick={exportJson}>Export JSON</MrButton>
+        <MrButton onClick={() => setExportOpen(true)}>Exportar</MrButton>
+        <MrButton onClick={() => setImportOpen(true)}>Importar</MrButton>
         <MrButton onClick={() => window.print()}>Imprimir</MrButton>
-        <MrButton variant="danger" onClick={eliminar}>
+        <MrButton variant="danger" onClick={() => setConfirmDelete(true)}>
           Eliminar
         </MrButton>
       </div>
@@ -518,9 +530,35 @@ export default function Selfradar() {
       </MrTabs>
 
       <p className="mr-privacy">
-        Security by design: validación al cargar/guardar, límites de texto, sin red.
-        No diagnosticar desde el score — solo trazar.
+        Security by design: validación al cargar/guardar, límites de texto, export
+        cifrado opcional (AES-GCM), sin red. No diagnosticar desde el score — solo trazar.
       </p>
+
+      <MrConfirmModal
+        open={confirmDelete}
+        title="Eliminar sesión"
+        description="¿Eliminar esta sesión de Selfradar? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        onConfirm={doEliminar}
+        onCancel={() => setConfirmDelete(false)}
+      />
+      <MrExportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        payload={active}
+        tool="selfradar"
+        filenameBase={`selfradar-${active.date || 'sesion'}`}
+        preferEncrypted={false}
+        onDone={showToast}
+        onError={showToast}
+      />
+      <MrImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        toolLabel="Self Radar"
+        onImport={handleImport}
+        onError={showToast}
+      />
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </main>

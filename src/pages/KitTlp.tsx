@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { MrButton } from '../components/metodo-ro/MrButton';
 import { MrCard } from '../components/metodo-ro/MrCard';
+import { MrConfirmModal } from '../components/metodo-ro/MrConfirmModal';
+import { MrExportModal } from '../components/metodo-ro/MrExportModal';
 import { MrField } from '../components/metodo-ro/MrField';
+import { MrImportModal } from '../components/metodo-ro/MrImportModal';
 import { MrStepHead } from '../components/metodo-ro/MrStepHead';
 import { MrTabs } from '../components/metodo-ro/MrTabs';
 import { ToastContainer } from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import {
-  downloadJson,
   loadKitTlpSessions,
   MR_LIMITS,
   saveKitTlpSessions,
@@ -47,6 +49,9 @@ export default function KitTlp() {
   const lista = sessions.length ? sessions : [createKitTlpSession()];
   const [activeId, setActiveId] = useState(lista[0].id);
   const [tab, setTab] = useState('protocolo');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const { toasts, showToast, dismissToast } = useToast();
 
   const active = lista.find((s) => s.id === activeId) ?? lista[0];
@@ -86,11 +91,8 @@ export default function KitTlp() {
     showToast('Nueva entrada Kit TLP');
   }
 
-  function eliminar() {
-    const ok = window.confirm(
-      '¿Eliminar esta entrada de Kit TLP? Contiene notas personales y no se puede deshacer.'
-    );
-    if (!ok) return;
+  function doEliminar() {
+    setConfirmDelete(false);
     if (lista.length <= 1) {
       const s = createKitTlpSession();
       commitSessions([s]);
@@ -104,13 +106,18 @@ export default function KitTlp() {
     showToast('Entrada eliminada');
   }
 
-  function exportJson() {
-    const ok = window.confirm(
-      'Exportar Kit TLP genera un archivo JSON con contenido sensible (crisis / afecto) en este dispositivo. ¿Continuar?'
-    );
-    if (!ok) return;
-    downloadJson(`kit-tlp-${active.date || 'sesion'}.json`, active);
-    showToast('JSON exportado (confirma destino seguro)');
+  function handleImport(data: unknown) {
+    const session = sanitizeKitTlpSession(data);
+    if (!session) {
+      showToast('Entrada Kit TLP inválida o corrupta');
+      return;
+    }
+    session.id = createKitTlpSession().id;
+    session.updatedAt = Date.now();
+    commitSessions([session, ...lista].slice(0, MR_LIMITS.sessions));
+    setActiveId(session.id);
+    setTab('protocolo');
+    showToast('Entrada importada');
   }
 
   return (
@@ -130,9 +137,10 @@ export default function KitTlp() {
         <MrButton variant="primary" onClick={nueva}>
           Nueva entrada
         </MrButton>
-        <MrButton onClick={exportJson}>Export JSON</MrButton>
+        <MrButton onClick={() => setExportOpen(true)}>Exportar</MrButton>
+        <MrButton onClick={() => setImportOpen(true)}>Importar</MrButton>
         <MrButton onClick={() => window.print()}>Imprimir</MrButton>
-        <MrButton variant="danger" onClick={eliminar}>
+        <MrButton variant="danger" onClick={() => setConfirmDelete(true)}>
           Eliminar
         </MrButton>
       </div>
@@ -414,9 +422,35 @@ export default function KitTlp() {
       </MrTabs>
 
       <p className="mr-privacy">
-        Anti: no diagnosticar · no moralizar. Export TLP pide confirmación (datos
-        sensibles). Sin servidores.
+        Anti: no diagnosticar · no moralizar. Export cifrado recomendado (AES-GCM).
+        Sin servidores.
       </p>
+
+      <MrConfirmModal
+        open={confirmDelete}
+        title="Eliminar entrada Kit TLP"
+        description="Contiene notas personales. ¿Eliminar? No se puede deshacer."
+        confirmLabel="Eliminar"
+        onConfirm={doEliminar}
+        onCancel={() => setConfirmDelete(false)}
+      />
+      <MrExportModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        payload={active}
+        tool="kit-tlp"
+        filenameBase={`kit-tlp-${active.date || 'sesion'}`}
+        preferEncrypted
+        onDone={showToast}
+        onError={showToast}
+      />
+      <MrImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        toolLabel="Kit TLP"
+        onImport={handleImport}
+        onError={showToast}
+      />
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </main>
