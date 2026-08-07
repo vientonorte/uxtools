@@ -10,6 +10,8 @@ Suite de herramientas UX en producción para SURA Investments.
 | **UXFLOW** | Motor de documentación técnica UX automatizada: flujos, criterios de aceptación, tablas y assets para Figma | [uxflow.html](https://vientonorte.github.io/uxtools/uxflow.html) |
 | **Operating Model DX** | Pipeline de priorización ejecutiva con Matriz Eisenhower: consolida señales desde Jira, Miro, Figma y Teams en decisiones priorizadas mediante scoring automático | [eisenhower.html](https://vientonorte.github.io/uxtools/eisenhower.html) |
 | **RF Recon Console** | Blueprint UX para operación SIGINT (tipo IMSI catcher): arquitectura de información en 4 fases, dashboard táctico de 3 paneles y reglas de UX crítica. **Prototipo de interfaz con datos simulados** — no controla hardware ni captura radiofrecuencia | [imsi.html](https://vientonorte.github.io/uxtools/imsi.html) |
+| **Self Radar** | Método Ro · review semanal: 7 ejes fijos (1–10), preguntas de buen vivir, cierre y máx. 3 acciones. localStorage + print | [app.html#/selfradar](https://vientonorte.github.io/uxtools/app.html#/selfradar) |
+| **Kit TLP** | Método Ro · protocolo DBT/TCC en crisis (8 pasos, STOP, ayuda). localStorage + print | [app.html#/kit-tlp](https://vientonorte.github.io/uxtools/app.html#/kit-tlp) |
 
 ## Preview
 

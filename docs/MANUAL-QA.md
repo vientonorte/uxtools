@@ -23,6 +23,8 @@
 | Admin | `admin.html` · `src/pages/Admin.tsx` |
 | Medicinal | `src/pages/Medicinal/*` |
 | Brief | `src/pages/Brief.tsx` |
+| Self Radar | `app.html#/selfradar` · `src/pages/Selfradar.tsx` |
+| Kit TLP | `app.html#/kit-tlp` · `src/pages/KitTlp.tsx` |
 
 ---
 

@@ -10,6 +10,7 @@ import './styles/uxflow.css';
 import './styles/admin.css';
 import './styles/brief.css';
 import './styles/medicinal.css';
+import './styles/metodo-ro.css';
 import App from './App';
 
 if ('serviceWorker' in navigator) {

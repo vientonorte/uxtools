@@ -5,7 +5,9 @@ export type SuiteModuleId =
   | 'eisenhower'
   | 'voc'
   | 'admin'
-  | 'brief';
+  | 'brief'
+  | 'selfradar'
+  | 'kit-tlp';
 
 export interface SuiteModule {
   id: SuiteModuleId;
@@ -75,6 +77,22 @@ export const SUITE_MODULES: SuiteModule[] = [
     logo: 'BRF',
     badge: 'Nuevo',
     spaPath: '/brief',
+  },
+  {
+    id: 'selfradar',
+    label: 'Self Radar',
+    shortLabel: 'Radar',
+    logo: 'SR',
+    badge: 'Ro',
+    spaPath: '/selfradar',
+  },
+  {
+    id: 'kit-tlp',
+    label: 'Kit TLP',
+    shortLabel: 'TLP',
+    logo: 'TLP',
+    badge: 'Ro',
+    spaPath: '/kit-tlp',
   },
   {
     id: 'admin',

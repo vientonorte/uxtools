@@ -329,6 +329,64 @@ export default function Dashboard() {
             </div>
           </article>
 
+          {/* Self Radar · Método Ro */}
+          <article className="module-card" id="mod-selfradar">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">◎</div>
+                <span className="badge badge-live module-badge">MÉTODO RO</span>
+              </div>
+              <h2 className="module-title">Self Radar</h2>
+              <p className="module-desc">
+                Review semanal Método Ro: 7 ejes fijos (1–10), preguntas de buen vivir, sonrisas, review y máx. 3 acciones a Calendar. Clave A · localStorage.
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">📅</span>Cadencia semanal · no diario
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Funciones">
+                <span className="mod-tag">Radar</span>
+                <span className="mod-tag">Clave A</span>
+                <span className="mod-tag">localStorage</span>
+                <span className="mod-tag">Print</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <Link className="btn-module-open" to="/selfradar">Abrir Self Radar →</Link>
+              <Link className="btn-module-ghost" to="/kit-tlp">Kit TLP</Link>
+            </div>
+          </article>
+
+          {/* Kit TLP · Método Ro */}
+          <article className="module-card" id="mod-kit-tlp">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">⏸</div>
+                <span className="badge badge-live module-badge">MÉTODO RO</span>
+              </div>
+              <h2 className="module-title">Kit TLP</h2>
+              <p className="module-desc">
+                Protocolo DBT/TCC en crisis: 8 pasos (hechos → STOP → coping → ayuda). Sin diagnóstico. 100% local, export JSON e imprimible.
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">🛑</span>STOP · Respira · Observa · Procesa
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Funciones">
+                <span className="mod-tag">DBT</span>
+                <span className="mod-tag">TCC</span>
+                <span className="mod-tag">localStorage</span>
+                <span className="mod-tag">Print</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <Link className="btn-module-open" to="/kit-tlp">Abrir Kit TLP →</Link>
+              <Link className="btn-module-ghost" to="/selfradar">Self Radar</Link>
+            </div>
+          </article>
+
           {/* ID Medicinal */}
           <article className="module-card" id="mod-medicinal">
             <div className="module-card-inner">
@@ -402,7 +460,8 @@ export default function Dashboard() {
               <div className="workspace-actions">
                 <Link className="workspace-action primary" to="/benchmark">Nuevo benchmark</Link>
                 <Link className="workspace-action ghost" to="/uxflow">Nuevo UXFlow</Link>
-                <Link className="workspace-action ghost" to="/admin">Abrir admin</Link>
+                <Link className="workspace-action ghost" to="/selfradar">Self Radar</Link>
+                <Link className="workspace-action ghost" to="/kit-tlp">Kit TLP</Link>
               </div>
             </article>
 

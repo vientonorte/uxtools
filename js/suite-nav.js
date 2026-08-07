@@ -13,6 +13,8 @@
     { id: 'uxflow', label: 'UXFLOW', shortLabel: 'UXFlow', logo: 'UXF', badge: 'v1.0', staticPath: 'uxflow.html' },
     { id: 'eisenhower', label: 'Operating Model DX', shortLabel: 'DX', logo: 'DX', badge: 'v1.0', staticPath: 'eisenhower.html' },
     { id: 'voc', label: 'Mapa Vocacional', shortLabel: 'VOC', logo: 'VOC', badge: 'v2', staticPath: 'voc.html' },
+    { id: 'selfradar', label: 'Self Radar', shortLabel: 'Radar', logo: 'SR', badge: 'Ro', staticPath: 'app.html#/selfradar' },
+    { id: 'kit-tlp', label: 'Kit TLP', shortLabel: 'TLP', logo: 'TLP', badge: 'Ro', staticPath: 'app.html#/kit-tlp' },
     { id: 'admin', label: 'Content Manager', shortLabel: 'Admin', logo: 'UXT', badge: 'Admin', staticPath: 'admin.html', variant: 'admin' },
   ];
 
