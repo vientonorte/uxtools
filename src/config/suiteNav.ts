@@ -111,8 +111,8 @@ export const SUITE_MODULES: SuiteModule[] = [
     id: 'onboarding',
     label: 'Onboarding · Mapa',
     shortLabel: 'Mapa',
-    logo: 'VOC',
-    badge: 'VOC',
+    logo: 'MAP',
+    badge: 'Map',
     spaPath: '/onboarding',
   },
   {

@@ -88,6 +88,16 @@ mustContain(
   '/poliradar',
   'CTA PoliRadar pantalla completa'
 );
+mustContain(
+  'src/styles/onboarding.css',
+  'width: min(100%, 420px)',
+  'mapa radial visible en móvil'
+);
+mustContain(
+  'src/config/suiteNav.ts',
+  "logo: 'MAP'",
+  'nav onboarding no duplica VOC'
+);
 
 if (fs.existsSync(path.join(ROOT, 'src/lib/onboarding-sprint.ts'))) {
   bad('onboarding-sprint.ts', 'el wrapper DS 5 días no debe existir');

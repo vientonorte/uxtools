@@ -103,6 +103,10 @@ export default function Onboarding() {
         ))}
       </ol>
 
+      <p className="ob-poli-banner">
+        <Link to="/poliradar">{t.poliCta}</Link>
+      </p>
+
       <section className="ob-map-wrap" aria-label={t.mapTitle}>
         <h2 className="ob-map-title">{t.mapTitle}</h2>
         <p className="ob-map-hint">{t.mapHint}</p>
@@ -162,7 +166,11 @@ export default function Onboarding() {
                   <span aria-hidden="true">{item.icon}</span>
                   <span>
                     <strong>{copy.voc}</strong>
-                    <em>{copy.name}{done ? ` · ${t.stamped}` : ''}</em>
+                    <em>
+                      {copy.name}
+                      {item.featured ? ` · ${t.marked}` : ''}
+                      {done ? ` · ${t.stamped}` : ''}
+                    </em>
                   </span>
                 </button>
               </li>
@@ -181,7 +189,11 @@ export default function Onboarding() {
               {t.poliCta}
             </Link>
           </div>
-        ) : null}
+        ) : (
+          <Link className="ob-poli-inline" to="/poliradar">
+            {t.poliCta}
+          </Link>
+        )}
       </MrCard>
 
       <div className="mr-toolbar ob-nav">

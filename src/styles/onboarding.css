@@ -220,6 +220,25 @@ a.mr-btn {
   opacity: 0.75;
 }
 
+.ob-poli-banner {
+  margin: 0 0 1rem;
+}
+
+.ob-poli-banner a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  color: var(--cyan, #5ce1e6);
+}
+
+.ob-poli-inline {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  margin-top: 0.5rem;
+  color: var(--cyan, #5ce1e6);
+}
+
 .ob-map-list {
   display: none;
   list-style: none;
@@ -288,10 +307,30 @@ a.mr-btn {
 
 @media (max-width: 720px) {
   .ob-map {
-    display: none;
+    width: min(100%, 420px);
+  }
+
+  .ob-nodo {
+    width: 78px;
+    height: 78px;
+    padding: 0.25rem;
+  }
+
+  .ob-nodo-label {
+    font-size: 0.58rem;
+  }
+
+  .ob-centro {
+    width: 78px;
+    height: 78px;
+  }
+
+  .ob-yo-name {
+    font-size: 0.72rem;
   }
 
   .ob-map-list {
     display: grid;
+    margin-top: 0.75rem;
   }
 }
