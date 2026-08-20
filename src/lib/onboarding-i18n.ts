@@ -6,134 +6,234 @@ export const ONBOARD_LANGS: { id: OnboardLang; label: string; native: string }[]
   { id: 'pt', label: 'Português', native: 'Português' },
 ];
 
-const COPY = {
+export type ToolId =
+  | 'benchmark'
+  | 'uxflow'
+  | 'poliradar'
+  | 'dx'
+  | 'voc'
+  | 'tlp'
+  | 'selfradar'
+  | 'brief';
+
+export interface ToolLayout {
+  id: ToolId;
+  icon: string;
+  top: string;
+  left: string;
+  href: string;
+  spa: boolean;
+  featured?: boolean;
+}
+
+/** Same 8-node radial as voc.html (Martina). Each node = a suite tool. */
+export const TOOL_LAYOUT: ToolLayout[] = [
+  { id: 'benchmark', icon: '🌅', top: '12%', left: '50%', href: '/benchmark', spa: true },
+  { id: 'uxflow', icon: '🎯', top: '23%', left: '77%', href: '/uxflow', spa: true },
+  { id: 'poliradar', icon: '🃏', top: '50%', left: '88%', href: '/poliradar', spa: true, featured: true },
+  { id: 'dx', icon: '🏠', top: '77%', left: '77%', href: 'eisenhower.html', spa: false },
+  { id: 'voc', icon: '🛠️', top: '88%', left: '50%', href: 'voc.html', spa: false },
+  { id: 'tlp', icon: '💡', top: '77%', left: '23%', href: '/kit-tlp', spa: true },
+  { id: 'selfradar', icon: '📚', top: '50%', left: '12%', href: '/selfradar', spa: true },
+  { id: 'brief', icon: '🌙', top: '23%', left: '23%', href: '/brief', spa: true },
+];
+
+interface ToolCopy {
+  voc: string;
+  name: string;
+  job: string;
+}
+
+interface Copy {
+  skip: string;
+  start: string;
+  open: string;
+  eyebrow: string;
+  title: string;
+  sub: string;
+  mapTitle: string;
+  mapHint: string;
+  centerYou: string;
+  centerAge: string;
+  privacy: string;
+  featured: string;
+  poliCta: string;
+  tools: Record<ToolId, ToolCopy>;
+}
+
+const COPY: Record<OnboardLang, Copy> = {
   es: {
     skip: 'Saltar e ir al hub',
-    back: 'Atrás',
-    next: 'Continuar',
     start: 'Entrar a UX Tools',
-    stepLang: 'Idioma',
-    stepPrivacy: 'Privacidad',
-    stepSecurity: 'Seguridad',
-    stepBio: 'Biometría',
-    stepSupport: 'Apoyo',
-    hLang: 'Elige tu idioma',
-    pLang: 'La interfaz de este onboarding está en tres idiomas. Puedes cambiar cuando quieras. El resto de la suite sigue en el idioma de cada módulo.',
-    hPrivacy: 'Privacy by design',
-    pPrivacy:
-      'Tus sesiones viven en este dispositivo (localStorage). No hay cuenta, no hay servidor de perfil, no hay cookies de tracking. Si borras el sitio, se borra tu dato.',
-    bulletsPrivacy: [
-      'Minimización: solo lo que escribes en Self Radar / Kit TLP.',
-      'Sin terceros: no Analytics, no ads, no pixel.',
-      'Tú exportas: JSON cifrado opcional. Nadie más lo lee.',
-    ],
-    hSecurity: 'Security by design',
-    pSecurity:
-      'Validamos y recortamos lo que se guarda. Sin eval, sin HTML inyectado, enlaces externos en allowlist. Lo sensible no sale del navegador.',
-    bulletsSecurity: [
-      'Límites de texto y de sesiones (anti-cuota).',
-      'Export opcional con AES-GCM.',
-      'Passkey / WebAuthn es opt-in. Nunca obligatorio.',
-    ],
-    hBio: 'Biometría opcional',
-    pBio:
-      'Puedes proteger este navegador con Face ID, huella o llave del sistema. La llave privada no sale del dispositivo. Si no hay sensor, o usas lector de pantalla, puedes continuar sin biometría.',
-    bioCta: 'Activar passkey en este dispositivo',
-    bioSkip: 'Continuar sin biometría',
-    bioOk: 'Passkey lista en este dispositivo.',
-    bioFail: 'No se pudo crear la passkey. Sigue sin ella; el hub funciona igual.',
-    bioUnsupported: 'Este navegador no ofrece WebAuthn. El onboarding sigue accesible.',
-    hSupport: 'Crowdfunding · código abierto',
-    pSupport:
-      'Método Ro / UX Tools es CC BY-NC-SA. No hay campaña de cobro en línea todavía. Si quieres fondear el proyecto, escribe: el mail es el canal de crowdfunding hasta que exista Kickstarter o similar.',
-    crowdfund: 'Escribir para crowdfunding',
-    code: 'Ver código en GitHub',
+    open: 'Abrir herramienta',
+    eyebrow: 'UX Tools · Mapa vocacional',
+    title: 'Estas son las herramientas',
+    sub: 'El mismo mapa VOC: 8 preguntas, 8 caminos. Toca un nodo según afinidad. PoliRadar está marcado.',
+    mapTitle: 'El mapa',
+    mapHint: 'Toca cada pregunta y entra a la herramienta que resuena ✦',
+    centerYou: 'tú',
+    centerAge: 'en el trabajo',
+    privacy: 'Las sesiones viven en este dispositivo. Sin cuenta, sin tracking.',
+    featured: 'Disponible ahora',
+    poliCta: 'PoliRadar · pantalla completa + QR',
+    tools: {
+      benchmark: {
+        voc: 'Mi mañana ideal',
+        name: 'UX Benchmark',
+        job: 'Comparas productos con dimensiones. Empiezas el día midiendo, no opinando.',
+      },
+      uxflow: {
+        voc: 'Pierdo noción del tiempo cuando…',
+        name: 'UXFlow',
+        job: 'Documentas flujos, criterios y handoff. El trabajo que se come las horas.',
+      },
+      poliradar: {
+        voc: 'Con quién paso el día',
+        name: 'PoliRadar',
+        job: 'RADAR · El Polijuego. Facilitación de vínculos (pareja / grupo). Pantalla completa y QR para compartir.',
+      },
+      dx: {
+        voc: 'Dónde estoy',
+        name: 'Operating Model DX',
+        job: 'Matriz Eisenhower: dónde está la prioridad entre Jira, Figma y el ruido.',
+      },
+      voc: {
+        voc: 'Qué tocan mis manos',
+        name: 'Mapa Vocacional',
+        job: 'El VOC original: 8 preguntas, inferencia local, caminos para Martina.',
+      },
+      tlp: {
+        voc: 'Qué problema resuelvo',
+        name: 'Kit TLP',
+        job: 'Cuando hay crisis: STOP, coping, ayuda. Sin diagnóstico. 100% local.',
+      },
+      selfradar: {
+        voc: 'Qué aprendo todo el rato',
+        name: 'Self Radar',
+        job: 'Review semanal Método Ro: 7 ejes, buen vivir, máx. 3 acciones.',
+      },
+      brief: {
+        voc: 'Cómo cierro mi día',
+        name: 'Brief de Campaña',
+        job: 'Cierras con un brief: alcance, presupuesto, proyección. Para salir del loop.',
+      },
+    },
   },
   en: {
     skip: 'Skip to hub',
-    back: 'Back',
-    next: 'Continue',
     start: 'Enter UX Tools',
-    stepLang: 'Language',
-    stepPrivacy: 'Privacy',
-    stepSecurity: 'Security',
-    stepBio: 'Biometrics',
-    stepSupport: 'Support',
-    hLang: 'Choose your language',
-    pLang: 'This onboarding is in three languages. You can switch anytime. Each module keeps its own language.',
-    hPrivacy: 'Privacy by design',
-    pPrivacy:
-      'Your sessions stay on this device (localStorage). No account, no profile server, no tracking cookies. Clear the site, clear your data.',
-    bulletsPrivacy: [
-      'Minimisation: only what you type in Self Radar / Kit TLP.',
-      'No third parties: no analytics, ads, or pixels.',
-      'You export: optional encrypted JSON. Nobody else reads it.',
-    ],
-    hSecurity: 'Security by design',
-    pSecurity:
-      'We validate and clamp stored text. No eval, no injected HTML, allowlisted outbound links. Sensitive data never leaves the browser.',
-    bulletsSecurity: [
-      'Text and session caps (quota safety).',
-      'Optional AES-GCM export.',
-      'Passkey / WebAuthn is opt-in. Never required.',
-    ],
-    hBio: 'Optional biometrics',
-    pBio:
-      'You can lock this browser with Face ID, a fingerprint, or a platform key. The private key never leaves the device. No sensor, or using a screen reader? Continue without biometrics.',
-    bioCta: 'Enable a passkey on this device',
-    bioSkip: 'Continue without biometrics',
-    bioOk: 'Passkey ready on this device.',
-    bioFail: 'Could not create a passkey. Continue anyway — the hub still works.',
-    bioUnsupported: 'This browser has no WebAuthn. Onboarding stays accessible.',
-    hSupport: 'Crowdfunding · open source',
-    pSupport:
-      'Método Ro / UX Tools is CC BY-NC-SA. There is no live payment campaign yet. To fund the project, write: that mailbox is the crowdfunding channel until Kickstarter or similar exists.',
-    crowdfund: 'Write to crowdfund',
-    code: 'View code on GitHub',
+    open: 'Open tool',
+    eyebrow: 'UX Tools · Vocational map',
+    title: 'These are the tools',
+    sub: 'Same VOC map: 8 questions, 8 paths. Tap a node by affinity. PoliRadar is marked.',
+    mapTitle: 'The map',
+    mapHint: 'Tap each question and open the tool that resonates ✦',
+    centerYou: 'you',
+    centerAge: 'at work',
+    privacy: 'Sessions stay on this device. No account, no tracking.',
+    featured: 'Available now',
+    poliCta: 'PoliRadar · fullscreen + QR',
+    tools: {
+      benchmark: {
+        voc: 'My ideal morning',
+        name: 'UX Benchmark',
+        job: 'Compare products on dimensions. Start the day measuring, not guessing.',
+      },
+      uxflow: {
+        voc: 'I lose track of time when…',
+        name: 'UXFlow',
+        job: 'Document flows, criteria, handoff. The work that eats the hours.',
+      },
+      poliradar: {
+        voc: 'Who I spend the day with',
+        name: 'PoliRadar',
+        job: 'RADAR · El Polijuego. Facilitation for pairs / groups. Fullscreen and a QR to share.',
+      },
+      dx: {
+        voc: 'Where I am',
+        name: 'Operating Model DX',
+        job: 'Eisenhower matrix: where priority sits between Jira, Figma, and noise.',
+      },
+      voc: {
+        voc: 'What my hands touch',
+        name: 'Vocational map',
+        job: 'The original VOC: 8 questions, local inference, paths for Martina.',
+      },
+      tlp: {
+        voc: 'What problem I solve',
+        name: 'Kit TLP',
+        job: 'In a crisis: STOP, coping, help. No diagnosis. Fully local.',
+      },
+      selfradar: {
+        voc: 'What I keep learning',
+        name: 'Self Radar',
+        job: 'Weekly Método Ro review: 7 axes, living well, max 3 actions.',
+      },
+      brief: {
+        voc: 'How I close the day',
+        name: 'Campaign brief',
+        job: 'Close with a brief: scope, budget, projection. Out of the loop.',
+      },
+    },
   },
   pt: {
     skip: 'Saltar para o hub',
-    back: 'Voltar',
-    next: 'Continuar',
     start: 'Entrar no UX Tools',
-    stepLang: 'Idioma',
-    stepPrivacy: 'Privacidade',
-    stepSecurity: 'Segurança',
-    stepBio: 'Biometria',
-    stepSupport: 'Apoio',
-    hLang: 'Escolha o idioma',
-    pLang: 'Este onboarding está em três idiomas. Pode mudar quando quiser. Cada módulo mantém o próprio idioma.',
-    hPrivacy: 'Privacy by design',
-    pPrivacy:
-      'As sessões ficam neste dispositivo (localStorage). Sem conta, sem servidor de perfil, sem cookies de tracking. Apagar o site apaga os dados.',
-    bulletsPrivacy: [
-      'Minimização: só o que você escreve no Self Radar / Kit TLP.',
-      'Sem terceiros: sem analytics, ads ou pixel.',
-      'Você exporta: JSON cifrado opcional. Ninguém mais lê.',
-    ],
-    hSecurity: 'Security by design',
-    pSecurity:
-      'Validamos e limitamos o que se guarda. Sem eval, sem HTML injetado, links externos em allowlist. O dado sensível não sai do navegador.',
-    bulletsSecurity: [
-      'Limites de texto e de sessões.',
-      'Export opcional com AES-GCM.',
-      'Passkey / WebAuthn é opt-in. Nunca obrigatório.',
-    ],
-    hBio: 'Biometria opcional',
-    pBio:
-      'Pode proteger este navegador com Face ID, impressão digital ou chave do sistema. A chave privada não sai do dispositivo. Sem sensor, ou com leitor de tela? Siga sem biometria.',
-    bioCta: 'Ativar passkey neste dispositivo',
-    bioSkip: 'Continuar sem biometria',
-    bioOk: 'Passkey pronta neste dispositivo.',
-    bioFail: 'Não foi possível criar a passkey. O hub funciona na mesma.',
-    bioUnsupported: 'Este navegador não tem WebAuthn. O onboarding continua acessível.',
-    hSupport: 'Crowdfunding · código aberto',
-    pSupport:
-      'Método Ro / UX Tools é CC BY-NC-SA. Ainda não há campanha de pagamento. Para financiar o projeto, escreva: esse e-mail é o canal de crowdfunding até existir Kickstarter ou similar.',
-    crowdfund: 'Escrever para crowdfunding',
-    code: 'Ver código no GitHub',
+    open: 'Abrir ferramenta',
+    eyebrow: 'UX Tools · Mapa vocacional',
+    title: 'Estas são as ferramentas',
+    sub: 'O mesmo mapa VOC: 8 perguntas, 8 caminhos. Toque um nó por afinidade. PoliRadar está marcado.',
+    mapTitle: 'O mapa',
+    mapHint: 'Toque cada pergunta e entre na ferramenta que ressoa ✦',
+    centerYou: 'você',
+    centerAge: 'no trabalho',
+    privacy: 'As sessões ficam neste dispositivo. Sem conta, sem tracking.',
+    featured: 'Disponível agora',
+    poliCta: 'PoliRadar · tela cheia + QR',
+    tools: {
+      benchmark: {
+        voc: 'Minha manhã ideal',
+        name: 'UX Benchmark',
+        job: 'Compare produtos com dimensões. Comece o dia medindo, não opinando.',
+      },
+      uxflow: {
+        voc: 'Perco a noção do tempo quando…',
+        name: 'UXFlow',
+        job: 'Documente fluxos, critérios e handoff. O trabalho que come as horas.',
+      },
+      poliradar: {
+        voc: 'Com quem passo o dia',
+        name: 'PoliRadar',
+        job: 'RADAR · El Polijuego. Facilitação de vínculos (casal / grupo). Tela cheia e QR para compartilhar.',
+      },
+      dx: {
+        voc: 'Onde estou',
+        name: 'Operating Model DX',
+        job: 'Matriz Eisenhower: onde está a prioridade entre Jira, Figma e o ruído.',
+      },
+      voc: {
+        voc: 'O que minhas mãos tocam',
+        name: 'Mapa Vocacional',
+        job: 'O VOC original: 8 perguntas, inferência local, caminhos para Martina.',
+      },
+      tlp: {
+        voc: 'Qual problema resolvo',
+        name: 'Kit TLP',
+        job: 'Na crise: STOP, coping, ajuda. Sem diagnóstico. 100% local.',
+      },
+      selfradar: {
+        voc: 'O que aprendo o tempo todo',
+        name: 'Self Radar',
+        job: 'Review semanal Método Ro: 7 eixos, bom viver, máx. 3 ações.',
+      },
+      brief: {
+        voc: 'Como fecho o meu dia',
+        name: 'Brief de Campanha',
+        job: 'Feche com um brief: alcance, orçamento, projeção. Sair do loop.',
+      },
+    },
   },
-} as const;
+};
 
 export function onboardCopy(lang: OnboardLang) {
   return COPY[lang];

@@ -12,7 +12,9 @@ Suite de herramientas UX en producción para SURA Investments.
 | **RF Recon Console** | Blueprint UX para operación SIGINT (tipo IMSI catcher): arquitectura de información en 4 fases, dashboard táctico de 3 paneles y reglas de UX crítica. **Prototipo de interfaz con datos simulados** — no controla hardware ni captura radiofrecuencia | [imsi.html](https://vientonorte.github.io/uxtools/imsi.html) |
 | **Self Radar** | Método Ro · review semanal: 7 ejes fijos (1–10), preguntas de buen vivir, cierre y máx. 3 acciones. localStorage + print | [app.html#/selfradar](https://vientonorte.github.io/uxtools/app.html#/selfradar) |
 | **Kit TLP** | Método Ro · protocolo DBT/TCC en crisis (8 pasos, STOP, ayuda). localStorage + print | [app.html#/kit-tlp](https://vientonorte.github.io/uxtools/app.html#/kit-tlp) |
-| **Onboarding** | Privacy / security by design, biometría opt-in (WebAuthn), ES/EN/PT. Passkey nunca obligatoria | [app.html#/onboarding](https://vientonorte.github.io/uxtools/app.html#/onboarding) |
+| **PoliRadar** | RADAR · El Polijuego. Facilitación de vínculos (pareja/grupo). Pantalla completa + QR para compartir | [app.html#/poliradar](https://vientonorte.github.io/uxtools/app.html#/poliradar) |
+| **Onboarding** | Mapa de herramientas al estilo VOC (8 nodos vocacionales). Contexto de la suite, no un wizard legal | [app.html#/onboarding](https://vientonorte.github.io/uxtools/app.html#/onboarding) |
+| **Mapa Vocacional** | 8 preguntas · inferencia semántica local (Martina) | [voc.html](https://vientonorte.github.io/uxtools/voc.html) |
 
 **Crowdfunding:** aún no hay campaña Kickstarter/GoFundMe. Canal: [contacto@vientonorte.io](mailto:contacto@vientonorte.io?subject=Crowdfunding%20UX%20Tools%20Metodo%20Ro).
 

@@ -2,38 +2,20 @@
   max-width: 720px;
 }
 
+.ob-main--map {
+  max-width: 880px;
+}
+
 .ob-p {
   margin: 0 0 0.75rem;
   line-height: 1.55;
-}
-
-.ob-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin: 0 0 1.25rem;
-}
-
-.ob-step {
-  min-height: 44px;
-  padding: 0.4rem 0.7rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
-  background: transparent;
-  color: var(--muted, #9aa3b2);
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.ob-step.is-active {
-  border-color: var(--cyan, #5ce1e6);
-  color: var(--white, #fff);
 }
 
 .ob-langs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  margin: 0 0 1.25rem;
 }
 
 .ob-lang {
@@ -56,16 +38,6 @@
   height: 1.1rem;
 }
 
-.ob-ok {
-  color: var(--cyan, #5ce1e6);
-  margin: 0.75rem 0 0;
-}
-
-.ob-warn {
-  color: var(--muted, #9aa3b2);
-  margin: 0.75rem 0 0;
-}
-
 .ob-nav {
   margin-top: 1.25rem;
 }
@@ -76,4 +48,190 @@ a.mr-btn {
   justify-content: center;
   text-decoration: none;
   box-sizing: border-box;
+}
+
+.ob-map-wrap {
+  margin: 0 0 1.5rem;
+}
+
+.ob-map-title {
+  font-size: 1.15rem;
+  margin: 0 0 0.35rem;
+}
+
+.ob-map-hint {
+  margin: 0 0 1rem;
+  color: var(--muted, #9aa3b2);
+  font-size: 0.95rem;
+}
+
+.ob-map {
+  position: relative;
+  width: min(100%, 640px);
+  aspect-ratio: 1;
+  margin: 0 auto 1.25rem;
+}
+
+.ob-map-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ob-map-lines line {
+  stroke: var(--border-subtle, rgba(255, 255, 255, 0.28));
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+
+.ob-nodo {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 118px;
+  height: 118px;
+  padding: 0.45rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.18));
+  background: rgba(11, 15, 26, 0.96);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  z-index: 1;
+}
+
+.ob-nodo-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.ob-nodo-label {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  text-align: center;
+}
+
+.ob-nodo.is-on,
+.ob-nodo-row.is-on {
+  border-color: var(--cyan, #5ce1e6);
+}
+
+.ob-nodo.is-featured,
+.ob-nodo-row.is-featured {
+  box-shadow: 0 0 0 2px var(--cyan, #5ce1e6);
+}
+
+.ob-centro {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid var(--cyan, #5ce1e6);
+  background: #0b0f1a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.ob-yo {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.ob-yo-name {
+  font-weight: 700;
+}
+
+.ob-yo-age {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+
+.ob-map-list {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.5rem;
+}
+
+.ob-nodo-row {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ob-nodo-row strong,
+.ob-nodo-row em {
+  display: block;
+}
+
+.ob-nodo-row em {
+  font-style: normal;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.ob-qr {
+  margin: 0;
+}
+
+.ob-qr-img {
+  display: block;
+  width: 192px;
+  height: 192px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.ob-qr-caption {
+  margin: 0.6rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.ob-qr-url {
+  display: inline-block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  word-break: break-all;
+}
+
+.ob-qr-placeholder {
+  width: 192px;
+  height: 192px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 720px) {
+  .ob-map {
+    display: none;
+  }
+
+  .ob-map-list {
+    display: grid;
+  }
 }

@@ -8,6 +8,7 @@ export type SuiteModuleId =
   | 'brief'
   | 'selfradar'
   | 'kit-tlp'
+  | 'polijuego'
   | 'onboarding';
 
 export interface SuiteModule {
@@ -99,11 +100,19 @@ export const SUITE_MODULES: SuiteModule[] = [
     spaPath: '/kit-tlp',
   },
   {
+    id: 'polijuego',
+    label: 'PoliRadar',
+    shortLabel: 'PoliRadar',
+    logo: 'RAD',
+    badge: 'Ro',
+    spaPath: '/poliradar',
+  },
+  {
     id: 'onboarding',
     label: 'Onboarding',
     shortLabel: 'Onboard',
     logo: 'OB',
-    badge: 'Ro',
+    badge: 'VOC',
     spaPath: '/onboarding',
   },
   {

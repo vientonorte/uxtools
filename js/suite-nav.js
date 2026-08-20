@@ -15,7 +15,8 @@
     { id: 'voc', label: 'Mapa Vocacional', shortLabel: 'VOC', logo: 'VOC', badge: 'v2', staticPath: 'voc.html' },
     { id: 'selfradar', label: 'Self Radar', shortLabel: 'Radar', logo: 'SR', badge: 'Ro', staticPath: 'app.html#/selfradar' },
     { id: 'kit-tlp', label: 'Kit TLP', shortLabel: 'TLP', logo: 'TLP', badge: 'Ro', staticPath: 'app.html#/kit-tlp' },
-    { id: 'onboarding', label: 'Onboarding', shortLabel: 'Onboard', logo: 'OB', badge: 'Ro', staticPath: 'app.html#/onboarding' },
+    { id: 'polijuego', label: 'PoliRadar', shortLabel: 'PoliRadar', logo: 'RAD', badge: 'Ro', staticPath: 'app.html#/poliradar' },
+    { id: 'onboarding', label: 'Onboarding', shortLabel: 'Onboard', logo: 'OB', badge: 'VOC', staticPath: 'app.html#/onboarding' },
     { id: 'admin', label: 'Content Manager', shortLabel: 'Admin', logo: 'UXT', badge: 'Admin', staticPath: 'admin.html', variant: 'admin' },
   ];
 

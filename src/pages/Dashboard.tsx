@@ -9,7 +9,6 @@ import {
   loadSelfradarSessions,
 } from '../lib/metodo-ro-storage';
 import type { KitTlpSession, SelfradarSession } from '../types/metodo-ro';
-import { EXTERNAL_LINKS } from '../config/suiteNav';
 
 function readStorage<T>(key: string, fallback: T): T {
   try {
@@ -436,37 +435,61 @@ export default function Dashboard() {
             </div>
           </article>
 
-          <article className="module-card" id="mod-onboarding">
+          {/* PoliRadar · RADAR El Polijuego · Método Ro */}
+          <article className="module-card" id="mod-polijuego">
             <div className="module-card-inner">
               <div className="module-top">
-                <div className="module-icon-wrap" aria-hidden="true">◎</div>
+                <div className="module-icon-wrap" aria-hidden="true">🃏</div>
                 <span className="badge badge-live module-badge">MÉTODO RO</span>
               </div>
-              <h2 className="module-title">Onboarding</h2>
+              <h2 className="module-title">PoliRadar</h2>
               <p className="module-desc">
-                Privacy by design, security by design, biometría opcional (passkey) y ES/EN/PT.
-                Accesible: passkey nunca es obligatoria. Crowdfunding del proyecto.
+                RADAR · El Polijuego. Facilitación de vínculos éticos (pareja / grupo).
+                Ciclo Rev → Aco → Deb → Acc → Rec. Pantalla completa y QR para compartir.
               </p>
               <div className="module-meta">
                 <span className="module-meta-item">
-                  <span className="module-meta-icon">🔒</span>Local · WCAG · WebAuthn opt-in
+                  <span className="module-meta-icon">◎</span>Pareja · Grupo · Self Radar
                 </span>
               </div>
               <div className="module-tags" aria-label="Funciones">
-                <span className="mod-tag">Privacy</span>
-                <span className="mod-tag">Security</span>
-                <span className="mod-tag">Biometría</span>
+                <span className="mod-tag">PoliRadar</span>
+                <span className="mod-tag">Fullscreen</span>
+                <span className="mod-tag">QR</span>
+                <span className="mod-tag">Open Source</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <Link className="btn-module-open" to="/poliradar">Abrir PoliRadar →</Link>
+              <Link className="btn-module-ghost" to="/selfradar">Self Radar</Link>
+            </div>
+          </article>
+
+          <article className="module-card" id="mod-onboarding">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">✦</div>
+                <span className="badge badge-live module-badge">VOC</span>
+              </div>
+              <h2 className="module-title">Onboarding</h2>
+              <p className="module-desc">
+                Mapa de herramientas al estilo VOC: 8 nodos vocacionales para conocer la suite
+                (PoliRadar, VOC, Self Radar, Benchmark, UXFlow…).
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">🧭</span>8 herramientas · mapa vocacional
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Funciones">
+                <span className="mod-tag">VOC</span>
+                <span className="mod-tag">PoliRadar</span>
                 <span className="mod-tag">ES · EN · PT</span>
               </div>
             </div>
             <div className="module-card-footer">
               <Link className="btn-module-open" to="/onboarding">Abrir onboarding →</Link>
-              <a
-                className="btn-module-ghost"
-                href={EXTERNAL_LINKS.crowdfund}
-              >
-                Crowdfunding
-              </a>
+              <Link className="btn-module-ghost" to="/poliradar">PoliRadar</Link>
             </div>
           </article>
 
@@ -545,6 +568,7 @@ export default function Dashboard() {
                 <Link className="workspace-action ghost" to="/uxflow">Nuevo UXFlow</Link>
                 <Link className="workspace-action ghost" to="/selfradar">Self Radar</Link>
                 <Link className="workspace-action ghost" to="/kit-tlp">Kit TLP</Link>
+                <Link className="workspace-action ghost" to="/poliradar">PoliRadar</Link>
                 <Link className="workspace-action ghost" to="/onboarding">Onboarding</Link>
               </div>
             </article>

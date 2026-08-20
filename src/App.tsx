@@ -11,6 +11,7 @@ import Medicinal from './pages/Medicinal';
 import Selfradar from './pages/Selfradar';
 import KitTlp from './pages/KitTlp';
 import Onboarding from './pages/Onboarding';
+import Polijuego from './pages/Polijuego';
 
 export default function App() {
   return (
@@ -29,6 +30,8 @@ export default function App() {
         <Route path="/selfradar" element={<Selfradar />} />
         <Route path="/kit-tlp" element={<KitTlp />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/polijuego" element={<Polijuego />} />
+        <Route path="/poliradar" element={<Polijuego />} />
       </Routes>
       <Footer />
     </BenchmarkProvider>
