@@ -244,19 +244,19 @@ export default function Dashboard() {
       </header>
 
       <main className="dash-main" id="main" tabIndex={-1}>
-        <article className="workspace-card workspace-card-primary fade-up dash-sprint" id="mod-sprint">
+        <article className="workspace-card workspace-card-primary fade-up dash-map" id="mod-map">
           <div className="workspace-card-top">
             <div className="workspace-icon" aria-hidden="true">✦</div>
-            <span className="workspace-badge">DESIGN SPRINT VN</span>
+            <span className="workspace-badge">MAPA VOCACIONAL</span>
           </div>
-          <h2 className="workspace-title">Juega el sprint. Aprende la suite.</h2>
+          <h2 className="workspace-title">Estas son las herramientas</h2>
           <p className="workspace-desc">
-            Cinco días: Map → Sketch → Decide → Prototype → Test. Cada día desbloquea
-            una herramienta de este hub (Benchmark, UXFlow, DX, VOC, PoliRadar).
+            8 nodos VOC, 8 instrumentos live. Sella el que resuena (Benchmark, UXFlow,
+            DX, VOC, PoliRadar, Self Radar, Kit TLP, Brief). PoliRadar: pantalla completa + QR.
           </p>
           <div className="workspace-actions">
             <Link className="workspace-action primary" to="/onboarding">
-              {isOnboardDone() ? 'Volver a jugar el sprint' : 'Empezar onboarding'}
+              {isOnboardDone() ? 'Volver al mapa' : 'Empezar onboarding'}
             </Link>
             <Link className="workspace-action ghost" to="/poliradar">
               PoliRadar
@@ -271,26 +271,26 @@ export default function Dashboard() {
             <div className="module-card-inner">
               <div className="module-top">
                 <div className="module-icon-wrap" aria-hidden="true">✦</div>
-                <span className="badge badge-live module-badge">DS VN</span>
+                <span className="badge badge-live module-badge">VOC</span>
               </div>
-              <h2 className="module-title">Onboarding · Sprint</h2>
+              <h2 className="module-title">Onboarding · Mapa</h2>
               <p className="module-desc">
-                Design Sprint VN gamificado: Map → Sketch → Decide → Prototype → Test.
-                Explica el hub live (Benchmark, UXFlow, DX, VOC, PoliRadar).
+                Mapa vocacional gamificado: sella los 8 instrumentos live del hub.
+                PoliRadar con pantalla completa y QR para compartir.
               </p>
               <div className="module-meta">
                 <span className="module-meta-item">
-                  <span className="module-meta-icon">🧭</span>5 días · 8 herramientas
+                  <span className="module-meta-icon">🧭</span>8 herramientas · VOC
                 </span>
               </div>
               <div className="module-tags" aria-label="Funciones">
-                <span className="mod-tag">Design Sprint</span>
                 <span className="mod-tag">VOC</span>
                 <span className="mod-tag">PoliRadar</span>
+                <span className="mod-tag">Sellos</span>
               </div>
             </div>
             <div className="module-card-footer">
-              <Link className="btn-module-open" to="/onboarding">Jugar sprint →</Link>
+              <Link className="btn-module-open" to="/onboarding">Abrir mapa →</Link>
               <Link className="btn-module-ghost" to="/poliradar">PoliRadar</Link>
             </div>
           </article>
@@ -582,7 +582,7 @@ export default function Dashboard() {
                 <div className="workspace-icon" aria-hidden="true">⌘</div>
                 <span className="workspace-badge">FOCO</span>
               </div>
-              <h3 className="workspace-title">Atajos del sprint</h3>
+              <h3 className="workspace-title">Atajos de la suite</h3>
               <p className="workspace-desc">Abre el flujo de trabajo principal sin perder tiempo entre módulos.</p>
               <div className="workspace-actions">
                 <Link className="workspace-action primary" to="/benchmark">Nuevo benchmark</Link>

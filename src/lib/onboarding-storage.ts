@@ -1,9 +1,17 @@
-import type { OnboardLang } from './onboarding-i18n';
-import type { SprintDay } from './onboarding-sprint';
+import type { OnboardLang, ToolId } from './onboarding-i18n';
+import { TOOL_LAYOUT } from './onboarding-i18n';
 
 const LANG_KEY = 'uxtools-onboard-lang';
 const DONE_KEY = 'uxtools-onboard-done';
 const CRED_KEY = 'uxtools-onboard-cred';
+const STAMP_KEY = 'uxtools-onboard-stamps';
+const PICK_KEY = 'uxtools-onboard-picks';
+
+const TOOL_IDS: ToolId[] = TOOL_LAYOUT.map((n) => n.id);
+
+function isToolId(value: unknown): value is ToolId {
+  return typeof value === 'string' && TOOL_IDS.includes(value as ToolId);
+}
 
 export function loadOnboardLang(): OnboardLang {
   const v = localStorage.getItem(LANG_KEY);
@@ -34,50 +42,36 @@ export function savePasskeyId(id: string): void {
   localStorage.setItem(CRED_KEY, id);
 }
 
-const STAMP_KEY = 'uxtools-onboard-stamps';
-const PICK_KEY = 'uxtools-onboard-picks';
-
-export interface OnboardPicks {
-  map?: string;
-  sketch?: string;
-  decide?: string;
-}
-
-export function loadStamps(): SprintDay[] {
+export function loadStamps(): ToolId[] {
   try {
     const raw = localStorage.getItem(STAMP_KEY);
     const parsed = raw ? (JSON.parse(raw) as unknown) : [];
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (d): d is SprintDay =>
-        d === 'map' ||
-        d === 'sketch' ||
-        d === 'decide' ||
-        d === 'prototype' ||
-        d === 'test'
-    );
+    return parsed.filter(isToolId);
   } catch {
     return [];
   }
 }
 
-export function saveStamp(day: SprintDay): SprintDay[] {
-  const next = Array.from(new Set([...loadStamps(), day]));
+export function saveStamp(id: ToolId): ToolId[] {
+  const next = Array.from(new Set([...loadStamps(), id]));
   localStorage.setItem(STAMP_KEY, JSON.stringify(next));
   return next;
 }
 
-export function loadPicks(): OnboardPicks {
+export function loadSelectedTool(): ToolId {
   try {
     const raw = localStorage.getItem(PICK_KEY);
-    return raw ? (JSON.parse(raw) as OnboardPicks) : {};
+    const parsed = raw ? (JSON.parse(raw) as { tool?: unknown; map?: unknown }) : {};
+    if (isToolId(parsed.tool)) return parsed.tool;
+    if (isToolId(parsed.map)) return parsed.map;
   } catch {
-    return {};
+    /* ignore */
   }
+  return 'poliradar';
 }
 
-export function savePicks(partial: OnboardPicks): OnboardPicks {
-  const next = { ...loadPicks(), ...partial };
-  localStorage.setItem(PICK_KEY, JSON.stringify(next));
-  return next;
+export function saveSelectedTool(id: ToolId): ToolId {
+  localStorage.setItem(PICK_KEY, JSON.stringify({ tool: id }));
+  return id;
 }
