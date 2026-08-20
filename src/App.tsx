@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { Nav } from './components/Nav';
 import { Footer } from './components/Footer';
 import { BenchmarkProvider } from './contexts/BenchmarkContext';
@@ -12,14 +12,7 @@ import Selfradar from './pages/Selfradar';
 import KitTlp from './pages/KitTlp';
 import Onboarding from './pages/Onboarding';
 import Polijuego from './pages/Polijuego';
-import { isOnboardDone } from './lib/onboarding-storage';
-
-function HomeGate() {
-  if (!isOnboardDone()) {
-    return <Navigate to="/onboarding" replace />;
-  }
-  return <Dashboard />;
-}
+import { ToolGate } from './components/ToolGate';
 
 export default function App() {
   return (
@@ -29,17 +22,66 @@ export default function App() {
       </a>
       <Nav />
       <Routes>
-        <Route path="/" element={<HomeGate />} />
-        <Route path="/benchmark" element={<Benchmark />} />
-        <Route path="/uxflow" element={<UxFlow />} />
+        <Route path="/" element={<Dashboard />} />
+        <Route
+          path="/benchmark"
+          element={
+            <ToolGate id="benchmark">
+              <Benchmark />
+            </ToolGate>
+          }
+        />
+        <Route
+          path="/uxflow"
+          element={
+            <ToolGate id="uxflow">
+              <UxFlow />
+            </ToolGate>
+          }
+        />
         <Route path="/admin" element={<Admin />} />
-        <Route path="/brief" element={<Brief />} />
+        <Route
+          path="/brief"
+          element={
+            <ToolGate id="brief">
+              <Brief />
+            </ToolGate>
+          }
+        />
         <Route path="/medicinal" element={<Medicinal />} />
-        <Route path="/selfradar" element={<Selfradar />} />
-        <Route path="/kit-tlp" element={<KitTlp />} />
+        <Route
+          path="/selfradar"
+          element={
+            <ToolGate id="selfradar">
+              <Selfradar />
+            </ToolGate>
+          }
+        />
+        <Route
+          path="/kit-tlp"
+          element={
+            <ToolGate id="tlp">
+              <KitTlp />
+            </ToolGate>
+          }
+        />
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/polijuego" element={<Polijuego />} />
-        <Route path="/poliradar" element={<Polijuego />} />
+        <Route
+          path="/polijuego"
+          element={
+            <ToolGate id="poliradar">
+              <Polijuego />
+            </ToolGate>
+          }
+        />
+        <Route
+          path="/poliradar"
+          element={
+            <ToolGate id="poliradar">
+              <Polijuego />
+            </ToolGate>
+          }
+        />
       </Routes>
       <Footer />
     </BenchmarkProvider>

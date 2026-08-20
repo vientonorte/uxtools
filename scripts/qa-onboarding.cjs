@@ -43,10 +43,35 @@ function mustNotContain(rel, needle, label) {
 
 process.stdout.write('\nQA onboarding · UX Tools (path usuario = /uxtools/)\n');
 
-mustContain(
+mustNotContain(
   'src/App.tsx',
   'Navigate to="/onboarding"',
-  'HomeGate redirige / → /onboarding'
+  'hub ya no fuerza onboarding de suite'
+);
+mustContain(
+  'src/App.tsx',
+  'ToolGate id="benchmark"',
+  'first-view Benchmark'
+);
+mustContain(
+  'src/App.tsx',
+  'ToolGate id="poliradar"',
+  'first-view PoliRadar'
+);
+mustContain(
+  'src/components/ToolGate.tsx',
+  'firstEyebrow',
+  'first-view por herramienta usa copy VOC'
+);
+mustContain(
+  'src/lib/onboarding-i18n.ts',
+  'Primera vez en esta herramienta',
+  'copy first-view ES'
+);
+mustContain(
+  'js/suite-nav.js',
+  'showToolFirstView',
+  'first-view en HTML estático (DX / VOC)'
 );
 mustContain(
   'src/lib/onboarding-storage.ts',

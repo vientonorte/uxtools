@@ -56,7 +56,12 @@ export function loadStamps(): ToolId[] {
 export function saveStamp(id: ToolId): ToolId[] {
   const next = Array.from(new Set([...loadStamps(), id]));
   localStorage.setItem(STAMP_KEY, JSON.stringify(next));
+  if (next.length >= TOOL_IDS.length) markOnboardDone();
   return next;
+}
+
+export function isToolStamped(id: ToolId): boolean {
+  return loadStamps().includes(id);
 }
 
 export function loadSelectedTool(): ToolId {

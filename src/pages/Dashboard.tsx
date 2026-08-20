@@ -256,7 +256,7 @@ export default function Dashboard() {
           </p>
           <div className="workspace-actions">
             <Link className="workspace-action primary" to="/onboarding">
-              {isOnboardDone() ? 'Volver al mapa' : 'Empezar onboarding'}
+              {isOnboardDone() ? 'Volver al mapa' : 'Ver el mapa'}
             </Link>
             <Link className="workspace-action ghost" to="/poliradar">
               PoliRadar

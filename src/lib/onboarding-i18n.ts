@@ -63,6 +63,9 @@ interface Copy {
   stamped: string;
   score: string;
   enter: string;
+  enterTool: string;
+  firstEyebrow: string;
+  mapCta: string;
   shareQr: string;
   doneAlready: string;
   tools: Record<ToolId, ToolCopy>;
@@ -88,6 +91,9 @@ const COPY: Record<OnboardLang, Copy> = {
     stamped: 'Sellada',
     score: 'instrumentos sellados',
     enter: 'Entrar al hub',
+    enterTool: 'Entrar a {name}',
+    firstEyebrow: 'Primera vez en esta herramienta',
+    mapCta: 'Ver el mapa de 8',
     shareQr: 'Comparte PoliRadar con este QR',
     doneAlready: 'Onboarding ya marcado en este dispositivo.',
     tools: {
@@ -152,6 +158,9 @@ const COPY: Record<OnboardLang, Copy> = {
     stamped: 'Stamped',
     score: 'instruments stamped',
     enter: 'Enter the hub',
+    enterTool: 'Enter {name}',
+    firstEyebrow: 'First time in this tool',
+    mapCta: 'See the 8-node map',
     shareQr: 'Share PoliRadar with this QR',
     doneAlready: 'Onboarding already marked on this device.',
     tools: {
@@ -216,6 +225,9 @@ const COPY: Record<OnboardLang, Copy> = {
     stamped: 'Selada',
     score: 'instrumentos selados',
     enter: 'Entrar no hub',
+    enterTool: 'Entrar em {name}',
+    firstEyebrow: 'Primeira vez nesta ferramenta',
+    mapCta: 'Ver o mapa de 8',
     shareQr: 'Compartilhe PoliRadar com este QR',
     doneAlready: 'Onboarding já marcado neste dispositivo.',
     tools: {
