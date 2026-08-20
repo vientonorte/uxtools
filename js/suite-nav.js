@@ -16,7 +16,7 @@
     { id: 'selfradar', label: 'Self Radar', shortLabel: 'Radar', logo: 'SR', badge: 'Ro', staticPath: 'app.html#/selfradar' },
     { id: 'kit-tlp', label: 'Kit TLP', shortLabel: 'TLP', logo: 'TLP', badge: 'Ro', staticPath: 'app.html#/kit-tlp' },
     { id: 'polijuego', label: 'PoliRadar', shortLabel: 'PoliRadar', logo: 'RAD', badge: 'Ro', staticPath: 'app.html#/poliradar' },
-    { id: 'onboarding', label: 'Onboarding · Mapa', shortLabel: 'Mapa', logo: 'VOC', badge: 'VOC', staticPath: 'app.html#/onboarding' },
+    { id: 'onboarding', label: 'Onboarding · Mapa', shortLabel: 'Mapa', logo: 'MAP', badge: 'Map', staticPath: 'app.html#/onboarding' },
     { id: 'admin', label: 'Content Manager', shortLabel: 'Admin', logo: 'UXT', badge: 'Admin', staticPath: 'admin.html', variant: 'admin' },
   ];
 

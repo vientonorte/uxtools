@@ -57,6 +57,7 @@ interface Copy {
   centerAge: string;
   privacy: string;
   featured: string;
+  marked: string;
   poliCta: string;
   stamp: string;
   stamped: string;
@@ -81,6 +82,7 @@ const COPY: Record<OnboardLang, Copy> = {
     centerAge: 'en el trabajo',
     privacy: 'Las sesiones viven en este dispositivo. Sin cuenta, sin tracking.',
     featured: 'Disponible ahora',
+    marked: 'marcado',
     poliCta: 'PoliRadar · pantalla completa + QR',
     stamp: 'Sellar esta herramienta',
     stamped: 'Sellada',
@@ -144,6 +146,7 @@ const COPY: Record<OnboardLang, Copy> = {
     centerAge: 'at work',
     privacy: 'Sessions stay on this device. No account, no tracking.',
     featured: 'Available now',
+    marked: 'marked',
     poliCta: 'PoliRadar · fullscreen + QR',
     stamp: 'Stamp this tool',
     stamped: 'Stamped',
@@ -207,6 +210,7 @@ const COPY: Record<OnboardLang, Copy> = {
     centerAge: 'no trabalho',
     privacy: 'As sessões ficam neste dispositivo. Sem conta, sem tracking.',
     featured: 'Disponível agora',
+    marked: 'marcado',
     poliCta: 'PoliRadar · tela cheia + QR',
     stamp: 'Selar esta ferramenta',
     stamped: 'Selada',

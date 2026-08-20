@@ -62,9 +62,8 @@ export function saveStamp(id: ToolId): ToolId[] {
 export function loadSelectedTool(): ToolId {
   try {
     const raw = localStorage.getItem(PICK_KEY);
-    const parsed = raw ? (JSON.parse(raw) as { tool?: unknown; map?: unknown }) : {};
+    const parsed = raw ? (JSON.parse(raw) as { tool?: unknown }) : {};
     if (isToolId(parsed.tool)) return parsed.tool;
-    if (isToolId(parsed.map)) return parsed.map;
   } catch {
     /* ignore */
   }
