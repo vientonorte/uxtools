@@ -4,6 +4,11 @@ import { BENCHMARK_STORAGE_KEY, DIMENSIONES_DEFAULT } from '../types/benchmark';
 import type { BenchmarkState, BenchmarkSession } from '../types/benchmark';
 import { loadUxflowSessions } from '../lib/uxflow-storage';
 import type { UxflowSession } from '../types/uxflow';
+import {
+  loadKitTlpSessions,
+  loadSelfradarSessions,
+} from '../lib/metodo-ro-storage';
+import type { KitTlpSession, SelfradarSession } from '../types/metodo-ro';
 
 function readStorage<T>(key: string, fallback: T): T {
   try {
@@ -33,8 +38,9 @@ interface ActivityItem {
 }
 
 interface RecentArtifact {
-  id: number;
-  type: 'bm' | 'uxf';
+  id: string;
+  sort: number;
+  type: 'bm' | 'uxf' | 'sr' | 'tlp';
   title: string;
   subtitle: string;
   date: string;
@@ -57,7 +63,8 @@ function summarizeBm(session: BenchmarkSession): RecentArtifact {
     if (total >= leaderTotal) { leaderTotal = total; leaderName = p.nombre; }
   });
   return {
-    id: session.id,
+    id: `bm-${session.id}`,
+    sort: session.id,
     type: 'bm',
     title: session.nombre || 'Benchmark sin título',
     subtitle: session.analista ? `Analista: ${session.analista}` : 'Benchmark',
@@ -72,7 +79,8 @@ function summarizeUxf(session: UxflowSession): RecentArtifact {
   const steps = Array.isArray(session.flow?.steps) ? session.flow.steps.length : 0;
   const edgeCases = Array.isArray(session.flow?.edgeCases) ? session.flow.edgeCases.length : 0;
   return {
-    id: session.id,
+    id: `uxf-${session.id}`,
+    sort: session.id,
     type: 'uxf',
     title: session.titulo || 'Documento UXFlow',
     subtitle: session.linea || 'UXFlow',
@@ -80,6 +88,42 @@ function summarizeUxf(session: UxflowSession): RecentArtifact {
     score: steps ? `${steps} pasos` : 'Documento',
     meta: edgeCases ? `${edgeCases} casos borde` : 'Sin casos borde',
     href: '/uxflow',
+  };
+}
+
+function isLiveSelfradar(s: SelfradarSession): boolean {
+  return Object.values(s.scores).some((x) => x.score > 0) || s.qConseguir.trim().length > 0;
+}
+
+function isLiveKit(s: KitTlpSession): boolean {
+  return s.sucedio.trim().length > 0 || s.intensity > 0;
+}
+
+function summarizeSr(session: SelfradarSession): RecentArtifact {
+  return {
+    id: session.id,
+    sort: session.updatedAt || session.createdAt,
+    type: 'sr',
+    title: `Self Radar · ${session.date || 'sesión'}`,
+    subtitle: 'Método Ro',
+    date: session.date || '',
+    score: 'Radar',
+    meta: 'local',
+    href: '/selfradar',
+  };
+}
+
+function summarizeTlp(session: KitTlpSession): RecentArtifact {
+  return {
+    id: session.id,
+    sort: session.updatedAt || session.createdAt,
+    type: 'tlp',
+    title: `Kit TLP · ${session.date || 'sesión'}`,
+    subtitle: 'Método Ro',
+    date: session.date || '',
+    score: session.intensity ? `${session.intensity}/10` : 'TLP',
+    meta: 'local',
+    href: '/kit-tlp',
   };
 }
 
@@ -111,7 +155,11 @@ export default function Dashboard() {
   const recents: RecentArtifact[] = [
     ...bmSessions.map(summarizeBm),
     ...uxList.map(summarizeUxf),
-  ].sort((a, b) => b.id - a.id).slice(0, 5);
+    ...loadSelfradarSessions().filter(isLiveSelfradar).map(summarizeSr),
+    ...loadKitTlpSessions().filter(isLiveKit).map(summarizeTlp),
+  ]
+    .sort((a, b) => b.sort - a.sort)
+    .slice(0, 5);
 
   const [query, setQuery] = useState('');
   const moduleRef = useRef<HTMLDivElement>(null);
@@ -387,17 +435,17 @@ export default function Dashboard() {
             </div>
           </article>
 
-          {/* RADAR · El Polijuego · Método Ro */}
+          {/* PoliRadar · RADAR El Polijuego · Método Ro */}
           <article className="module-card" id="mod-polijuego">
             <div className="module-card-inner">
               <div className="module-top">
                 <div className="module-icon-wrap" aria-hidden="true">🃏</div>
                 <span className="badge badge-live module-badge">MÉTODO RO</span>
               </div>
-              <h2 className="module-title">RADAR · El Polijuego</h2>
+              <h2 className="module-title">PoliRadar</h2>
               <p className="module-desc">
-                Facilitación de vínculos éticos (pareja / grupo). Ciclo Rev → Aco → Deb → Acc → Rec.
-                Comunicación · Compasión · Honestidad radical.
+                RADAR · El Polijuego. Facilitación de vínculos éticos (pareja / grupo).
+                Ciclo Rev → Aco → Deb → Acc → Rec. Pantalla completa y QR para compartir.
               </p>
               <div className="module-meta">
                 <span className="module-meta-item">
@@ -405,15 +453,43 @@ export default function Dashboard() {
                 </span>
               </div>
               <div className="module-tags" aria-label="Funciones">
-                <span className="mod-tag">Pareja/Grupo</span>
-                <span className="mod-tag">Método Ro</span>
-                <span className="mod-tag">Figma Site</span>
+                <span className="mod-tag">PoliRadar</span>
+                <span className="mod-tag">Fullscreen</span>
+                <span className="mod-tag">QR</span>
                 <span className="mod-tag">Open Source</span>
               </div>
             </div>
             <div className="module-card-footer">
-              <Link className="btn-module-open" to="/polijuego">Abrir Polijuego →</Link>
+              <Link className="btn-module-open" to="/poliradar">Abrir PoliRadar →</Link>
               <Link className="btn-module-ghost" to="/selfradar">Self Radar</Link>
+            </div>
+          </article>
+
+          <article className="module-card" id="mod-onboarding">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">✦</div>
+                <span className="badge badge-live module-badge">VOC</span>
+              </div>
+              <h2 className="module-title">Onboarding</h2>
+              <p className="module-desc">
+                Design Sprint VN gamificado: Map → Sketch → Decide → Prototype → Test.
+                Explica el hub live (Benchmark, UXFlow, DX, VOC, PoliRadar).
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">🧭</span>8 herramientas · mapa vocacional
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Funciones">
+                <span className="mod-tag">VOC</span>
+                <span className="mod-tag">PoliRadar</span>
+                <span className="mod-tag">ES · EN · PT</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <Link className="btn-module-open" to="/onboarding">Abrir onboarding →</Link>
+              <Link className="btn-module-ghost" to="/poliradar">PoliRadar</Link>
             </div>
           </article>
 
@@ -492,7 +568,8 @@ export default function Dashboard() {
                 <Link className="workspace-action ghost" to="/uxflow">Nuevo UXFlow</Link>
                 <Link className="workspace-action ghost" to="/selfradar">Self Radar</Link>
                 <Link className="workspace-action ghost" to="/kit-tlp">Kit TLP</Link>
-                <Link className="workspace-action ghost" to="/polijuego">Polijuego</Link>
+                <Link className="workspace-action ghost" to="/poliradar">PoliRadar</Link>
+                <Link className="workspace-action ghost" to="/onboarding">Onboarding</Link>
               </div>
             </article>
 
@@ -505,14 +582,27 @@ export default function Dashboard() {
               <p className="workspace-desc">Sesiones y documentos más recientes para retomar trabajo.</p>
               <div className="recent-artifacts" aria-live="polite">
                 {recents.length === 0 ? (
-                  <div className="activity-empty">Sin artefactos recientes aún.</div>
+                  <div className="activity-empty">
+                    Aún no hay sesiones en este navegador (Benchmark, UXFlow, Self Radar o Kit TLP).
+                    <div className="workspace-actions" style={{ marginTop: '0.75rem' }}>
+                      <Link className="workspace-action primary" to="/onboarding">
+                        Abrir onboarding
+                      </Link>
+                    </div>
+                  </div>
                 ) : (
                   recents
                     .filter((item) => !query || item.title.toLowerCase().includes(query.toLowerCase()))
                     .map((item) => (
                       <Link key={item.id} className="recent-artifact" to={item.href}>
                         <div className="recent-artifact-icon" aria-hidden="true">
-                          {item.type === 'bm' ? '📊' : '⚡'}
+                          {item.type === 'bm'
+                            ? '📊'
+                            : item.type === 'sr'
+                              ? '◎'
+                              : item.type === 'tlp'
+                                ? '⏸'
+                                : '⚡'}
                         </div>
                         <div className="recent-artifact-body">
                           <div className="recent-artifact-title">{item.title}</div>

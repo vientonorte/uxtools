@@ -8,7 +8,8 @@ export type SuiteModuleId =
   | 'brief'
   | 'selfradar'
   | 'kit-tlp'
-  | 'polijuego';
+  | 'polijuego'
+  | 'onboarding';
 
 export interface SuiteModule {
   id: SuiteModuleId;
@@ -25,6 +26,9 @@ export interface SuiteModule {
 export const EXTERNAL_LINKS = {
   vientonorte: 'https://vientonorte.github.io/',
   github: 'https://github.com/vientonorte/uxtools',
+  /** Canal de crowdfunding hasta que exista campaña (Kickstarter/GoFundMe). */
+  crowdfund:
+    'mailto:contacto@vientonorte.io?subject=Crowdfunding%20UX%20Tools%20Metodo%20Ro',
 } as const;
 
 export const SUITE_MODULES: SuiteModule[] = [
@@ -97,11 +101,19 @@ export const SUITE_MODULES: SuiteModule[] = [
   },
   {
     id: 'polijuego',
-    label: 'RADAR · El Polijuego',
-    shortLabel: 'Polijuego',
+    label: 'PoliRadar',
+    shortLabel: 'PoliRadar',
     logo: 'RAD',
     badge: 'Ro',
-    spaPath: '/polijuego',
+    spaPath: '/poliradar',
+  },
+  {
+    id: 'onboarding',
+    label: 'Onboarding',
+    shortLabel: 'Onboard',
+    logo: 'OB',
+    badge: 'VOC',
+    spaPath: '/onboarding',
   },
   {
     id: 'admin',

@@ -20,7 +20,10 @@ function pathnameToModule(pathname: string): SuiteModuleId {
   if (pathname.startsWith('/brief')) return 'brief';
   if (pathname.startsWith('/selfradar')) return 'selfradar';
   if (pathname.startsWith('/kit-tlp')) return 'kit-tlp';
-  if (pathname.startsWith('/polijuego')) return 'polijuego';
+  if (pathname.startsWith('/polijuego') || pathname.startsWith('/poliradar')) {
+    return 'polijuego';
+  }
+  if (pathname.startsWith('/onboarding')) return 'onboarding';
   if (pathname.startsWith('/medicinal')) return 'suite';
   return 'suite';
 }
