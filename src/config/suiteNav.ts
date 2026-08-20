@@ -7,7 +7,8 @@ export type SuiteModuleId =
   | 'admin'
   | 'brief'
   | 'selfradar'
-  | 'kit-tlp';
+  | 'kit-tlp'
+  | 'onboarding';
 
 export interface SuiteModule {
   id: SuiteModuleId;
@@ -24,6 +25,9 @@ export interface SuiteModule {
 export const EXTERNAL_LINKS = {
   vientonorte: 'https://vientonorte.github.io/',
   github: 'https://github.com/vientonorte/uxtools',
+  /** Canal de crowdfunding hasta que exista campaña (Kickstarter/GoFundMe). */
+  crowdfund:
+    'mailto:contacto@vientonorte.io?subject=Crowdfunding%20UX%20Tools%20Metodo%20Ro',
 } as const;
 
 export const SUITE_MODULES: SuiteModule[] = [
@@ -93,6 +97,14 @@ export const SUITE_MODULES: SuiteModule[] = [
     logo: 'TLP',
     badge: 'Ro',
     spaPath: '/kit-tlp',
+  },
+  {
+    id: 'onboarding',
+    label: 'Onboarding',
+    shortLabel: 'Onboard',
+    logo: 'OB',
+    badge: 'Ro',
+    spaPath: '/onboarding',
   },
   {
     id: 'admin',
