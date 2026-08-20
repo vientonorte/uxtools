@@ -9,6 +9,7 @@ import {
   loadSelfradarSessions,
 } from '../lib/metodo-ro-storage';
 import type { KitTlpSession, SelfradarSession } from '../types/metodo-ro';
+import { isOnboardDone } from '../lib/onboarding-storage';
 
 function readStorage<T>(key: string, fallback: T): T {
   try {
@@ -243,9 +244,57 @@ export default function Dashboard() {
       </header>
 
       <main className="dash-main" id="main" tabIndex={-1}>
+        <article className="workspace-card workspace-card-primary fade-up dash-sprint" id="mod-sprint">
+          <div className="workspace-card-top">
+            <div className="workspace-icon" aria-hidden="true">✦</div>
+            <span className="workspace-badge">DESIGN SPRINT VN</span>
+          </div>
+          <h2 className="workspace-title">Juega el sprint. Aprende la suite.</h2>
+          <p className="workspace-desc">
+            Cinco días: Map → Sketch → Decide → Prototype → Test. Cada día desbloquea
+            una herramienta de este hub (Benchmark, UXFlow, DX, VOC, PoliRadar).
+          </p>
+          <div className="workspace-actions">
+            <Link className="workspace-action primary" to="/onboarding">
+              {isOnboardDone() ? 'Volver a jugar el sprint' : 'Empezar onboarding'}
+            </Link>
+            <Link className="workspace-action ghost" to="/poliradar">
+              PoliRadar
+            </Link>
+          </div>
+        </article>
+
         <div className="dash-section-label fade-up">Instrumentos UX</div>
 
         <div className="modules-grid fade-up delay-1" ref={moduleRef}>
+          <article className="module-card" id="mod-onboarding">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">✦</div>
+                <span className="badge badge-live module-badge">DS VN</span>
+              </div>
+              <h2 className="module-title">Onboarding · Sprint</h2>
+              <p className="module-desc">
+                Design Sprint VN gamificado: Map → Sketch → Decide → Prototype → Test.
+                Explica el hub live (Benchmark, UXFlow, DX, VOC, PoliRadar).
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">🧭</span>5 días · 8 herramientas
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Funciones">
+                <span className="mod-tag">Design Sprint</span>
+                <span className="mod-tag">VOC</span>
+                <span className="mod-tag">PoliRadar</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <Link className="btn-module-open" to="/onboarding">Jugar sprint →</Link>
+              <Link className="btn-module-ghost" to="/poliradar">PoliRadar</Link>
+            </div>
+          </article>
+
           {/* Benchmark */}
           <article className="module-card" id="mod-benchmark">
             <div className="module-card-inner">
@@ -462,34 +511,6 @@ export default function Dashboard() {
             <div className="module-card-footer">
               <Link className="btn-module-open" to="/poliradar">Abrir PoliRadar →</Link>
               <Link className="btn-module-ghost" to="/selfradar">Self Radar</Link>
-            </div>
-          </article>
-
-          <article className="module-card" id="mod-onboarding">
-            <div className="module-card-inner">
-              <div className="module-top">
-                <div className="module-icon-wrap" aria-hidden="true">✦</div>
-                <span className="badge badge-live module-badge">VOC</span>
-              </div>
-              <h2 className="module-title">Onboarding</h2>
-              <p className="module-desc">
-                Design Sprint VN gamificado: Map → Sketch → Decide → Prototype → Test.
-                Explica el hub live (Benchmark, UXFlow, DX, VOC, PoliRadar).
-              </p>
-              <div className="module-meta">
-                <span className="module-meta-item">
-                  <span className="module-meta-icon">🧭</span>8 herramientas · mapa vocacional
-                </span>
-              </div>
-              <div className="module-tags" aria-label="Funciones">
-                <span className="mod-tag">VOC</span>
-                <span className="mod-tag">PoliRadar</span>
-                <span className="mod-tag">ES · EN · PT</span>
-              </div>
-            </div>
-            <div className="module-card-footer">
-              <Link className="btn-module-open" to="/onboarding">Abrir onboarding →</Link>
-              <Link className="btn-module-ghost" to="/poliradar">PoliRadar</Link>
             </div>
           </article>
 

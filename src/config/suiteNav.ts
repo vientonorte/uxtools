@@ -109,10 +109,10 @@ export const SUITE_MODULES: SuiteModule[] = [
   },
   {
     id: 'onboarding',
-    label: 'Onboarding',
-    shortLabel: 'Onboard',
-    logo: 'OB',
-    badge: 'VOC',
+    label: 'Onboarding · Sprint',
+    shortLabel: 'Sprint',
+    logo: 'DS',
+    badge: 'DS',
     spaPath: '/onboarding',
   },
   {
