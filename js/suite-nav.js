@@ -187,10 +187,102 @@
     bindMenu(container);
   }
 
+  var STAMP_KEY = 'uxtools-onboard-stamps';
+  var MODULE_FIRST_VIEW = {
+    benchmark: {
+      id: 'benchmark',
+      icon: '🌅',
+      voc: 'Mi mañana ideal',
+      name: 'UX Benchmark',
+      job: 'Comparas productos con dimensiones. Empiezas el día midiendo, no opinando.',
+    },
+    uxflow: {
+      id: 'uxflow',
+      icon: '🎯',
+      voc: 'Pierdo noción del tiempo cuando…',
+      name: 'UXFlow',
+      job: 'Documentas flujos, criterios y handoff. El trabajo que se come las horas.',
+    },
+    eisenhower: {
+      id: 'dx',
+      icon: '🏠',
+      voc: 'Dónde estoy',
+      name: 'Operating Model DX',
+      job: 'Matriz Eisenhower: dónde está la prioridad entre Jira, Figma y el ruido.',
+    },
+    voc: {
+      id: 'voc',
+      icon: '🛠️',
+      voc: 'Qué tocan mis manos',
+      name: 'Mapa Vocacional',
+      job: 'El VOC original: 8 preguntas, inferencia local, caminos para Martina.',
+    },
+  };
+
+  function loadStamps() {
+    try {
+      var parsed = JSON.parse(localStorage.getItem(STAMP_KEY) || '[]');
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveStamp(id) {
+    var next = loadStamps();
+    if (next.indexOf(id) === -1) next.push(id);
+    localStorage.setItem(STAMP_KEY, JSON.stringify(next));
+    return next;
+  }
+
+  function showToolFirstView(meta) {
+    if (loadStamps().indexOf(meta.id) !== -1) return;
+    if (document.getElementById('ob-first-overlay')) return;
+
+    var style = document.createElement('style');
+    style.textContent =
+      '#ob-first-overlay{position:fixed;inset:0;z-index:400;background:#0b0f1a;color:#f4f6fb;overflow:auto;padding:1.5rem}' +
+      '#ob-first-overlay .ob-first-inner{max-width:640px;margin:2rem auto}' +
+      '#ob-first-overlay h1{font-size:1.6rem;margin:0.35rem 0}' +
+      '#ob-first-overlay .ob-first-voc{opacity:0.8;margin:0 0 1rem}' +
+      '#ob-first-overlay .ob-first-job{line-height:1.5}' +
+      '#ob-first-overlay .ob-first-actions{display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:1.25rem}' +
+      '#ob-first-overlay button,#ob-first-overlay a.ob-first-btn{min-height:44px;padding:0.5rem 1rem;border-radius:8px;border:1px solid rgba(255,255,255,0.18);background:transparent;color:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}' +
+      '#ob-first-overlay button.primary{background:#5ce1e6;color:#0b0f1a;border-color:#5ce1e6}';
+    document.head.appendChild(style);
+
+    var overlay = document.createElement('div');
+    overlay.id = 'ob-first-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-labelledby', 'ob-first-title');
+    overlay.innerHTML =
+      '<div class="ob-first-inner">' +
+        '<p>Primera vez en esta herramienta</p>' +
+        '<h1 id="ob-first-title">' + escapeAttr(meta.icon + ' ' + meta.name) + '</h1>' +
+        '<p class="ob-first-voc">' + escapeAttr(meta.voc) + '</p>' +
+        '<p class="ob-first-job">' + escapeAttr(meta.job) + '</p>' +
+        '<div class="ob-first-actions">' +
+          '<button type="button" class="primary" data-ob-enter>Entrar a ' + escapeAttr(meta.name) + '</button>' +
+          '<a class="ob-first-btn" href="app.html#/onboarding">Ver el mapa de 8</a>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(overlay);
+    var btn = overlay.querySelector('[data-ob-enter]');
+    if (btn) {
+      btn.addEventListener('click', function () {
+        saveStamp(meta.id);
+        overlay.remove();
+      });
+    }
+  }
+
   function init() {
     document.querySelectorAll('[data-suite-nav]').forEach(function (el) {
       if (el.getAttribute('data-theme') === 'voc') initVocNav(el);
       else renderSuiteNav(el);
+      var mod = el.getAttribute('data-module');
+      if (mod && MODULE_FIRST_VIEW[mod]) showToolFirstView(MODULE_FIRST_VIEW[mod]);
     });
   }
 

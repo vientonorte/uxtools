@@ -1,4 +1,4 @@
-const CACHE = 'uxtools-suite-v4';
+const CACHE = 'uxtools-suite-v5';
 const SHELL = [
   '/uxtools/',
   '/uxtools/assets/',
