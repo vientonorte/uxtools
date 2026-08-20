@@ -248,6 +248,7 @@
 }
 .workspace-card:hover { border-color: var(--border-medium); }
 .workspace-card-primary { border-color: rgba(0,181,226,0.15); }
+.dash-sprint { margin-bottom: var(--space-6); }
 .workspace-card-top {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: var(--space-4);

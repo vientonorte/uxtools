@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { Nav } from './components/Nav';
 import { Footer } from './components/Footer';
 import { BenchmarkProvider } from './contexts/BenchmarkContext';
@@ -12,6 +12,14 @@ import Selfradar from './pages/Selfradar';
 import KitTlp from './pages/KitTlp';
 import Onboarding from './pages/Onboarding';
 import Polijuego from './pages/Polijuego';
+import { isOnboardDone } from './lib/onboarding-storage';
+
+function HomeGate() {
+  if (!isOnboardDone()) {
+    return <Navigate to="/onboarding" replace />;
+  }
+  return <Dashboard />;
+}
 
 export default function App() {
   return (
@@ -21,7 +29,7 @@ export default function App() {
       </a>
       <Nav />
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<HomeGate />} />
         <Route path="/benchmark" element={<Benchmark />} />
         <Route path="/uxflow" element={<UxFlow />} />
         <Route path="/admin" element={<Admin />} />
