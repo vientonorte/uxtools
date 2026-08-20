@@ -1,4 +1,4 @@
-const CACHE = 'id-medicinal-v1';
+const CACHE = 'uxtools-suite-v2';
 const SHELL = [
   '/uxtools/',
   '/uxtools/assets/',
