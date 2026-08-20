@@ -10,6 +10,7 @@ import Brief from './pages/Brief';
 import Medicinal from './pages/Medicinal';
 import Selfradar from './pages/Selfradar';
 import KitTlp from './pages/KitTlp';
+import Polijuego from './pages/Polijuego';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/medicinal" element={<Medicinal />} />
         <Route path="/selfradar" element={<Selfradar />} />
         <Route path="/kit-tlp" element={<KitTlp />} />
+        <Route path="/polijuego" element={<Polijuego />} />
       </Routes>
       <Footer />
     </BenchmarkProvider>

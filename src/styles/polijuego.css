@@ -1,0 +1,25 @@
+/* RADAR · El Polijuego — links styled as Método Ro buttons + Figma embed */
+
+a.mr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.mr-embed {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  background: #0b0f1a;
+}
+
+.mr-embed iframe {
+  display: block;
+  width: 100%;
+  height: min(78vh, 820px);
+  border: 0;
+}

@@ -387,6 +387,36 @@ export default function Dashboard() {
             </div>
           </article>
 
+          {/* RADAR · El Polijuego · Método Ro */}
+          <article className="module-card" id="mod-polijuego">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">🃏</div>
+                <span className="badge badge-live module-badge">MÉTODO RO</span>
+              </div>
+              <h2 className="module-title">RADAR · El Polijuego</h2>
+              <p className="module-desc">
+                Facilitación de vínculos éticos (pareja / grupo). Ciclo Rev → Aco → Deb → Acc → Rec.
+                Comunicación · Compasión · Honestidad radical.
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">◎</span>Pareja · Grupo · Self Radar
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Funciones">
+                <span className="mod-tag">Pareja/Grupo</span>
+                <span className="mod-tag">Método Ro</span>
+                <span className="mod-tag">Figma Site</span>
+                <span className="mod-tag">Open Source</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <Link className="btn-module-open" to="/polijuego">Abrir Polijuego →</Link>
+              <Link className="btn-module-ghost" to="/selfradar">Self Radar</Link>
+            </div>
+          </article>
+
           {/* ID Medicinal */}
           <article className="module-card" id="mod-medicinal">
             <div className="module-card-inner">
@@ -462,6 +492,7 @@ export default function Dashboard() {
                 <Link className="workspace-action ghost" to="/uxflow">Nuevo UXFlow</Link>
                 <Link className="workspace-action ghost" to="/selfradar">Self Radar</Link>
                 <Link className="workspace-action ghost" to="/kit-tlp">Kit TLP</Link>
+                <Link className="workspace-action ghost" to="/polijuego">Polijuego</Link>
               </div>
             </article>
 
