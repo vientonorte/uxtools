@@ -7,7 +7,8 @@ export type SuiteModuleId =
   | 'admin'
   | 'brief'
   | 'selfradar'
-  | 'kit-tlp';
+  | 'kit-tlp'
+  | 'polijuego';
 
 export interface SuiteModule {
   id: SuiteModuleId;
@@ -93,6 +94,14 @@ export const SUITE_MODULES: SuiteModule[] = [
     logo: 'TLP',
     badge: 'Ro',
     spaPath: '/kit-tlp',
+  },
+  {
+    id: 'polijuego',
+    label: 'RADAR · El Polijuego',
+    shortLabel: 'Polijuego',
+    logo: 'RAD',
+    badge: 'Ro',
+    spaPath: '/polijuego',
   },
   {
     id: 'admin',
