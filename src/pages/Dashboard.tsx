@@ -473,8 +473,8 @@ export default function Dashboard() {
               </div>
               <h2 className="module-title">Onboarding</h2>
               <p className="module-desc">
-                Mapa de herramientas al estilo VOC: 8 nodos vocacionales para conocer la suite
-                (PoliRadar, VOC, Self Radar, Benchmark, UXFlow…).
+                Design Sprint VN gamificado: Map → Sketch → Decide → Prototype → Test.
+                Explica el hub live (Benchmark, UXFlow, DX, VOC, PoliRadar).
               </p>
               <div className="module-meta">
                 <span className="module-meta-item">
