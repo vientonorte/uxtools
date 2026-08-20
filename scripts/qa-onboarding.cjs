@@ -2,7 +2,7 @@
 
 /**
  * QA onboarding UX Tools — path real del usuario.
- * Mide fuente + (opcional) live. Fallar CI si el hub no entra al sprint.
+ * Mide fuente + (opcional) live. Fallar CI si el hub no entra al mapa VOC.
  *
  *   node scripts/qa-onboarding.cjs
  *   QA_LIVE=1 node scripts/qa-onboarding.cjs
@@ -35,6 +35,12 @@ function mustContain(rel, needle, label) {
   else ok(label);
 }
 
+function mustNotContain(rel, needle, label) {
+  var text = read(rel);
+  if (text.indexOf(needle) !== -1) bad(label, 'aún tiene `' + needle + '` en ' + rel);
+  else ok(label);
+}
+
 process.stdout.write('\nQA onboarding · UX Tools (path usuario = /uxtools/)\n');
 
 mustContain(
@@ -49,24 +55,45 @@ mustContain(
 );
 mustContain(
   'src/pages/Onboarding.tsx',
+  'TOOL_LAYOUT',
+  'Onboarding usa el mapa VOC de 8 instrumentos'
+);
+mustNotContain(
+  'src/pages/Onboarding.tsx',
   'SPRINT_DAYS',
-  'Onboarding usa días DS VN'
+  'sin chrome Design Sprint de 5 días'
 );
 mustContain(
-  'src/lib/onboarding-sprint.ts',
-  'Juega el sprint',
-  'copy gamificada ES'
+  'src/lib/onboarding-i18n.ts',
+  'Estas son las herramientas',
+  'copy gamificada ES sobre instrumentos'
 );
 mustContain(
   'src/pages/Dashboard.tsx',
-  'dash-sprint',
-  'banner sprint arriba del hub'
+  'dash-map',
+  'banner mapa VOC arriba del hub'
 );
 mustContain(
   'src/config/suiteNav.ts',
-  "shortLabel: 'Sprint'",
-  'nav visible como Sprint'
+  "shortLabel: 'Mapa'",
+  'nav visible como Mapa'
 );
+mustContain(
+  'src/pages/Onboarding.tsx',
+  'QrShare',
+  'PoliRadar QR en onboarding'
+);
+mustContain(
+  'src/pages/Onboarding.tsx',
+  '/poliradar',
+  'CTA PoliRadar pantalla completa'
+);
+
+if (fs.existsSync(path.join(ROOT, 'src/lib/onboarding-sprint.ts'))) {
+  bad('onboarding-sprint.ts', 'el wrapper DS 5 días no debe existir');
+} else {
+  ok('sin onboarding-sprint.ts');
+}
 
 var sw = read('sw.js');
 if (sw.indexOf('id-medicinal-v1') !== -1) {
@@ -97,8 +124,16 @@ if (process.env.QA_LIVE === '1') {
     })
     .then(function (js) {
       if (js == null) return;
-      if (js.indexOf('Juega el sprint') === -1) bad('live bundle copy', 'sin Juega el sprint');
-      else ok('live bundle Juega el sprint');
+      if (js.indexOf('Estas son las herramientas') === -1) {
+        bad('live bundle copy', 'sin Estas son las herramientas');
+      } else {
+        ok('live bundle Estas son las herramientas');
+      }
+      if (js.indexOf('Juega el sprint') !== -1) {
+        bad('live bundle chrome DS', 'aún dice Juega el sprint');
+      } else {
+        ok('live bundle sin Juega el sprint');
+      }
       if (js.indexOf('uxtools-onboard-done') === -1) bad('live bundle gate', 'sin sello first-visit');
       else ok('live bundle first-visit key');
       if (js.indexOf('/onboarding') === -1) bad('live bundle route', 'sin /onboarding');

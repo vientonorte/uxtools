@@ -25,7 +25,7 @@ jobs:
       - name: Validate HTML and JS assets
         run: node scripts/validate-static.cjs
 
-      - name: QA onboarding (hub → sprint)
+      - name: QA onboarding (hub → mapa VOC)
         run: node scripts/qa-onboarding.cjs
 
       - name: Run unit tests

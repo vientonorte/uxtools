@@ -58,6 +58,12 @@ interface Copy {
   privacy: string;
   featured: string;
   poliCta: string;
+  stamp: string;
+  stamped: string;
+  score: string;
+  enter: string;
+  shareQr: string;
+  doneAlready: string;
   tools: Record<ToolId, ToolCopy>;
 }
 
@@ -68,14 +74,20 @@ const COPY: Record<OnboardLang, Copy> = {
     open: 'Abrir herramienta',
     eyebrow: 'UX Tools · Mapa vocacional',
     title: 'Estas son las herramientas',
-    sub: 'El mismo mapa VOC: 8 preguntas, 8 caminos. Toca un nodo según afinidad. PoliRadar está marcado.',
+    sub: '8 preguntas, 8 instrumentos live. Toca un nodo, sella el que resuena. PoliRadar está marcado: pantalla completa y QR.',
     mapTitle: 'El mapa',
-    mapHint: 'Toca cada pregunta y entra a la herramienta que resuena ✦',
+    mapHint: 'Toca cada pregunta. Sellar = conoces ese instrumento ✦',
     centerYou: 'tú',
     centerAge: 'en el trabajo',
     privacy: 'Las sesiones viven en este dispositivo. Sin cuenta, sin tracking.',
     featured: 'Disponible ahora',
     poliCta: 'PoliRadar · pantalla completa + QR',
+    stamp: 'Sellar esta herramienta',
+    stamped: 'Sellada',
+    score: 'instrumentos sellados',
+    enter: 'Entrar al hub',
+    shareQr: 'Comparte PoliRadar con este QR',
+    doneAlready: 'Onboarding ya marcado en este dispositivo.',
     tools: {
       benchmark: {
         voc: 'Mi mañana ideal',
@@ -125,14 +137,20 @@ const COPY: Record<OnboardLang, Copy> = {
     open: 'Open tool',
     eyebrow: 'UX Tools · Vocational map',
     title: 'These are the tools',
-    sub: 'Same VOC map: 8 questions, 8 paths. Tap a node by affinity. PoliRadar is marked.',
+    sub: '8 questions, 8 live instruments. Tap a node, stamp the one that resonates. PoliRadar is marked: fullscreen and QR.',
     mapTitle: 'The map',
-    mapHint: 'Tap each question and open the tool that resonates ✦',
+    mapHint: 'Tap each question. Stamp = you know that instrument ✦',
     centerYou: 'you',
     centerAge: 'at work',
     privacy: 'Sessions stay on this device. No account, no tracking.',
     featured: 'Available now',
     poliCta: 'PoliRadar · fullscreen + QR',
+    stamp: 'Stamp this tool',
+    stamped: 'Stamped',
+    score: 'instruments stamped',
+    enter: 'Enter the hub',
+    shareQr: 'Share PoliRadar with this QR',
+    doneAlready: 'Onboarding already marked on this device.',
     tools: {
       benchmark: {
         voc: 'My ideal morning',
@@ -182,14 +200,20 @@ const COPY: Record<OnboardLang, Copy> = {
     open: 'Abrir ferramenta',
     eyebrow: 'UX Tools · Mapa vocacional',
     title: 'Estas são as ferramentas',
-    sub: 'O mesmo mapa VOC: 8 perguntas, 8 caminhos. Toque um nó por afinidade. PoliRadar está marcado.',
+    sub: '8 perguntas, 8 instrumentos live. Toque um nó, sele o que ressoa. PoliRadar está marcado: tela cheia e QR.',
     mapTitle: 'O mapa',
-    mapHint: 'Toque cada pergunta e entre na ferramenta que ressoa ✦',
+    mapHint: 'Toque cada pergunta. Selar = você conhece esse instrumento ✦',
     centerYou: 'você',
     centerAge: 'no trabalho',
     privacy: 'As sessões ficam neste dispositivo. Sem conta, sem tracking.',
     featured: 'Disponível agora',
     poliCta: 'PoliRadar · tela cheia + QR',
+    stamp: 'Selar esta ferramenta',
+    stamped: 'Selada',
+    score: 'instrumentos selados',
+    enter: 'Entrar no hub',
+    shareQr: 'Compartilhe PoliRadar com este QR',
+    doneAlready: 'Onboarding já marcado neste dispositivo.',
     tools: {
       benchmark: {
         voc: 'Minha manhã ideal',
