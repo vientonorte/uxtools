@@ -12,7 +12,7 @@ Suite de herramientas UX en producción para SURA Investments.
 | **RF Recon Console** | Blueprint UX para operación SIGINT (tipo IMSI catcher): arquitectura de información en 4 fases, dashboard táctico de 3 paneles y reglas de UX crítica. **Prototipo de interfaz con datos simulados** — no controla hardware ni captura radiofrecuencia | [imsi.html](https://vientonorte.github.io/uxtools/imsi.html) |
 | **Self Radar** | Método Ro · review semanal: 7 ejes fijos (1–10), preguntas de buen vivir, cierre y máx. 3 acciones. localStorage + print | [app.html#/selfradar](https://vientonorte.github.io/uxtools/app.html#/selfradar) |
 | **Kit TLP** | Método Ro · protocolo DBT/TCC en crisis (8 pasos, STOP, ayuda). localStorage + print | [app.html#/kit-tlp](https://vientonorte.github.io/uxtools/app.html#/kit-tlp) |
-| **PoliRadar** | RADAR · El Polijuego. Facilitación de vínculos (pareja/grupo). Pantalla completa + QR para compartir | [app.html#/poliradar](https://vientonorte.github.io/uxtools/app.html#/poliradar) |
+| **PoliRadar** | RADAR · El Polijuego. Facilitación de vínculos (pareja/grupo). Login Supabase (magic link) + pantalla completa + QR | [app.html#/poliradar](https://vientonorte.github.io/uxtools/app.html#/poliradar) |
 | **Onboarding** | Mapa vocacional gamificado: sella los 8 instrumentos live. PoliRadar con pantalla completa + QR | [app.html#/onboarding](https://vientonorte.github.io/uxtools/app.html#/onboarding) |
 | **Mapa Vocacional** | 8 preguntas · inferencia semántica local (Martina) | [voc.html](https://vientonorte.github.io/uxtools/voc.html) |
 
@@ -72,6 +72,11 @@ El sitio se publica automáticamente con GitHub Pages desde `main` mediante GitH
 - `Deploy to GitHub Pages` genera un artifact y publica solo si la validación pasa
 
 **https://vientonorte.github.io/uxtools/**
+
+## PoliRadar · Supabase login
+
+Project ref `nbzcmywmbjgcbkqdyggh`. Setup: [`supabase/README.md`](supabase/README.md).
+Sin `VITE_SUPABASE_*` el juego se abre sin cuenta. Con las keys, «Jugar aquí» pide sesión.
 
 ## Revisión técnica reciente
 
