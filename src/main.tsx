@@ -12,6 +12,9 @@ import './styles/brief.css';
 import './styles/medicinal.css';
 import './styles/metodo-ro.css';
 import App from './App';
+import { consumeAuthCallback } from './lib/supabase';
+
+void consumeAuthCallback();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

@@ -4,3 +4,5 @@ dist/
 .DS_Store
 *.log
 Benchmark*Digital.zip
+.env
+.env.local

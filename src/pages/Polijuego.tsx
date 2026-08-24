@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { PoliradarLogin } from '../components/PoliradarLogin';
 import { QrShare } from '../components/QrShare';
+import { signOutPoli, usePoliSession } from '../lib/poliradar-auth';
 import { FIGMA_SITE, poliradarShareUrl } from '../lib/poliradar';
 import '../styles/polijuego.css';
 
@@ -10,6 +12,8 @@ export default function Polijuego() {
   const [shareUrl, setShareUrl] = useState(poliradarShareUrl);
   const [copied, setCopied] = useState(false);
   const [fsError, setFsError] = useState<string | null>(null);
+  const { configured, ready, session } = usePoliSession();
+  const canPlay = !configured || Boolean(session);
 
   useEffect(() => {
     setShareUrl(poliradarShareUrl());
@@ -60,23 +64,32 @@ export default function Polijuego() {
       </header>
 
       <div className="mr-toolbar" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
-        <a
-          className="mr-btn mr-btn--primary"
-          href={FIGMA_SITE}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Jugar en pareja / grupo ↗
-        </a>
-        <button type="button" className="mr-btn" onClick={() => void toggleFullscreen()}>
-          {fullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-        </button>
+        {canPlay ? (
+          <a
+            className="mr-btn mr-btn--primary"
+            href={FIGMA_SITE}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Jugar en pareja / grupo ↗
+          </a>
+        ) : null}
+        {canPlay ? (
+          <button type="button" className="mr-btn" onClick={() => void toggleFullscreen()}>
+            {fullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+          </button>
+        ) : null}
         <Link className="mr-btn" to="/selfradar">
           Self Radar — modo individual
         </Link>
         <Link className="mr-btn" to="/onboarding">
           Mapa de herramientas
         </Link>
+        {session ? (
+          <button type="button" className="mr-btn" onClick={() => void signOutPoli()}>
+            Salir ({session.user.email})
+          </button>
+        ) : null}
       </div>
 
       <section className="mr-card">
@@ -111,32 +124,40 @@ export default function Polijuego() {
         </ol>
       </section>
 
-      <section className="mr-card">
-        <div className="poli-play-head">
-          <h2 className="mr-card__title">Jugar aquí</h2>
-          <button type="button" className="mr-btn mr-btn--primary" onClick={() => void toggleFullscreen()}>
-            {fullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-          </button>
-        </div>
-        <div
-          ref={wrapRef}
-          className={`mr-embed${fullscreen ? ' is-fullscreen' : ''}`}
-        >
-          <iframe
-            title="PoliRadar — RADAR El Polijuego"
-            src={FIGMA_SITE}
-            allow="fullscreen"
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-        </div>
-        {fsError ? <p className="poli-warn">{fsError}</p> : null}
-        <p style={{ margin: '0.85rem 0 0', fontSize: '0.9rem', opacity: 0.75 }}>
-          Si el embed no carga, usa «Jugar en pareja / grupo» para abrir el Figma Site
-          en una pestaña nueva.
-        </p>
-      </section>
+      {!ready ? (
+        <section className="mr-card">
+          <p className="mr-card__hint">Cargando sesión…</p>
+        </section>
+      ) : !canPlay ? (
+        <PoliradarLogin />
+      ) : (
+        <section className="mr-card">
+          <div className="poli-play-head">
+            <h2 className="mr-card__title">Jugar aquí</h2>
+            <button type="button" className="mr-btn mr-btn--primary" onClick={() => void toggleFullscreen()}>
+              {fullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+            </button>
+          </div>
+          <div
+            ref={wrapRef}
+            className={`mr-embed${fullscreen ? ' is-fullscreen' : ''}`}
+          >
+            <iframe
+              title="PoliRadar — RADAR El Polijuego"
+              src={FIGMA_SITE}
+              allow="fullscreen"
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+          {fsError ? <p className="poli-warn">{fsError}</p> : null}
+          <p style={{ margin: '0.85rem 0 0', fontSize: '0.9rem', opacity: 0.75 }}>
+            Si el embed no carga, usa «Jugar en pareja / grupo» para abrir el Figma Site
+            en una pestaña nueva.
+          </p>
+        </section>
+      )}
 
       <section className="mr-card" id="compartir">
         <h2 className="mr-card__title">Compartir con QR</h2>
