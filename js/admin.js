@@ -430,15 +430,151 @@ function csvCell(v) {
   return s;
 }
 
+/* ─── LIVE REGION HELPER ─────────────────────────────────── */
+function announce(msg) {
+  var el = document.getElementById('admin-announcer');
+  if (!el) return;
+  el.textContent = '';
+  /* brief pause ensures screen readers re-announce same message */
+  setTimeout(function () { el.textContent = msg; }, 50);
+}
+
 /* ─── BORRAR TODO ────────────────────────────────────────────── */
-function borrarTodoLocalStorage() {
-  if (!confirm('¿Borrar TODOS los datos guardados en localStorage?\nEsta acción es irreversible.')) return;
+function solicitarBorrarTodo() {
+  /* If passkey is registered, verify first */
+  if (window.Passkey && Passkey.available() && Passkey.registered()) {
+    Passkey.verify().then(function (ok) {
+      if (ok) abrirDialogBorrar();
+      else showToast('⚠ Verificación de passkey fallida o cancelada');
+    }).catch(function () {
+      showToast('⚠ Verificación cancelada');
+    });
+  } else {
+    abrirDialogBorrar();
+  }
+}
+
+function abrirDialogBorrar() {
+  var dialog = document.getElementById('dialog-borrar-todo');
+  if (!dialog) return;
+  dialog.hidden = false;
+  document.body.style.overflow = 'hidden';
+  var confirmBtn = document.getElementById('dialog-borrar-confirm');
+  if (confirmBtn) confirmBtn.focus();
+}
+
+function cerrarDialogBorrar() {
+  var dialog = document.getElementById('dialog-borrar-todo');
+  if (!dialog) return;
+  dialog.hidden = true;
+  document.body.style.overflow = '';
+}
+
+function confirmarBorrarTodo() {
+  cerrarDialogBorrar();
   try { localStorage.clear(); } catch (e) { /* pass */ }
   renderDimensiones();
   renderTemplates();
   renderBmSessions();
   renderUxHistory();
-  showToast('🗑 localStorage borrado completamente');
+  initPasskeySection();
+  showToast('🗑 Todos los datos eliminados');
+  announce('Todos los datos de localStorage han sido eliminados.');
+}
+
+/* ─── PASSKEY ─────────────────────────────────────────────────── */
+function updatePasskeyBadge() {
+  var badge = document.getElementById('passkey-status-badge');
+  if (!badge) return;
+  if (!window.Passkey || !Passkey.available()) {
+    badge.textContent = '';
+    return;
+  }
+  if (Passkey.registered()) {
+    badge.textContent = '✅ Activa';
+    badge.className = 'passkey-status-badge passkey-status-badge--active';
+  } else {
+    badge.textContent = '○ No configurada';
+    badge.className = 'passkey-status-badge passkey-status-badge--inactive';
+  }
+}
+
+function initPasskeySection() {
+  var unavail   = document.getElementById('passkey-unavailable');
+  var unregDiv  = document.getElementById('passkey-state-unregistered');
+  var regDiv    = document.getElementById('passkey-state-registered');
+
+  if (!unavail || !unregDiv || !regDiv) return;
+
+  if (!window.Passkey || !Passkey.available()) {
+    unavail.hidden  = false;
+    unregDiv.hidden = true;
+    regDiv.hidden   = true;
+  } else if (Passkey.registered()) {
+    unavail.hidden  = true;
+    unregDiv.hidden = true;
+    regDiv.hidden   = false;
+  } else {
+    unavail.hidden  = true;
+    unregDiv.hidden = false;
+    regDiv.hidden   = true;
+  }
+  updatePasskeyBadge();
+}
+
+function accionRegistrarPasskey() {
+  if (!window.Passkey) return;
+  Passkey.register().then(function () {
+    initPasskeySection();
+    showToast('✅ Passkey configurada correctamente');
+    announce('Passkey registrada. Las acciones destructivas ahora requerirán verificación.');
+  }).catch(function (err) {
+    if (err && err.message === 'cancelled') {
+      showToast('○ Registro de passkey cancelado');
+    } else {
+      showToast('⚠ No se pudo registrar la passkey: ' + (err && err.message ? err.message : 'error'));
+    }
+  });
+}
+
+function accionVerificarPasskey() {
+  if (!window.Passkey) return;
+  Passkey.verify().then(function (ok) {
+    if (ok) {
+      showToast('✅ Passkey verificada correctamente');
+      announce('Passkey verificada.');
+    } else {
+      showToast('⚠ Verificación fallida');
+    }
+  }).catch(function () {
+    showToast('⚠ Verificación cancelada');
+  });
+}
+
+function accionEliminarPasskey() {
+  if (!window.Passkey) return;
+  var dialog = document.getElementById('dialog-eliminar-passkey');
+  if (!dialog) return;
+  dialog.hidden = false;
+  document.body.style.overflow = 'hidden';
+  var confirmBtn = document.getElementById('dialog-passkey-confirm');
+  if (confirmBtn) confirmBtn.focus();
+}
+
+function cerrarDialogPasskey() {
+  var dialog = document.getElementById('dialog-eliminar-passkey');
+  if (!dialog) return;
+  dialog.hidden = true;
+  document.body.style.overflow = '';
+}
+
+function confirmarEliminarPasskey() {
+  cerrarDialogPasskey();
+  if (!window.Passkey) return;
+  Passkey.clear();
+  initPasskeySection();
+  showToast('🗑 Passkey eliminada de este dispositivo');
+  announce('Passkey eliminada.');
 }
 
 /* ─── TABS ───────────────────────────────────────────────────── */
@@ -459,8 +595,23 @@ function borrarTodoLocalStorage() {
 
       panels.forEach(function (p) { p.classList.remove('active'); });
       var panel = document.getElementById('admin-tab-' + target);
-      if (panel) panel.classList.add('active');
+      if (panel) {
+        panel.classList.add('active');
+        panel.focus();
+      }
+
+      if (target === 'seguridad') initPasskeySection();
     });
+  });
+
+  /* Close dialogs on Escape */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      var borrarDialog = document.getElementById('dialog-borrar-todo');
+      if (borrarDialog && !borrarDialog.hidden) { cerrarDialogBorrar(); return; }
+      var passkeyDialog = document.getElementById('dialog-eliminar-passkey');
+      if (passkeyDialog && !passkeyDialog.hidden) { cerrarDialogPasskey(); }
+    }
   });
 })();
 
@@ -470,4 +621,5 @@ document.addEventListener('DOMContentLoaded', function () {
   renderTemplates();
   renderBmSessions();
   renderUxHistory();
+  initPasskeySection();
 });

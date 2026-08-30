@@ -27,14 +27,15 @@
 
   <!-- TABS -->
   <div class="admin-tabs" role="tablist" aria-label="Secciones del admin">
-    <button class="admin-tab active" data-tab="dimensiones" role="tab" aria-selected="true">📐 Dimensiones</button>
-    <button class="admin-tab" data-tab="templates" role="tab" aria-selected="false">📄 Templates UXFlow</button>
-    <button class="admin-tab" data-tab="sesiones" role="tab" aria-selected="false">🗂 Sesiones</button>
-    <button class="admin-tab" data-tab="exportar" role="tab" aria-selected="false">⬇ Exportar</button>
+    <button class="admin-tab active" id="tab-btn-dimensiones" data-tab="dimensiones" role="tab" aria-selected="true" aria-controls="admin-tab-dimensiones">📐 Dimensiones</button>
+    <button class="admin-tab" id="tab-btn-templates" data-tab="templates" role="tab" aria-selected="false" aria-controls="admin-tab-templates">📄 Templates UXFlow</button>
+    <button class="admin-tab" id="tab-btn-sesiones" data-tab="sesiones" role="tab" aria-selected="false" aria-controls="admin-tab-sesiones">🗂 Sesiones</button>
+    <button class="admin-tab" id="tab-btn-exportar" data-tab="exportar" role="tab" aria-selected="false" aria-controls="admin-tab-exportar">⬇ Exportar</button>
+    <button class="admin-tab" id="tab-btn-seguridad" data-tab="seguridad" role="tab" aria-selected="false" aria-controls="admin-tab-seguridad">🔑 Seguridad</button>
   </div>
 
   <!-- PANEL: DIMENSIONES -->
-  <section class="admin-panel active" id="admin-tab-dimensiones" role="tabpanel">
+  <section class="admin-panel active" id="admin-tab-dimensiones" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-dimensiones">
     <div class="admin-section-label">Dimensiones del Benchmark</div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:var(--space-5);">
       Edita, activa o desactiva las dimensiones usadas en el Benchmark. Los cambios se aplican al abrir el módulo.
@@ -68,7 +69,7 @@
   </section>
 
   <!-- PANEL: TEMPLATES UXFLOW -->
-  <section class="admin-panel" id="admin-tab-templates" role="tabpanel">
+  <section class="admin-panel" id="admin-tab-templates" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-templates">
     <div class="admin-section-label">Templates de Criterios de Aceptación</div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:var(--space-5);">
       Guarda templates de criterios para reutilizar en UXFLOW. Aparecen como opciones de carga rápida.
@@ -103,7 +104,7 @@
   </section>
 
   <!-- PANEL: SESIONES -->
-  <section class="admin-panel" id="admin-tab-sesiones" role="tabpanel">
+  <section class="admin-panel" id="admin-tab-sesiones" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-sesiones">
 
     <!-- Benchmark sessions -->
     <div class="admin-section-label">Sesiones de Benchmark guardadas</div>
@@ -159,7 +160,7 @@
   </section>
 
   <!-- PANEL: EXPORTAR -->
-  <section class="admin-panel" id="admin-tab-exportar" role="tabpanel">
+  <section class="admin-panel" id="admin-tab-exportar" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-exportar">
     <div class="admin-section-label">Exportar datos</div>
 
     <div class="admin-card">
@@ -199,8 +200,62 @@
           Elimina todos los datos guardados localmente. Esta acción no se puede deshacer.
         </p>
         <div class="btn-row">
-          <button class="btn-admin-danger" onclick="borrarTodoLocalStorage()">🗑 Borrar todo el localStorage</button>
+          <button class="btn-admin-danger" onclick="solicitarBorrarTodo()">🗑 Borrar todo el localStorage</button>
         </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- PANEL: SEGURIDAD -->
+  <section class="admin-panel" id="admin-tab-seguridad" role="tabpanel" tabindex="0" aria-labelledby="tab-btn-seguridad">
+    <div class="admin-section-label">Seguridad del dispositivo</div>
+
+    <!-- PASSKEY STATUS -->
+    <div class="admin-card" id="passkey-card">
+      <div class="admin-card-header">
+        <span class="admin-card-title">🔑 Passkey (autenticación local)</span>
+        <span class="passkey-status-badge" id="passkey-status-badge" aria-live="polite"></span>
+      </div>
+      <div class="admin-card-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:var(--space-4);">
+          Una passkey protege las acciones destructivas (como borrar todos tus datos) usando el autenticador de tu dispositivo (Face&nbsp;ID, Windows&nbsp;Hello, huella&nbsp;dactilar). <strong>La clave privada nunca sale de tu dispositivo y no se envía a ningún servidor.</strong>
+        </p>
+
+        <!-- Fallback: WebAuthn no soportado -->
+        <div id="passkey-unavailable" hidden>
+          <p class="passkey-notice passkey-notice--warn">⚠ Tu navegador no soporta passkey (WebAuthn). Puedes seguir usando las demás funciones del admin con normalidad.</p>
+        </div>
+
+        <!-- Estado: no registrado -->
+        <div id="passkey-state-unregistered" hidden>
+          <p class="passkey-notice">Sin passkey configurada en este dispositivo.</p>
+          <div class="btn-row" style="margin-top:var(--space-4);">
+            <button class="btn-admin-primary" onclick="accionRegistrarPasskey()">🔑 Configurar passkey</button>
+          </div>
+        </div>
+
+        <!-- Estado: registrado -->
+        <div id="passkey-state-registered" hidden>
+          <p class="passkey-notice passkey-notice--ok">✅ Passkey activa en este dispositivo.</p>
+          <div class="btn-row" style="margin-top:var(--space-4);">
+            <button class="btn-admin-primary" onclick="accionVerificarPasskey()">✔ Verificar passkey ahora</button>
+            <button class="btn-admin-danger" onclick="accionEliminarPasskey()">🗑 Eliminar passkey de este dispositivo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIVACIDAD -->
+    <div class="admin-card" style="margin-top:var(--space-5);">
+      <div class="admin-card-header">
+        <span class="admin-card-title">🔒 Privacidad</span>
+      </div>
+      <div class="admin-card-body">
+        <p style="font-size:13px;color:var(--muted);margin-bottom:var(--space-3);">
+          Todos los datos de esta suite se guardan únicamente en el <code style="font-family:var(--font-mono);color:var(--cyan);font-size:12px;">localStorage</code> de tu navegador. Sin servidor, sin tracking, sin terceros.
+        </p>
+        <a href="privacy.html" class="btn-admin-ghost" style="display:inline-block;">📄 Ver política de privacidad completa</a>
       </div>
     </div>
 
@@ -208,11 +263,49 @@
 
 </div><!-- /admin-shell -->
 
+<!-- DIALOG: Confirmar borrado de datos -->
+<div id="dialog-borrar-todo" role="alertdialog" aria-modal="true" aria-labelledby="dialog-borrar-title" aria-describedby="dialog-borrar-desc" hidden class="admin-dialog-backdrop">
+  <div class="admin-dialog">
+    <h2 class="admin-dialog-title" id="dialog-borrar-title">⚠ Eliminar todos los datos</h2>
+    <p class="admin-dialog-desc" id="dialog-borrar-desc">
+      Esto borrará permanentemente todos los datos guardados en este dispositivo: benchmarks, documentos UXFlow, dimensiones, templates y passkey.<br><br>
+      <strong>Esta acción no se puede deshacer.</strong>
+    </p>
+    <div class="admin-dialog-actions">
+      <button class="btn-admin-danger" id="dialog-borrar-confirm" onclick="confirmarBorrarTodo()">🗑 Sí, eliminar todo</button>
+      <button class="btn-admin-ghost" onclick="cerrarDialogBorrar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DIALOG: Confirmar eliminación de passkey -->
+<div id="dialog-eliminar-passkey" role="alertdialog" aria-modal="true" aria-labelledby="dialog-passkey-title" aria-describedby="dialog-passkey-desc" hidden class="admin-dialog-backdrop">
+  <div class="admin-dialog">
+    <h2 class="admin-dialog-title" id="dialog-passkey-title">🗑 Eliminar passkey</h2>
+    <p class="admin-dialog-desc" id="dialog-passkey-desc">
+      Se eliminará la passkey guardada en este dispositivo. Podrás configurar una nueva en cualquier momento.
+    </p>
+    <div class="admin-dialog-actions">
+      <button class="btn-admin-danger" id="dialog-passkey-confirm" onclick="confirmarEliminarPasskey()">🗑 Sí, eliminar passkey</button>
+      <button class="btn-admin-ghost" onclick="cerrarDialogPasskey()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ARIA live region for announcements -->
+<div id="admin-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
 <!-- TOAST -->
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="js/utils.js"></script>
 <script src="js/suite-nav.js"></script>
+<script src="js/passkey.js"></script>
 <script src="js/admin.js"></script>
+
+<footer class="site-footer">
+  UX Tools Suite · 2026 · <a href="https://vientonorte.github.io/" rel="noopener noreferrer">vientonorte</a> ·
+  <a href="privacy.html">🔒 Privacidad</a>
+</footer>
 </body>
 </html>
