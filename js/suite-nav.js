@@ -142,6 +142,7 @@
           '<div class="nav-drawer-footer">' +
             '<a class="nav-drawer-utility" href="' + EXTERNAL_LINKS.vientonorte + '" rel="noopener noreferrer">← vientonorte</a>' +
             '<a class="nav-drawer-utility" href="' + EXTERNAL_LINKS.github + '" rel="noopener noreferrer">GitHub</a>' +
+            '<a class="nav-drawer-utility" href="privacy.html">🔒 Privacidad</a>' +
           '</div>' +
         '</div>' +
       '</div>';
@@ -180,6 +181,7 @@
           '<div class="nav-drawer-footer">' +
             '<a class="nav-drawer-utility" href="' + EXTERNAL_LINKS.vientonorte + '" rel="noopener noreferrer">← vientonorte</a>' +
             '<a class="nav-drawer-utility" href="' + EXTERNAL_LINKS.github + '" rel="noopener noreferrer">GitHub</a>' +
+            '<a class="nav-drawer-utility" href="privacy.html">🔒 Privacidad</a>' +
           '</div>' +
         '</div>' +
       '</div>';

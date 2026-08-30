@@ -1,0 +1,185 @@
+/* ── PRIVACY PAGE ─────────────────────────────────────────── */
+.privacy-shell {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--space-9) var(--space-6) var(--space-12);
+}
+
+.privacy-header {
+  margin-bottom: var(--space-9);
+}
+
+.privacy-eyebrow {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--cyan);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-2);
+}
+
+.privacy-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.15;
+  margin-bottom: var(--space-3);
+}
+
+.privacy-meta {
+  font-size: 13px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+/* ── Sections ─────────────────────────────────────────────── */
+.privacy-toc {
+  background: var(--surface-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-9);
+}
+
+.privacy-toc-title {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-3);
+}
+
+.privacy-toc ol {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.privacy-toc li a {
+  color: var(--cyan);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.privacy-toc li a:hover { text-decoration: underline; }
+
+.privacy-section {
+  margin-bottom: var(--space-10);
+}
+
+.privacy-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.privacy-section-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.privacy-section-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.privacy-section p,
+.privacy-section li {
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.82);
+}
+
+.privacy-section p + p { margin-top: var(--space-3); }
+
+.privacy-section ul,
+.privacy-section ol {
+  padding-left: var(--space-6);
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.privacy-highlight {
+  background: var(--surface-glass);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  margin-top: var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.privacy-highlight-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+.privacy-highlight-text {
+  font-size: 13px;
+  color: var(--cyan-2);
+  line-height: 1.6;
+}
+
+.privacy-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--cyan);
+  background: rgba(0,181,226,0.08);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+
+/* ── Footer ───────────────────────────────────────────────── */
+.privacy-footer {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: var(--space-7);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.privacy-footer-text {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.privacy-footer-links {
+  display: flex;
+  gap: var(--space-5);
+}
+
+.privacy-footer-links a {
+  font-size: 12px;
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.privacy-footer-links a:hover { text-decoration: underline; }
+
+/* ── Global site footer (shared) ─────────────────────────── */
+.site-footer {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px solid var(--border-subtle);
+  margin-top: var(--space-10);
+}
+
+.site-footer a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+.site-footer a:hover { text-decoration: underline; }

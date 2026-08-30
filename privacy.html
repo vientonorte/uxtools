@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Política de privacidad de UX Tools · vientonorte. Sin tracking, sin servidor, solo localStorage en tu dispositivo.">
+  <title>Privacidad · UX Tools</title>
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=dm-mono:400,500|space-grotesk:300,400,500,600,700|inter:400,500" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/privacy.css">
+</head>
+<body>
+<a href="#main" class="vn-skip-link">Saltar al contenido principal</a>
+<nav data-suite-nav data-module="suite"></nav>
+
+<main class="privacy-shell" id="main" tabindex="-1">
+
+  <header class="privacy-header">
+    <div class="privacy-eyebrow">Política de privacidad</div>
+    <h1 class="privacy-title">Tus datos permanecen en tu dispositivo</h1>
+    <p class="privacy-meta">Última actualización: agosto 2026 · UX Tools · vientonorte</p>
+  </header>
+
+  <!-- TABLA DE CONTENIDOS -->
+  <nav class="privacy-toc" aria-label="Índice de la política de privacidad">
+    <div class="privacy-toc-title">Índice</div>
+    <ol>
+      <li><a href="#sec-datos">Qué datos procesamos</a></li>
+      <li><a href="#sec-almacenamiento">Cómo y dónde se almacenan</a></li>
+      <li><a href="#sec-control">Tu control sobre los datos</a></li>
+      <li><a href="#sec-passkey">Passkey — autenticación sin servidor</a></li>
+      <li><a href="#sec-terceros">Terceros y tracking</a></li>
+      <li><a href="#sec-contacto">Contacto y responsable</a></li>
+    </ol>
+  </nav>
+
+  <!-- 1. DATOS -->
+  <section class="privacy-section" id="sec-datos" aria-labelledby="sec-datos-title">
+    <div class="privacy-section-header">
+      <span class="privacy-section-icon" aria-hidden="true">📋</span>
+      <h2 class="privacy-section-title" id="sec-datos-title">1. Qué datos procesamos</h2>
+    </div>
+    <p>UX Tools procesa únicamente los datos que tú introduces de forma activa al usar las herramientas de la suite. Estos datos son:</p>
+    <ul>
+      <li><strong>Sesiones de Benchmark:</strong> nombres de productos, scores por dimensión, nombre del analista, fecha.</li>
+      <li><strong>Documentos UXFlow:</strong> criterios de aceptación, nombre de flujos, notas.</li>
+      <li><strong>Dimensiones y templates personalizados:</strong> los que configures en el panel Admin.</li>
+      <li><strong>Stamp de onboarding:</strong> qué módulos has visitado (solo IDs de módulo, sin PII).</li>
+      <li><strong>Passkey (si la configuras):</strong> el identificador público (<span class="privacy-code">rawId</span>) de tu credencial WebAuthn. Nunca la clave privada.</li>
+    </ul>
+    <div class="privacy-highlight">
+      <span class="privacy-highlight-icon" aria-hidden="true">🔒</span>
+      <span class="privacy-highlight-text">No recopilamos nombres reales, emails, contraseñas, datos de facturación, IPs ni ningún otro dato de identificación personal.</span>
+    </div>
+  </section>
+
+  <!-- 2. ALMACENAMIENTO -->
+  <section class="privacy-section" id="sec-almacenamiento" aria-labelledby="sec-almacenamiento-title">
+    <div class="privacy-section-header">
+      <span class="privacy-section-icon" aria-hidden="true">💾</span>
+      <h2 class="privacy-section-title" id="sec-almacenamiento-title">2. Cómo y dónde se almacenan</h2>
+    </div>
+    <p>Todos los datos se guardan en el <strong>localStorage</strong> de tu propio navegador, en tu dispositivo local. No existe ningún servidor propio ni base de datos en la nube que almacene tu información.</p>
+    <p>Las claves de almacenamiento utilizadas son:</p>
+    <ul>
+      <li><span class="privacy-code">uxbenchmark-state</span> — sesiones del Benchmark</li>
+      <li><span class="privacy-code">uxflow-historial</span> — documentos UXFlow</li>
+      <li><span class="privacy-code">uxbenchmark-dimensiones</span> — dimensiones personalizadas</li>
+      <li><span class="privacy-code">uxflow-templates</span> — templates de criterios</li>
+      <li><span class="privacy-code">uxtools-onboard-stamps</span> — registro de primeras visitas</li>
+      <li><span class="privacy-code">vn-passkey-id</span> — identificador público de passkey (si la usas)</li>
+    </ul>
+    <div class="privacy-highlight">
+      <span class="privacy-highlight-icon" aria-hidden="true">📍</span>
+      <span class="privacy-highlight-text">Los datos nunca salen de tu dispositivo hacia ningún servidor externo. GitHub Pages solo sirve los archivos estáticos de la aplicación.</span>
+    </div>
+  </section>
+
+  <!-- 3. CONTROL -->
+  <section class="privacy-section" id="sec-control" aria-labelledby="sec-control-title">
+    <div class="privacy-section-header">
+      <span class="privacy-section-icon" aria-hidden="true">🎛</span>
+      <h2 class="privacy-section-title" id="sec-control-title">3. Tu control sobre los datos</h2>
+    </div>
+    <p>Tienes control total sobre tus datos en todo momento:</p>
+    <ul>
+      <li><strong>Exportar:</strong> desde el panel <a href="admin.html">Admin → Exportar</a> puedes descargar un JSON completo o un CSV de tus sesiones de Benchmark.</li>
+      <li><strong>Eliminar todo:</strong> en Admin → Seguridad → "Eliminar todos mis datos" borras permanentemente todo lo almacenado en este dominio.</li>
+      <li><strong>Eliminar manualmente:</strong> desde las DevTools de tu navegador puedes inspeccionar y eliminar cualquier clave de localStorage.</li>
+      <li><strong>Retención:</strong> los datos persisten hasta que los borres explícitamente, limpies el almacenamiento del navegador o uses el modo incógnito.</li>
+    </ul>
+  </section>
+
+  <!-- 4. PASSKEY -->
+  <section class="privacy-section" id="sec-passkey" aria-labelledby="sec-passkey-title">
+    <div class="privacy-section-header">
+      <span class="privacy-section-icon" aria-hidden="true">🔑</span>
+      <h2 class="privacy-section-title" id="sec-passkey-title">4. Passkey — autenticación sin servidor</h2>
+    </div>
+    <p>Si eliges configurar una passkey en Admin → Seguridad, se utiliza la API estándar <strong>WebAuthn</strong> del navegador (Web Authentication API). Su funcionamiento es:</p>
+    <ul>
+      <li>La <strong>clave privada criptográfica nunca sale de tu dispositivo</strong>; la gestiona el autenticador de plataforma (Face ID, Windows Hello, huella dactilar, etc.).</li>
+      <li>Solo guardamos en localStorage el <span class="privacy-code">rawId</span> (identificador público de la credencial), que es un valor no sensible.</li>
+      <li>No enviamos ningún dato a ningún servidor para verificar la passkey. La verificación es completamente local.</li>
+      <li>La passkey protege acciones destructivas (como borrar todos tus datos) para añadir una capa extra de confirmación en el dispositivo.</li>
+      <li>Puedes eliminar la passkey desde Admin → Seguridad en cualquier momento.</li>
+    </ul>
+    <div class="privacy-highlight">
+      <span class="privacy-highlight-icon" aria-hidden="true">🛡</span>
+      <span class="privacy-highlight-text">La passkey de UX Tools es un mecanismo de confirmación local, no de autenticación remota. Usamos <code class="privacy-code">attestation: 'none'</code> para no enviar información del fabricante del dispositivo.</span>
+    </div>
+  </section>
+
+  <!-- 5. TERCEROS -->
+  <section class="privacy-section" id="sec-terceros" aria-labelledby="sec-terceros-title">
+    <div class="privacy-section-header">
+      <span class="privacy-section-icon" aria-hidden="true">🚫</span>
+      <h2 class="privacy-section-title" id="sec-terceros-title">5. Terceros y tracking</h2>
+    </div>
+    <p>UX Tools <strong>no utiliza ningún sistema de tracking, analytics ni telemetría</strong>. Concretamente:</p>
+    <ul>
+      <li>Sin Google Analytics, Plausible, Mixpanel ni similares.</li>
+      <li>Sin cookies de seguimiento.</li>
+      <li>Sin píxeles de publicidad.</li>
+      <li>Sin Service Workers que capturen datos de uso.</li>
+    </ul>
+    <p>La única conexión externa al cargar la aplicación es la fuente tipográfica desde <strong>fonts.bunny.net</strong> (alternativa de Bunny CDN a Google Fonts, con política de privacidad que no registra IPs de usuarios). Puedes consultarla en <a href="https://bunny.net/privacy" rel="noopener noreferrer" target="_blank">bunny.net/privacy</a>.</p>
+  </section>
+
+  <!-- 6. CONTACTO -->
+  <section class="privacy-section" id="sec-contacto" aria-labelledby="sec-contacto-title">
+    <div class="privacy-section-header">
+      <span class="privacy-section-icon" aria-hidden="true">✉</span>
+      <h2 class="privacy-section-title" id="sec-contacto-title">6. Contacto y responsable</h2>
+    </div>
+    <p>Responsable del proyecto: <strong>Rö (Rodrigo Gaete Gaona)</strong> — Colectivo vientonorte.</p>
+    <p>Para cualquier consulta sobre esta política o sobre los datos que gestionas con UX Tools:</p>
+    <ul>
+      <li>Web: <a href="https://vientonorte.github.io/" rel="noopener noreferrer" target="_blank">vientonorte.github.io</a></li>
+      <li>Repositorio: <a href="https://github.com/vientonorte/uxtools" rel="noopener noreferrer" target="_blank">github.com/vientonorte/uxtools</a></li>
+    </ul>
+  </section>
+
+  <footer class="privacy-footer">
+    <span class="privacy-footer-text">UX Tools Suite · 2026 · vientonorte</span>
+    <nav class="privacy-footer-links" aria-label="Enlaces legales">
+      <a href="index.html">Suite</a>
+      <a href="admin.html">Admin</a>
+      <a href="https://github.com/vientonorte/uxtools" rel="noopener noreferrer">GitHub</a>
+    </nav>
+  </footer>
+
+</main>
+
+<script src="js/suite-nav.js"></script>
+</body>
+</html>
