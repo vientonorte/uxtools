@@ -12,6 +12,7 @@ import Selfradar from './pages/Selfradar';
 import KitTlp from './pages/KitTlp';
 import Onboarding from './pages/Onboarding';
 import Polijuego from './pages/Polijuego';
+import Camila from './pages/Camila';
 import { ToolGate } from './components/ToolGate';
 
 export default function App() {
@@ -82,6 +83,8 @@ export default function App() {
             </ToolGate>
           }
         />
+        <Route path="/camila" element={<Camila />} />
+        <Route path="/camila/*" element={<Camila />} />
       </Routes>
       <Footer />
     </BenchmarkProvider>
