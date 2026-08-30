@@ -85,6 +85,8 @@ export default function App() {
         />
         <Route path="/camila" element={<Camila />} />
         <Route path="/camila/*" element={<Camila />} />
+        <Route path="/instafotos-app" element={<Camila />} />
+        <Route path="/instafotos-app/*" element={<Camila />} />
       </Routes>
       <Footer />
     </BenchmarkProvider>
