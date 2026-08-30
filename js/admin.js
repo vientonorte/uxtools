@@ -553,7 +553,24 @@ function accionVerificarPasskey() {
 
 function accionEliminarPasskey() {
   if (!window.Passkey) return;
-  if (!confirm('¿Eliminar la passkey de este dispositivo?\nPodrás configurar una nueva en cualquier momento.')) return;
+  var dialog = document.getElementById('dialog-eliminar-passkey');
+  if (!dialog) return;
+  dialog.hidden = false;
+  document.body.style.overflow = 'hidden';
+  var confirmBtn = document.getElementById('dialog-passkey-confirm');
+  if (confirmBtn) confirmBtn.focus();
+}
+
+function cerrarDialogPasskey() {
+  var dialog = document.getElementById('dialog-eliminar-passkey');
+  if (!dialog) return;
+  dialog.hidden = true;
+  document.body.style.overflow = '';
+}
+
+function confirmarEliminarPasskey() {
+  cerrarDialogPasskey();
+  if (!window.Passkey) return;
   Passkey.clear();
   initPasskeySection();
   showToast('🗑 Passkey eliminada de este dispositivo');
@@ -587,13 +604,13 @@ function accionEliminarPasskey() {
     });
   });
 
-  /* Close dialog on Escape */
+  /* Close dialogs on Escape */
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') {
-      var dialog = document.getElementById('dialog-borrar-todo');
-      if (dialog && !dialog.hidden) {
-        cerrarDialogBorrar();
-      }
+      var borrarDialog = document.getElementById('dialog-borrar-todo');
+      if (borrarDialog && !borrarDialog.hidden) { cerrarDialogBorrar(); return; }
+      var passkeyDialog = document.getElementById('dialog-eliminar-passkey');
+      if (passkeyDialog && !passkeyDialog.hidden) { cerrarDialogPasskey(); }
     }
   });
 })();
