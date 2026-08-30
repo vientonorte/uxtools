@@ -542,6 +542,34 @@ export default function Dashboard() {
             </div>
           </article>
 
+          {/* Instafotos App */}
+          <article className="module-card" id="mod-instafotos">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">📸</div>
+                <span className="badge badge-live module-badge">LIVE</span>
+              </div>
+              <h2 className="module-title">Instafotos App</h2>
+              <p className="module-desc">
+                App operacional para venta de fotos instantáneas en parques de Santiago. Flyer descargable, mapa de puntos de encuentro, historial ROI y gamificación por sesión.
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">🗺️</span>Parques · Flyer · ROI · Puntos
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Funciones">
+                <span className="mod-tag">Mapa</span>
+                <span className="mod-tag">Flyer PNG</span>
+                <span className="mod-tag">ROI</span>
+                <span className="mod-tag">Gamificación</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <Link className="btn-module-open" to="/instafotos-app">Abrir Instafotos →</Link>
+            </div>
+          </article>
+
           {/* VOC */}
           <article className="module-card" id="mod-voc">
             <div className="module-card-inner">

@@ -353,7 +353,7 @@ export default function Camila() {
         <div style={{ width: 200, flexShrink: 0, background: "rgba(255,255,255,.92)", borderRight: "1px solid #e0eaff", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
           <div style={{ padding: "20px 16px 14px" }}>
             <div style={{ fontFamily: "Caveat,cursive", fontSize: 18, fontWeight: 700, color: "#1e3a8a", lineHeight: 1 }}>{config.name}</div>
-            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>Camila · Santiago</div>
+            <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>Instafotos App · Santiago</div>
             <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", background: "linear-gradient(135deg,#fdf4ff,#eff6ff)", borderRadius: 10 }}>
               <span style={{ fontSize: 18 }}>{level.icon}</span>
               <div><div style={{ fontSize: 12, fontWeight: 800, color: "#7c3aed" }}>{level.name}</div><div style={{ fontSize: 10, color: "#a78bfa" }}>{totalPoints} ⭐</div></div>
@@ -378,7 +378,7 @@ export default function Camila() {
           <div style={{ background: "rgba(255,255,255,.9)", backdropFilter: "blur(8px)", borderBottom: "1px solid #e0eaff", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
             <div>
               <div style={{ fontFamily: "Caveat,cursive", fontSize: 18, fontWeight: 700, color: "#1e3a8a", lineHeight: 1 }}>{config.name}</div>
-              <div style={{ fontSize: 10, color: "#6b7280" }}>Camila · {level.icon} {level.name} · {totalPoints} ⭐</div>
+              <div style={{ fontSize: 10, color: "#6b7280" }}>Instafotos App · {level.icon} {level.name} · {totalPoints} ⭐</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <button onClick={() => setShowHelpModal(true)} style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>🆘</button>
