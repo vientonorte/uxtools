@@ -570,6 +570,34 @@ export default function Dashboard() {
             </div>
           </article>
 
+          {/* Pulso · compañera de bolsillo */}
+          <article className="module-card" id="mod-pulso">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">◎</div>
+                <span className="badge badge-live module-badge">CAMI</span>
+              </div>
+              <h2 className="module-title">Pulso</h2>
+              <p className="module-desc">
+                Compañera de bolsillo para el turno. 60s, Decir algo, frases, tareas, trayecto y SOS a Ro. Solo localStorage. Sin nube.
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon">🕊</span>Una mano · privacy-first
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Funciones">
+                <span className="mod-tag">60s</span>
+                <span className="mod-tag">WhatsApp Ro</span>
+                <span className="mod-tag">localStorage</span>
+                <span className="mod-tag">SOS</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <a className="btn-module-open" href="/uxtools/pulso/">Abrir Pulso →</a>
+            </div>
+          </article>
+
           {/* VOC */}
           <article className="module-card" id="mod-voc">
             <div className="module-card-inner">

@@ -14,6 +14,7 @@ Suite de herramientas UX en producción para SURA Investments.
 | **Kit TLP** | Método Ro · protocolo DBT/TCC en crisis (8 pasos, STOP, ayuda). localStorage + print | [app.html#/kit-tlp](https://vientonorte.github.io/uxtools/app.html#/kit-tlp) |
 | **PoliRadar** | RADAR · El Polijuego. Facilitación de vínculos (pareja/grupo). Login Supabase (magic link) + pantalla completa + QR | [app.html#/poliradar](https://vientonorte.github.io/uxtools/app.html#/poliradar) |
 | **Onboarding** | Mapa vocacional gamificado: sella los 8 instrumentos live. PoliRadar con pantalla completa + QR | [app.html#/onboarding](https://vientonorte.github.io/uxtools/app.html#/onboarding) |
+| **Pulso** | Compañera de bolsillo (turno). localStorage `pulso.v1`. SOS/Decir algo → WhatsApp Ro | [pulso/](https://vientonorte.github.io/uxtools/pulso/) |
 | **Mapa Vocacional** | 8 preguntas · inferencia semántica local (Martina) | [voc.html](https://vientonorte.github.io/uxtools/voc.html) |
 
 **Crowdfunding:** aún no hay campaña Kickstarter/GoFundMe. Canal: [contacto@vientonorte.io](mailto:contacto@vientonorte.io?subject=Crowdfunding%20UX%20Tools%20Metodo%20Ro).
