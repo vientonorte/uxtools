@@ -1,0 +1,18 @@
+{
+  "name": "Pulso",
+  "short_name": "Pulso",
+  "description": "Compañera de bolsillo para el turno. Solo en este teléfono.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0F1419",
+  "theme_color": "#0F1419",
+  "lang": "es-CL",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
