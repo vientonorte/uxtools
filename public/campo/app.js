@@ -290,7 +290,27 @@ async function persist() {
   if (!state || !key) return; // nunca se guarda en claro
   delete state.exportPass;
   state.settings.encrypt = true;
-  localStorage.setItem(STORE, JSON.stringify(await encryptWithKey(state, key)));
+  // encryptWithKey serializa el estado de inmediato: aunque luego se bloquee, se guarda esta foto.
+  const packed = await encryptWithKey(state, key);
+  localStorage.setItem(STORE, JSON.stringify(packed));
+  markSaved(Date.now());
+}
+
+function hhmm(ms) {
+  return new Date(ms).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
+
+function markSaved(ms) {
+  const el = $("saved");
+  if (!el) return;
+  el.textContent = `Guardado ${hhmm(ms)}`;
+  el.hidden = false;
+}
+
+// Guarda ya lo pendiente (al salir de la app, bloquear o cerrar la pestaña).
+function flush() {
+  window.clearTimeout(draftTimer);
+  return persist();
 }
 
 function route() {
@@ -314,9 +334,10 @@ function say(text, visible = "Guardado ✓") {
 }
 
 let draftTimer = 0;
+const AUTOSAVE_MS = 1000; // autoguardado: 1 s después de dejar de escribir
 function persistSoon() {
   window.clearTimeout(draftTimer);
-  draftTimer = window.setTimeout(() => persist(), 400);
+  draftTimer = window.setTimeout(() => persist(), AUTOSAVE_MS);
 }
 
 function studyById(id) {
@@ -456,11 +477,8 @@ function screenEstudios() {
 
 function screenNuevo() {
   head("", "Nuevo estudio", "Define guion, segmentos y cupos");
-  const draft = {
-    name: "Estudio Demo C · Paraderos",
-    questions: [],
-    segments: segments([3, 3, 2, 2]),
-  };
+  if (!state.studyDraft) state.studyDraft = { name: "Estudio Demo C · Paraderos", questions: [], segments: segments([3, 3, 2, 2]) };
+  const draft = state.studyDraft;
   const box = h("div");
   const name = input({ type: "text", value: draft.name, "aria-label": "Nombre del estudio" });
   box.append(field("Nombre del estudio", name));
@@ -536,18 +554,20 @@ function screenNuevo() {
         questions: draft.questions.map((q) => ({ ...q, text: q.text })),
       };
       state.studies.unshift(created);
+      state.studyDraft = null;
       state.activeStudyId = created.id;
       persist().then(() => {
         location.hash = `#/preparar?study=${created.id}`;
       });
     }
   });
-  box.addEventListener("change", (event) => {
+  box.addEventListener("input", (event) => {
     const t = event.target;
-    if (t instanceof HTMLInputElement && t.dataset.q) {
-      draft.questions[Number(t.dataset.q)].text = t.value;
-    }
+    if (t instanceof HTMLInputElement && t.dataset.q) draft.questions[Number(t.dataset.q)].text = t.value;
+    if (t === name) draft.name = name.value;
+    persistSoon();
   });
+  box.addEventListener("click", () => persistSoon());
   function move(index, dir) {
     const next = index + dir;
     if (next < 0 || next >= draft.questions.length) return;
@@ -750,7 +770,8 @@ function screenEntrevista(draft, study) {
   const tags = h("div", { class: "row", id: "tags" });
   box.append(tags);
   const q = study.questions[draft.questionIndex] || study.questions[0];
-  const qInput = input({ type: "text", id: "q-now", value: q ? q.text : "" });
+  const qInput = input({ type: "text", id: "q-now", value: draft.questionText ?? (q ? q.text : "") });
+  qInput.addEventListener("input", () => { draft.questionText = qInput.value; persistSoon(); });
   box.append(field("Pregunta actual", qInput));
   const seg = h("select", { id: "segment" });
   for (const item of study.segments) {
@@ -758,6 +779,7 @@ function screenEntrevista(draft, study) {
     if (item.id === draft.segmentId) opt.setAttribute("selected", "");
     seg.append(opt);
   }
+  seg.addEventListener("change", () => { draft.segmentId = seg.value; persistSoon(); });
   box.append(field("Categoría / segmento", seg));
   box.append(button("Terminar y registrar", { id: "finish" }));
 
@@ -889,6 +911,16 @@ function screenRegistro(item, study) {
   const line = h("p", { class: "card", text: status });
   line.append(button("Completar", { "data-go": `#/consentimiento?study=${study.id}&id=${item.id}` }));
   box.append(line);
+  if (!saved) {
+    box.addEventListener("input", () => {
+      const data = new FormData(box);
+      item.number = String(data.get("number") || "");
+      item.code = String(data.get("code") || "");
+      item.contact = String(data.get("contact") || "");
+      item.segmentId = String(data.get("segment") || item.segmentId);
+      persistSoon();
+    });
+  }
   if (!saved) box.append(button("Guardar registro", { type: "submit" }));
   else box.append(h("p", { text: "Este registro ya está en este teléfono." }));
   box.addEventListener("submit", async (event) => {
@@ -1409,14 +1441,14 @@ $("lock-form").addEventListener("submit", async (event) => {
   }
 });
 
+window.addEventListener("pagehide", () => { flush(); });
+
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState !== "hidden" || !state?.settings.lockOnLeave) return;
+  if (document.visibilityState !== "hidden") return;
+  flush(); // siempre se guarda antes de salir, aunque no se bloquee
+  if (!state?.settings.lockOnLeave) return;
   // No bloquear con entrevista u observación abierta: Notas de voz, cámara o archivos sacan de la app.
-  if (["/consentimiento", "/entrevista", "/observacion/nueva"].includes(route().path)) {
-    window.clearTimeout(draftTimer);
-    persist();
-    return;
-  }
+  if (["/consentimiento", "/entrevista", "/observacion/nueva"].includes(route().path)) return;
   {
     key = null;
     locked = true;

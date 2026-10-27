@@ -283,3 +283,7 @@ textarea { width: 100%; min-height: 88px; font: inherit; padding: 12px; border: 
 .danger-zone { margin-top: 3rem; border: 2px solid #b3261e; }
 button:disabled { opacity: 0.55; cursor: not-allowed; }
 .meta, #wipe-help { white-space: pre-line; }
+
+/* Autoguardado: «Guardado hh:mm» siempre visible bajo el título */
+.saved { margin: 4px 0 0; font-size: 1rem; color: var(--muted); }
+.saved::before { content: "✓ "; color: var(--vn-primitive-success); }
