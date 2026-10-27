@@ -1011,6 +1011,7 @@ function screenEvidencias(study) {
 function screenPrivacidad(study) {
   head("", "Privacidad", "Tus datos quedan protegidos en este teléfono");
   const box = h("form");
+  box.noValidate = true; // el error de retención se muestra en la app, no en el globo del navegador
   const s = state.settings;
   const auto = input({ type: "checkbox", name: "autoDelete", checked: s.autoDelete ? true : null });
   const lockLeave = input({ type: "checkbox", name: "lockOnLeave", checked: s.lockOnLeave ? true : null });
