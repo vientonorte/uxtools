@@ -1,7 +1,7 @@
 import { GUIA } from "./guia-data.js";
 const STORE = "campo.etnografia.v1"; // la clave no cambia entre versiones: así una actualización nunca "pierde" el estudio
 const BACKUP = "campo.etnografia.v1.antes-de-migrar"; // copia cifrada previa a cada migración
-const SCHEMA = 2;
+const SCHEMA = 3;
 const TABS = {
   "/estudios": "estudios",
   "/nuevo": "estudios",
@@ -70,48 +70,11 @@ function seed() {
       lockOnLeave: true,
       cloudEnabled: false,
     },
-    activeStudyId: "a",
-    studies: [
-      {
-        id: "a",
-        name: "Estudio Demo A · Línea X",
-        scriptReady: true,
-        segments: segments([3, 3, 2, 2], [2, 1, 0, 0]),
-        questions: TEMPLATE.map((q, i) => ({ id: `q${i}`, ...q })),
-      },
-      {
-        id: "b",
-        name: "Estudio Demo B · Feria",
-        scriptReady: false,
-        segments: segments([2, 2, 1, 1], [0, 0, 0, 0]),
-        questions: [],
-      },
-    ],
-    interviews: [
-      {
-        id: "e0417",
-        studyId: "a",
-        code: "E-0417",
-        number: "07",
-        segmentId: "jovenes",
-        contact: "",
-        savedAt: Date.parse("2026-10-22T10:40:00-03:00"),
-        consent: { participate: true, audio: false, photos: false, cloud: false },
-        notes: [
-          { t: "02:10", text: "Recarga en kiosko, no en app" },
-          { t: "04:55", text: "Evita hora punta por niño" },
-        ],
-        tags: ["#recarga", "#espera", "#cuidado"],
-        audio: [],
-        photos: [],
-        videos: [],
-      },
-    ],
-    batches: [
-      { id: "l1", studyId: "a", name: "Lote 1 · Estación Demo Norte", window: "08:00–10:00", goal: 4, done: 4 },
-      { id: "l2", studyId: "a", name: "Lote 2 · Estación Demo Centro", window: "10:30–12:30", goal: 4, done: 3 },
-      { id: "l3", studyId: "a", name: "Lote 3 · Estación Demo Sur", window: "15:00–17:00", goal: 4, done: 0 },
-    ],
+    activeStudyId: "",
+    studies: [],
+    interviews: [],
+    batches: [],
+    observations: [],
     draft: null,
   };
 }
@@ -136,8 +99,21 @@ function migrate(st) {
     row.consent = { participate: false, audio: false, photos: false, cloud: false, ...(row.consent || {}) };
   }
   if (st.draft === undefined) st.draft = null;
+  if (from < 3) dropDemo(st);
   st.schema = SCHEMA;
   return { state: st, from, changed: true };
+}
+
+// v3: quita «Estudio Demo A/B» de versiones anteriores, solo si no tienen datos reales.
+function dropDemo(st) {
+  const isDemoRow = (row) => row.id === "e0417" && row.code === "E-0417";
+  const demo = st.studies.filter((x) => ["a", "b"].includes(x.id) && /^Estudio Demo [AB] /.test(x.name || ""));
+  const drop = new Set(demo.filter((x) => !st.interviews.some((row) => row.studyId === x.id && !isDemoRow(row)) && !(st.draft && st.draft.studyId === x.id)).map((x) => x.id));
+  if (!drop.size) return;
+  st.studies = st.studies.filter((x) => !drop.has(x.id));
+  st.interviews = st.interviews.filter((row) => !(drop.has(row.studyId) && isDemoRow(row)));
+  st.batches = st.batches.filter((b) => !drop.has(b.studyId));
+  if (drop.has(st.activeStudyId)) st.activeStudyId = st.studies[0]?.id || "";
 }
 
 // Antes de reescribir datos de una versión anterior, deja la copia cifrada original aparte.
@@ -522,10 +498,10 @@ function screenEstudios() {
 
 function screenNuevo() {
   head("", "Nuevo estudio", "Define guion, segmentos y cupos");
-  if (!state.studyDraft) state.studyDraft = { name: "Estudio Demo C · Paraderos", questions: [], segments: segments([3, 3, 2, 2]) };
+  if (!state.studyDraft) state.studyDraft = { name: "", questions: [], segments: segments([3, 3, 2, 2]) };
   const draft = state.studyDraft;
   const box = h("div");
-  const name = input({ type: "text", value: draft.name, "aria-label": "Nombre del estudio" });
+  const name = input({ type: "text", value: draft.name, "aria-label": "Nombre del estudio", placeholder: "Ej.: Paraderos Línea 5" });
   box.append(field("Nombre del estudio", name));
   const plant = h("section", { class: "card" }, [
     h("h2", { text: "Partir desde plantilla" }),
@@ -634,7 +610,7 @@ function screenPreparar(study) {
     if (!blocks.has(q.block)) blocks.set(q.block, []);
     blocks.get(q.block).push(q);
   }
-  if (!blocks.size) box.append(h("p", { class: "notice", text: "Carga la plantilla desde Nuevo estudio, o abre el demo A." }));
+  if (!blocks.size) box.append(h("p", { class: "notice", text: "Este estudio no tiene preguntas.\nCrea un estudio nuevo con la plantilla guion v3." }));
   for (const [block, items] of blocks) {
     const card = h("section", { class: "card" }, [h("h2", { text: block })]);
     items.forEach((q, i) => {
@@ -967,10 +943,27 @@ function screenRegistro(item, study) {
     });
   }
   if (!saved) box.append(button("Guardar registro", { type: "submit" }));
-  else box.append(h("p", { text: "Este registro ya está en este teléfono." }));
+  else box.append(h("p", { class: "meta", text: "Este registro ya está en este teléfono.\nPuedes corregirlo y guardar los cambios." }), button("Guardar cambios", { type: "submit", id: "save-edit" }));
   box.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (saved) return;
+    if (saved) {
+      const data = new FormData(box);
+      const nextSeg = String(data.get("segment") || item.segmentId);
+      if (nextSeg !== item.segmentId) {
+        const from = study.segments.find((row) => row.id === item.segmentId);
+        const to = study.segments.find((row) => row.id === nextSeg);
+        if (from) from.done = Math.max(0, from.done - 1);
+        if (to) to.done += 1;
+      }
+      item.number = String(data.get("number") || "");
+      item.code = String(data.get("code") || "").trim() || item.code;
+      item.contact = String(data.get("contact") || "");
+      item.segmentId = nextSeg;
+      item.editedAt = Date.now();
+      await persist();
+      say("Cambios guardados.");
+      return;
+    }
     const data = new FormData(box);
     item.number = String(data.get("number") || "");
     item.code = String(data.get("code") || "");
@@ -1090,19 +1083,28 @@ function screenPrivacidad(study) {
   const box = h("form");
   box.noValidate = true; // el error de retención se muestra en la app, no en el globo del navegador
   const s = state.settings;
-  const auto = input({ type: "checkbox", name: "autoDelete", checked: s.autoDelete ? true : null });
+  const auto = h("select", { name: "retention", id: "retention" });
+  for (const [v, l] of [["never", "Nunca"], ["30", "A los 30 días"], ["90", "A los 90 días"], ["180", "A los 180 días"]]) {
+    const opt = h("option", { value: v, text: l });
+    const cur = s.autoDelete ? String(s.retentionDays) : "never";
+    if (v === cur) opt.setAttribute("selected", "");
+    auto.append(opt);
+  }
+  if (s.autoDelete && ![30, 90, 180].includes(Number(s.retentionDays))) {
+    const opt = h("option", { value: String(s.retentionDays), text: `A los ${s.retentionDays} días` });
+    opt.setAttribute("selected", "");
+    auto.append(opt);
+  }
   const lockLeave = input({ type: "checkbox", name: "lockOnLeave", checked: s.lockOnLeave ? true : null });
   const cloud = input({ type: "checkbox", name: "cloudEnabled", checked: s.cloudEnabled ? true : null });
-  const days = input({ type: "number", name: "retentionDays", min: "1", value: String(s.retentionDays) });
   const pass = input({ type: "password", name: "key", autocomplete: "new-password" });
   const err = h("p", { class: "error", role: "alert", id: "privacy-error" });
-  days.setAttribute("aria-describedby", "privacy-error");
+  auto.setAttribute("aria-describedby", "retention-help");
   box.append(
     h("p", { class: "notice", text: "La protección está siempre activa.\nDeja la clave vacía para mantener la actual." }),
     field("Nueva clave (opcional)", pass),
-    field("Retención (días)", days),
-    h("label", { class: "check" }, [auto, h("span", { text: "Borrar automáticamente al cumplir el plazo" })]),
-    h("p", { class: "notice", text: "Te avisamos en Mis estudios 72 h antes de borrar.\nPuedes exportar o posponer 7 d\u00edas, una vez." }),
+    field("Borrar entrevistas automáticamente", auto),
+    h("p", { class: "notice", id: "retention-help", text: "Por defecto, nunca se borran.\nSi eliges un plazo, te avisamos 72 h antes.\nPuedes exportar o posponer 7 d\u00edas, una vez." }),
     h("label", { class: "check" }, [lockLeave, h("span", { text: "Bloquear al salir de la app" })]),
     h("label", { class: "check" }, [cloud, h("span", { text: "Permitir transcripción en la nube (solo con permiso)" })]),
     err,
@@ -1121,23 +1123,15 @@ function screenPrivacidad(study) {
     event.preventDefault();
     const data = new FormData(box);
     const nextKey = String(data.get("key") || "");
-    const rawDays = String(data.get("retentionDays") || "").trim();
-    const nDays = Number(rawDays);
-    days.setAttribute("aria-invalid", "false");
-    if (!rawDays || !Number.isInteger(nDays) || nDays < 1) {
-      days.setAttribute("aria-invalid", "true");
-      err.textContent = "La retención tiene que ser de 1 día o más.\nEscribe un número entero, por ejemplo 30.";
-      days.focus();
-      return;
-    }
+    const ret = String(data.get("retention") || "never");
     if (nextKey && nextKey.length < 8) {
       err.textContent = "La nueva clave necesita 8 caracteres o más.";
       return;
     }
-    state.settings.autoDelete = data.get("autoDelete") === "on";
+    state.settings.autoDelete = ret !== "never";
     state.settings.lockOnLeave = data.get("lockOnLeave") === "on";
     state.settings.cloudEnabled = data.get("cloudEnabled") === "on";
-    state.settings.retentionDays = nDays;
+    if (ret !== "never") state.settings.retentionDays = Number(ret);
     if (nextKey) key = await makeKey(nextKey);
     applyRetention();
     await persist();
@@ -1243,6 +1237,7 @@ function screenObsLista() {
       o.ayuda ? h("p", { text: `Ayuda: ${o.ayuda}` }) : null,
       o.foto ? h("p", { text: `Foto N° ${o.foto}` }) : null,
       o.pistas?.length ? h("p", { text: `Pista para Maas: ${o.pistas.join(", ")}` }) : null,
+      button("Editar ficha", { class: "secondary", "data-go": `#/observacion/nueva?id=${o.id}`, "aria-label": `Editar ficha ${o.code}` }),
     ]));
   }
   paint(box);
@@ -1261,13 +1256,14 @@ function radios(name, options, legend) {
   ]);
 }
 
-function screenObsNueva() {
-  head("Guía", "Nueva ficha", "Lo que ves, sin nombres ni rostros");
+function screenObsNueva(editId) {
+  const editing = editId ? obsList().find((o) => o.id === editId) || null : null;
+  head("Guía", editing ? `Editar ${editing.code}` : "Nueva ficha", "Lo que ves, sin nombres ni rostros");
   const box = h("form", { novalidate: true });
   const lugar = input({ type: "text", name: "lugar", required: true, placeholder: "Ej.: Pajaritos, paradero 516" });
   const when = input({ type: "datetime-local", name: "when", required: true, value: nowLocal() });
   const code = h("p", { class: "meta", id: "obs-code" });
-  const upd = () => { code.textContent = `Código: ${obsCode(lugar.value, when.value)}`; };
+  const upd = () => { code.textContent = `Código: ${editing ? editing.code : obsCode(lugar.value, when.value)}`; };
   lugar.addEventListener("input", upd);
   when.addEventListener("input", upd);
   upd();
@@ -1293,8 +1289,17 @@ function screenObsNueva() {
   const err = h("p", { class: "error", role: "alert", id: "obs-error" });
   lugar.setAttribute("aria-describedby", "obs-error");
   box.querySelector('[name="vi"]').setAttribute("aria-describedby", "obs-error");
-  box.append(err, button("Guardar ficha", { type: "submit" }));
-  if (Array.isArray(state.obsDraft)) {
+  box.append(err, button(editing ? "Guardar cambios" : "Guardar ficha", { type: "submit" }));
+  if (editing) {
+    const fill = { lugar: editing.lugar, when: editing.when, franja: editing.franja, clima: editing.clima, corte: editing.corte ? "si" : "no", tema: editing.tema, vi: editing.vi, supongo: editing.supongo, traba: editing.traba, ayuda: editing.ayuda, foto: editing.foto };
+    for (const [name, value] of Object.entries(fill)) {
+      for (const el of box.querySelectorAll(`[name="${name}"]`)) {
+        if (el.type === "radio") el.checked = el.value === value; else el.value = value ?? "";
+      }
+    }
+    for (const el of box.querySelectorAll('[name="pista"]')) el.checked = (editing.pistas || []).includes(el.value);
+    upd();
+  } else if (Array.isArray(state.obsDraft)) {
     for (const [name, value] of state.obsDraft) {
       for (const el of box.querySelectorAll(`[name="${name}"]`)) {
         if (el.type === "checkbox" || el.type === "radio") { if (el.value === value) el.checked = true; } else el.value = value;
@@ -1302,8 +1307,9 @@ function screenObsNueva() {
     }
     upd();
   }
-  box.addEventListener("input", () => { state.obsDraft = [...new FormData(box).entries()].map(([k, v]) => [k, String(v)]); persistSoon(); });
-  box.addEventListener("change", () => { state.obsDraft = [...new FormData(box).entries()].map(([k, v]) => [k, String(v)]); persistSoon(); });
+  const keep = () => { if (!editing) { state.obsDraft = [...new FormData(box).entries()].map(([k, v]) => [k, String(v)]); persistSoon(); } };
+  box.addEventListener("input", keep);
+  box.addEventListener("change", keep);
   box.addEventListener("submit", async (event) => {
     event.preventDefault();
     const d = new FormData(box);
@@ -1320,6 +1326,19 @@ function screenObsNueva() {
       return;
     }
     const w = String(d.get("when") || nowLocal());
+    if (editing) {
+      Object.assign(editing, {
+        lugar: lug, when: w, franja: String(d.get("franja")), clima: String(d.get("clima") || ""),
+        corte: d.get("corte") === "si", tema: String(d.get("tema")), vi,
+        supongo: String(d.get("supongo") || ""), porPreguntar: Boolean(String(d.get("supongo") || "").trim()),
+        traba: String(d.get("traba") || ""), ayuda: String(d.get("ayuda") || ""), foto: String(d.get("foto") || ""),
+        pistas: d.getAll("pista").map(String), editedAt: Date.now(),
+      });
+      await persist();
+      say("Ficha actualizada.");
+      location.hash = "#/observacion";
+      return;
+    }
     obsList().push({
       id: uid("obs"),
       code: obsCode(lug, w),
@@ -1378,7 +1397,7 @@ async function render() {
   if (path === "/privacidad") return screenPrivacidad(study);
   if (path === "/guia") return screenGuia();
   if (path === "/observacion") return screenObsLista();
-  if (path === "/observacion/nueva") return screenObsNueva();
+  if (path === "/observacion/nueva") return screenObsNueva(params.get("id"));
   location.hash = "#/estudios";
 }
 
