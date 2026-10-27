@@ -10,34 +10,34 @@
   </head>
   <body>
     <div class="phone">
-      <div id="lock" class="lock" hidden>
+      <div id="lock" class="lock" role="region" aria-labelledby="lock-title" hidden>
         <p class="eyebrow">Bloqueado</p>
-        <h1>Los datos siguen en este teléfono</h1>
+        <h1 id="lock-title">Los datos siguen en este teléfono</h1>
         <p id="lock-help"></p>
         <button type="button" id="lock-passkey" hidden>Desbloquear con passkey</button>
-        <p id="lock-or" class="notice" hidden>o con la clave del investigador (PBKDF2 600.000)</p>
+        <p id="lock-or" class="notice" hidden>o usa tu clave</p>
         <form id="lock-form">
           <label class="field">
             <span>Clave del investigador</span>
-            <input id="lock-pass" type="password" autocomplete="current-password" />
+            <input id="lock-pass" type="password" autocomplete="current-password" aria-describedby="lock-help lock-error" />
           </label>
           <label class="field" id="lock-again-field" hidden>
             <span>Confirmar clave</span>
-            <input id="lock-again" type="password" autocomplete="new-password" />
+            <input id="lock-again" type="password" autocomplete="new-password" aria-describedby="lock-error" />
           </label>
+          <p id="lock-error" class="error" role="alert"></p>
           <button type="submit" id="lock-submit">Desbloquear</button>
         </form>
-        <p id="lock-error" class="error" role="alert"></p>
         <button type="button" id="lock-open" hidden>Desbloquear</button>
       </div>
       <header class="top">
-        <button type="button" id="back" class="text-btn">‹ Volver</button>
+        <button type="button" id="back" class="text-btn" aria-label="Volver">‹ Volver</button>
         <p id="eyebrow" class="eyebrow"></p>
         <h1 id="title"></h1>
         <p id="subtitle"></p>
         <button type="button" id="privacy" class="text-btn privacy">Privacidad</button>
       </header>
-      <main id="main"></main>
+      <main id="main" tabindex="-1"></main>
       <nav id="tabbar" aria-label="Secciones de campo">
         <a href="#/estudios" data-tab="estudios">Estudios</a>
         <a href="#/lotes" data-tab="campo">Campo</a>

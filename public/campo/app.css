@@ -50,7 +50,8 @@ body {
 }
 
 .phone {
-  width: min(100%, 393px);
+  width: 100%;
+  max-width: 40rem; /* crece fluido, sin salto en 768 */
   min-height: 100dvh;
   margin: 0 auto;
   background: var(--paper);
@@ -60,9 +61,10 @@ body {
 }
 
 .top {
-  padding: 18px 20px 8px;
+  padding: calc(18px + env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 8px max(20px, env(safe-area-inset-left));
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
+  overflow-wrap: anywhere;
   gap: 2px 8px;
 }
 
@@ -88,14 +90,15 @@ h1 {
 .eyebrow {
   margin: 0;
   color: var(--accent-text);
-  font-size: 0.8rem;
+  font-size: 1rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
 main {
   flex: 1;
-  padding: 12px 20px 24px;
+  padding: 12px max(20px, env(safe-area-inset-right)) 24px max(20px, env(safe-area-inset-left));
+  overflow-wrap: anywhere;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -104,22 +107,25 @@ main {
 nav {
   position: sticky;
   bottom: 0;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 4px;
-  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  padding: 8px max(8px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   background: var(--card);
   border-top: 1px solid var(--line);
 }
 
 nav a {
+  flex: 1 1 auto;
+  min-width: 44px;
+  padding: 0 6px;
   min-height: 48px;
   display: grid;
   place-items: center;
   text-decoration: none;
   color: var(--ink);
   border-radius: var(--vn-radius-sm);
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 nav a[aria-current="page"] {
@@ -221,13 +227,18 @@ textarea { min-height: 88px; resize: vertical; }
 .bars i.on { background: var(--accent-text); }
 .q { display: flex; flex-direction: column; gap: 8px; }
 .q .row { align-items: center; }
-.live { position: absolute; left: -999px; }
+.live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.notice, .error, #lock-help { white-space: pre-line; }
+input, select, textarea { font-size: 1rem; }
+.check input { flex: none; }
+img, video { max-width: 100%; height: auto; }
 .lock {
   position: absolute;
   inset: 0;
   z-index: 5;
   background: var(--paper);
-  padding: 32px 20px;
+  padding: calc(32px + env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) calc(32px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -240,7 +251,7 @@ button:focus-visible, nav a:focus-visible { box-shadow: 0 0 0 5px var(--card); }
 
 /* Responsive: en tablet/escritorio el marco crece y conserva lectura cómoda */
 @media (min-width: 768px) {
-  .phone { width: min(100%, 560px); box-shadow: 0 0 0 1px var(--vn-border-medium); }
+  .phone { box-shadow: 0 0 0 1px var(--vn-border-medium); }
 }
 
 /* WCAG 2.3.3 */
@@ -250,10 +261,17 @@ button:focus-visible, nav a:focus-visible { box-shadow: 0 0 0 5px var(--card); }
 
 /* Guía de observación */
 .fold summary { min-height: 44px; display: flex; align-items: center; font-weight: 700; cursor: pointer; }
-.fold h3, .session h3 { font-size: 0.95rem; margin: 12px 0 4px; }
+.fold h3, .session h3 { font-size: 1rem; margin: 12px 0 4px; }
 .fold ul { margin: 4px 0; padding-left: 20px; }
 .fold li, .fold p { color: var(--ink); line-height: 1.45; }
 .session { border-top: 1px solid var(--line); padding-top: 8px; }
 fieldset.card { margin: 0; }
 fieldset.card legend { font-weight: 700; padding: 0 4px; }
 textarea { width: 100%; min-height: 88px; font: inherit; padding: 12px; border: 1px solid var(--vn-primitive-pizarra); border-radius: var(--vn-radius-md); box-sizing: border-box; }
+
+/* Zoom 200% / pantallas muy angostas (reflow WCAG 1.4.10): la barra deja de ser fija para no tapar contenido */
+@media (max-width: 300px), (max-height: 420px) {
+  nav { position: static; }
+  .top { grid-template-columns: 1fr; }
+  .privacy { justify-self: start; }
+}

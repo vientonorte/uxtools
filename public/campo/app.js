@@ -254,16 +254,16 @@ async function load() {
   locked = true;
   state = null;
   if (!raw) {
-    showLock("setup", "Primer uso: crea la clave del investigador (mínimo 8 caracteres). Todo se guarda cifrado con AES-GCM; la clave no se guarda.");
+    showLock("setup", "Primer uso: crea tu clave, con 8 caracteres o más.\nTodo queda protegido en este teléfono.\nLa clave no se guarda: anótala en un lugar seguro.");
     return;
   }
   const blob = JSON.parse(raw);
   if (!blob.enc) {
     pendingPlain = blob.payload;
-    showLock("migrate", "Hay datos sin cifrar de una versión anterior. Crea una clave para cifrarlos; la copia en claro se borra.");
+    showLock("migrate", "Hay datos sin proteger de una versión anterior.\nCrea una clave para protegerlos.\nLa copia sin proteger se borra.");
     return;
   }
-  showLock("unlock", "Este teléfono guardó el estudio cifrado con AES-GCM. La clave no está en el disco.");
+  showLock("unlock", "Tu estudio está protegido en este teléfono.\nEscribe tu clave para abrirlo.");
 }
 
 function showLock(mode, help) {
@@ -273,13 +273,13 @@ function showLock(mode, help) {
   $("lock-form").hidden = false;
   $("lock-again-field").hidden = mode === "unlock";
   $("lock-pass").autocomplete = mode === "unlock" ? "current-password" : "new-password";
-  $("lock-submit").textContent = mode === "unlock" ? "Desbloquear" : "Crear clave y cifrar";
+  $("lock-submit").textContent = mode === "unlock" ? "Desbloquear" : "Crear clave y proteger datos";
   let pk = false;
   try { pk = isPasskeyBlob(JSON.parse(localStorage.getItem(STORE) || "null")); } catch { pk = false; }
   // Estudio con passkey: solo la passkey lo abre (no hay frase).
   $("lock-form").hidden = mode === "unlock" && pk;
   $("lock-passkey").hidden = !hasWebAuthn() || (mode === "unlock" && !pk);
-  $("lock-passkey").textContent = mode === "unlock" ? "Desbloquear con passkey" : "Crear passkey y cifrar";
+  $("lock-passkey").textContent = mode === "unlock" ? "Desbloquear con passkey" : "Crear passkey y proteger datos";
   $("lock-or").hidden = $("lock-passkey").hidden || $("lock-form").hidden;
   $("lock-pass").value = "";
   $("lock-again").value = "";
@@ -363,7 +363,7 @@ function paint(node) {
 }
 
 function screenEstudios() {
-  head("Campo", "Mis estudios", "Datos solo en este teléfono, cifrados si activas la clave");
+  head("Campo", "Mis estudios", "Tus datos quedan solo en este teléfono, protegidos con tu clave");
   const box = h("div");
   for (const study of state.studies) {
     const t = tally(study);
@@ -374,7 +374,7 @@ function screenEstudios() {
     card.append(button("Abrir estudio", { "data-go": `#/preparar?study=${study.id}` }));
     box.append(card);
   }
-  box.append(button("+ Nuevo estudio", { "data-go": "#/nuevo" }));
+  box.append(button("Crear estudio", { "data-go": "#/nuevo" }));
   box.append(h("p", { class: "notice", text: "Sin sincronización en la nube. Respaldo: exportación manual." }));
   if (state.settings.autoDelete) {
     box.append(h("p", { class: "notice", text: "Borrado automático activo. Aviso en pantalla 72 h antes. Podrás exportar o posponer 7 días una vez." }));
@@ -819,7 +819,7 @@ function strength(pass) {
 }
 
 function screenEvidencias(study) {
-  head(study.name, "Evidencias", "Solo fotos, videos y registros");
+  head(study.name, "Evidencias", "Elige qué exportar");
   const rows = state.interviews.filter((row) => row.studyId === study.id);
   const photos = rows.reduce((n, row) => n + row.photos.length, 0);
   const videos = rows.reduce((n, row) => n + row.videos.length, 0);
@@ -833,15 +833,15 @@ function screenEvidencias(study) {
     const check = input({ type: "checkbox", name, checked: true });
     box.append(h("label", { class: "check" }, [check, h("span", { text: label })]));
   }
-  box.append(h("p", { class: "notice", text: "No se exporta audio ni transcripciones sin opt-in. Fotos sin metadatos GPS." }));
+  box.append(h("p", { class: "notice", text: "El audio y las transcripciones solo se exportan con permiso.\nLas fotos van sin ubicación GPS." }));
   const pass = input({ type: "password", name: "pass", autocomplete: "new-password" });
   const again = input({ type: "password", name: "again", autocomplete: "new-password" });
   const bars = h("div", { class: "bars", id: "bars" }, [h("i"), h("i"), h("i"), h("i")]);
   box.append(h("section", { class: "card" }, [
-    h("h2", { text: "Paso 2 de 3 · Passphrase de exportación" }),
-    field("Passphrase", pass),
+    h("h2", { text: "Paso 2 de 3 · Clave del archivo" }),
+    field("Clave del archivo", pass),
     bars,
-    field("Confirmar passphrase", again),
+    field("Repite la clave", again),
   ]));
   const local = input({ type: "radio", name: "dest", value: "phone", checked: true });
   const icloud = input({ type: "radio", name: "dest", value: "icloud" });
@@ -851,10 +851,12 @@ function screenEvidencias(study) {
     h("label", { class: "check" }, [local, h("span", { text: "Guardar en este teléfono (Archivos)" })]),
     h("label", { class: "check" }, [icloud, h("span", { text: "iCloud Drive" })]),
     h("label", { class: "check" }, [drive, h("span", { text: "Google Drive" })]),
-    h("p", { class: "notice", text: "Este corte no abre iCloud ni Drive. Esas opciones también guardan el archivo cifrado en Descargas." }),
+    h("p", { class: "notice", text: "Por ahora no se abre iCloud ni Drive.\nEl archivo protegido se guarda en Descargas." }),
   ]));
-  const err = h("p", { class: "error", role: "alert" });
-  box.append(err, button("Exportar", { type: "submit" }));
+  const err = h("p", { class: "error", role: "alert", id: "export-error" });
+  pass.setAttribute("aria-describedby", "export-error");
+  again.setAttribute("aria-describedby", "export-error");
+  box.append(err, button("Exportar evidencias", { type: "submit" }));
   pass.addEventListener("input", () => {
     const n = strength(pass.value);
     for (const [i, bar] of [...bars.children].entries()) bar.classList.toggle("on", i < n);
@@ -864,7 +866,7 @@ function screenEvidencias(study) {
     const data = new FormData(box);
     const passphrase = String(data.get("pass") || "");
     if (passphrase.length < 8 || passphrase !== String(data.get("again") || "")) {
-      err.textContent = "La passphrase tiene que coincidir y tener al menos 8 caracteres.";
+      err.textContent = "Las claves no coinciden o son muy cortas.\nEscribe la misma clave dos veces, con 8 caracteres o más.";
       return;
     }
     const includeAudio = rows.some((row) => row.consent.cloud);
@@ -893,13 +895,13 @@ function screenEvidencias(study) {
     a.click();
     URL.revokeObjectURL(url);
     err.textContent = "";
-    say("Exportación cifrada guardada en Descargas. Sin GPS y sin audio si no hubo opt-in.");
+    say("Archivo protegido guardado en Descargas. Va sin GPS y sin audio si no hubo permiso.");
   });
   paint(box);
 }
 
 function screenPrivacidad(study) {
-  head("", "Privacidad", "Cifrado AES-GCM en el dispositivo");
+  head("", "Privacidad", "Tus datos quedan protegidos en este teléfono");
   const box = h("form");
   const s = state.settings;
   const auto = input({ type: "checkbox", name: "autoDelete", checked: s.autoDelete ? true : null });
@@ -909,24 +911,24 @@ function screenPrivacidad(study) {
   const pass = input({ type: "password", name: "key", autocomplete: "new-password" });
   const err = h("p", { class: "error", role: "alert" });
   box.append(
-    h("p", { class: "notice", text: "Cifrado AES-GCM siempre activo (PBKDF2 600.000 iteraciones). Deja la clave vacía para mantener la actual." }),
-    field("Nueva clave del investigador (opcional)", pass),
+    h("p", { class: "notice", text: "La protección está siempre activa.\nDeja la clave vacía para mantener la actual." }),
+    field("Nueva clave (opcional)", pass),
     field("Retención (días)", days),
-    h("label", { class: "check" }, [auto, h("span", { text: "Borrado automático al cumplir el plazo" })]),
+    h("label", { class: "check" }, [auto, h("span", { text: "Borrar automáticamente al cumplir el plazo" })]),
     h("p", { class: "notice", text: "Te avisaremos 72 h antes del borrado. Podrás exportar o posponer 7 días una vez." }),
-    h("label", { class: "check" }, [lockLeave, h("span", { text: "Bloqueo al salir de la app" })]),
-    h("label", { class: "check" }, [cloud, h("span", { text: "Transcripción nube habilitada (requiere opt-in)" })]),
+    h("label", { class: "check" }, [lockLeave, h("span", { text: "Bloquear al salir de la app" })]),
+    h("label", { class: "check" }, [cloud, h("span", { text: "Permitir transcripción en la nube (solo con permiso)" })]),
     err,
     button("Guardar privacidad", { type: "submit" }),
     button("Borrar estudio y evidencias", { type: "button", id: "wipe", class: "danger" }),
-    h("p", { text: "El borrado es irreversible." }),
+    h("p", { text: "El borrado no se puede deshacer." }),
   );
   box.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(box);
     const nextKey = String(data.get("key") || "");
     if (nextKey && nextKey.length < 8) {
-      err.textContent = "La nueva clave debe tener al menos 8 caracteres.";
+      err.textContent = "La nueva clave necesita 8 caracteres o más.";
       return;
     }
     state.settings.autoDelete = data.get("autoDelete") === "on";
@@ -937,7 +939,7 @@ function screenPrivacidad(study) {
     applyRetention();
     await persist();
     err.textContent = "";
-    say("Privacidad guardada. Estudio cifrado en este teléfono.");
+    say("Privacidad guardada.");
     render();
   });
   box.querySelector("#wipe").addEventListener("click", async () => {
@@ -995,8 +997,8 @@ function screenGuia() {
   head("Campo", "Guía de observación", "v3 · FRUTA · Maas Chile");
   const box = h("div");
   box.append(h("p", { class: "notice", text: `Objetivo: ${GUIA.objetivo}` }));
-  box.append(button("+ Nueva ficha de observación", { "data-go": "#/observacion/nueva" }));
-  box.append(button(`Mis fichas (${obsList().length})`, { "data-go": "#/observacion", class: "secondary" }));
+  box.append(button("Crear ficha de observación", { "data-go": "#/observacion/nueva" }));
+  box.append(button(`Ver mis fichas (${obsList().length})`, { "data-go": "#/observacion", class: "secondary" }));
   box.append(fold("Antes de salir · Al registrar", [ul(GUIA.antes)], true));
   box.append(fold("Sesiones", GUIA.sesiones.map((s) => h("div", { class: "session" }, [
     h("h3", { text: `${s.id} · ${s.dia}` }),
@@ -1021,7 +1023,7 @@ function screenGuia() {
 function screenObsLista() {
   head("Guía", "Fichas de observación", "Guardadas solo en este teléfono");
   const box = h("div");
-  box.append(button("+ Nueva ficha", { "data-go": "#/observacion/nueva" }));
+  box.append(button("Crear ficha", { "data-go": "#/observacion/nueva" }));
   const rows = obsList();
   if (!rows.length) box.append(h("p", { class: "notice", text: "Todavía no hay fichas." }));
   for (const o of [...rows].reverse()) {
@@ -1082,7 +1084,8 @@ function screenObsNueva() {
       ...OBS_PISTAS.map(([v, l]) => h("label", { class: "check" }, [input({ type: "checkbox", name: "pista", value: v }), h("span", { text: l })])),
     ]),
   );
-  const err = h("p", { class: "error", role: "alert" });
+  const err = h("p", { class: "error", role: "alert", id: "obs-error" });
+  lugar.setAttribute("aria-describedby", "obs-error");
   box.append(err, button("Guardar ficha", { type: "submit" }));
   box.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -1095,7 +1098,7 @@ function screenObsNueva() {
     box.querySelector('[name="lugar"]').setAttribute("aria-invalid", lug ? "false" : "true");
     box.querySelector('[name="vi"]').setAttribute("aria-invalid", vi ? "false" : "true");
     if (missing.length) {
-      err.textContent = `Falta ${missing.join(" y ")}.`;
+      err.textContent = `Falta ${missing.join(" y ")}.\nCompleta el campo marcado para guardar.`;
       box.querySelector(lug ? '[name="vi"]' : '[name="lugar"]').focus();
       return;
     }
@@ -1220,7 +1223,7 @@ $("lock-passkey").addEventListener("click", async () => {
     return finishUnlock();
   } catch (err) {
     $("lock-error").textContent = String(err?.message) === "no-prf"
-      ? "Este dispositivo no entrega PRF para passkeys. Usa la clave del investigador."
+      ? "Este teléfono no permite abrir con passkey.\nUsa tu clave."
       : "No se pudo usar la passkey (cancelada o no corresponde a este estudio).";
   }
 });
@@ -1230,7 +1233,7 @@ $("lock-form").addEventListener("submit", async (event) => {
   const pass = $("lock-pass").value;
   if (lockMode !== "unlock") {
     if (pass.length < 8 || pass !== $("lock-again").value) {
-      $("lock-error").textContent = "La clave tiene que coincidir y tener al menos 8 caracteres.";
+      $("lock-error").textContent = "Las claves no coinciden o son muy cortas.\nEscribe la misma clave dos veces, con 8 caracteres o más.";
       return;
     }
     key = await makeKey(pass);
@@ -1260,7 +1263,7 @@ $("lock-form").addEventListener("submit", async (event) => {
     $("lock-error").textContent = "";
     render();
   } catch {
-    $("lock-error").textContent = "Esa clave no abre el archivo de este teléfono.";
+    $("lock-error").textContent = "Esa clave no es correcta.\nRevísala y vuelve a intentarlo.";
   }
 });
 
