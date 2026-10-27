@@ -299,8 +299,24 @@ function route() {
   return { path: path || "/estudios", params: new URLSearchParams(query || "") };
 }
 
-function say(text) {
+let toastTimer = 0;
+function say(text, visible = "Guardado ✓") {
   live.textContent = text;
+  let toast = document.getElementById("toast");
+  if (!toast) {
+    toast = h("p", { id: "toast", class: "toast", "aria-hidden": "true" });
+    document.body.append(toast);
+  }
+  toast.textContent = visible || text;
+  toast.hidden = false;
+  window.clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => { toast.hidden = true; }, 2000);
+}
+
+let draftTimer = 0;
+function persistSoon() {
+  window.clearTimeout(draftTimer);
+  draftTimer = window.setTimeout(() => persist(), 400);
 }
 
 function studyById(id) {
@@ -527,16 +543,23 @@ function screenPreparar(study) {
 function screenLotes(study) {
   head(study.name, "Lotes del día", "Jueves 22-10 · demo");
   const box = h("div");
-  const rows = state.batches.filter((b) => b.studyId === study.id);
-  if (!rows.length) box.append(h("p", { text: "Este estudio no tiene lotes todavía. El demo A sí." }));
+  let rows = state.batches.filter((b) => b.studyId === study.id);
+  if (!rows.length) {
+    const goal = study.segments.reduce((n, s) => n + s.quota, 0) || 4;
+    state.batches.push({ id: uid("l"), studyId: study.id, name: "Hoy", window: "Sin horario", goal, done: 0 });
+    rows = state.batches.filter((b) => b.studyId === study.id);
+    persist();
+    box.append(h("p", { class: "notice", text: "Creamos un lote: Hoy.\nPuedes partir ya." }));
+  }
   for (const batch of rows) {
     box.append(h("article", { class: "card" }, [
       h("h2", { text: batch.name }),
       h("p", { text: `${batch.window} · ${batch.done}/${batch.goal}${batch.done >= batch.goal ? " ✓" : ""}` }),
     ]));
   }
-  const open = rows.find((b) => b.done < b.goal);
-  if (open) box.append(button(`Iniciar ${open.name.split(" · ")[0].toLowerCase()}`, { "data-go": `#/consentimiento?study=${study.id}&batch=${open.id}` }));
+  const open = rows.find((b) => b.done < b.goal) || rows[rows.length - 1];
+  const label = open.done < open.goal ? `Iniciar ${open.name.split(" · ")[0].toLowerCase()}` : "Iniciar entrevista extra";
+  box.append(button(open.name === "Hoy" && open.done < open.goal ? "Iniciar entrevista" : label, { "data-go": `#/consentimiento?study=${study.id}&batch=${open.id}`, id: "start-batch" }));
   paint(box);
 }
 
@@ -571,7 +594,12 @@ function screenConsent(study, batchId, interviewId) {
   ]);
   if (!state.settings.cloudEnabled) cloudCard.append(h("p", { class: "meta", text: "La transcripción en la nube está apagada en Privacidad." }));
   box.append(cloudCard);
-  const code = input({ type: "text", name: "code", value: "E-0418", autocomplete: "off" });
+  const used = new Set(state.interviews.filter((i) => i.studyId === study.id).map((i) => i.code));
+  if (state.draft && state.draft.studyId === study.id) used.add(state.draft.code);
+  const current = interviewId && state.draft && state.draft.id === interviewId ? state.draft.code : "";
+  let seq = state.interviews.filter((i) => i.studyId === study.id).length + 1;
+  while (used.has(`P${seq}`)) seq += 1;
+  const code = input({ type: "text", name: "code", value: current || `P${seq}`, autocomplete: "off" });
   box.append(field("Código anónimo (no nombre)", code));
   box.append(button("Iniciar entrevista", { type: "submit", id: "start" }));
   box.append(button("Continuar sin consentimiento de audio", { type: "submit", id: "start-no-audio", class: "secondary" }));
@@ -632,20 +660,21 @@ function screenEntrevista(draft, study) {
   audioInput.hidden = true;
   const photoInput = input({ type: "file", accept: "image/*", capture: "environment", id: "photo-file" });
   photoInput.hidden = true;
-  box.append(button("Adjuntar audio (Notas de voz)", { id: "pick-audio" }));
-  box.append(h("p", { class: "meta", text: "Graba con Notas de voz y luego adjúntalo. Puedes adjuntar varios clips. El archivo no se sube." }));
+  box.append(button("Anotar audio de Notas de voz", { id: "pick-audio" }));
+  box.append(h("p", { class: "meta", text: "Graba con Notas de voz.\nAquí se anota solo el nombre y el tamaño del clip.\nEl audio queda en Notas de voz, no en esta app." }));
   const audioList = h("div", { id: "audio-list" });
   box.append(audioList, audioInput);
-  box.append(button("Grabar en la app (beta)", { id: "rec", class: "secondary" }));
+  // Grabación en la app (beta) oculta: grababa 4 s y no guardaba el audio.
   const recStatus = h("p", { id: "rec-status", class: "meta", role: "status", text: "" });
-  box.append(recStatus);
   const controls = h("div", { class: "row" }, [
-    button("Foto (cámara)", { id: "pick-photo", class: "chip" }),
+    button("Anotar foto", { id: "pick-photo", class: "chip" }),
     button("Nota", { id: "add-note", class: "chip" }),
   ]);
   box.append(controls, photoInput);
-  const noteInput = input({ type: "text", id: "note-text", placeholder: "Nota con la hora de la entrevista" });
+  box.append(h("p", { class: "meta", text: "La foto queda en tu galería.\nAquí se anota solo el nombre y el tamaño." }));
+  const noteInput = input({ type: "text", id: "note-text", placeholder: "Nota con la hora de la entrevista", value: draft.noteDraft || "", "aria-label": "Nota" });
   box.append(noteInput);
+  noteInput.addEventListener("input", () => { draft.noteDraft = noteInput.value; persistSoon(); });
   const notes = h("div", { class: "card", id: "notes" });
   box.append(notes);
   box.append(h("h2", { text: "Tags" }));
@@ -683,6 +712,7 @@ function screenEntrevista(draft, study) {
       if (!text) return;
       draft.notes.push({ t: elapsed(draft.startedAt), text });
       noteInput.value = "";
+      draft.noteDraft = "";
       await persist();
       drawLists();
       say("Nota guardada en este teléfono");
@@ -730,14 +760,14 @@ function screenEntrevista(draft, study) {
     draft.audio.push({ name: file.name, bytes: file.size });
     await persist();
     drawLists();
-    say("Audio adjuntado. No se sube.");
+    say("Audio anotado: nombre y tamaño. El clip queda en Notas de voz.", "Anotado ✓");
   });
   photoInput.addEventListener("change", async () => {
     const file = photoInput.files && photoInput.files[0];
     if (!file) return;
     draft.photos.push({ name: file.name, bytes: file.size });
     await persist();
-    say("Foto adjuntada sin coordenadas.");
+    say("Foto anotada: nombre y tamaño. La foto queda en tu galería.", "Anotado ✓");
   });
   paint(box);
   const timer = window.setInterval(() => {
@@ -895,7 +925,7 @@ function screenEvidencias(study) {
     a.click();
     URL.revokeObjectURL(url);
     err.textContent = "";
-    say("Archivo protegido guardado en Descargas. Va sin GPS y sin audio si no hubo permiso.");
+    say("Archivo protegido guardado en Descargas. Va sin GPS y sin audio si no hubo permiso.", "Exportado ✓");
   });
   paint(box);
 }
@@ -920,9 +950,16 @@ function screenPrivacidad(study) {
     h("label", { class: "check" }, [cloud, h("span", { text: "Permitir transcripción en la nube (solo con permiso)" })]),
     err,
     button("Guardar privacidad", { type: "submit" }),
-    button("Borrar estudio y evidencias", { type: "button", id: "wipe", class: "danger" }),
-    h("p", { text: "El borrado no se puede deshacer." }),
   );
+  const confirmWipe = input({ type: "text", id: "wipe-confirm", autocomplete: "off", autocapitalize: "characters", "aria-describedby": "wipe-help" });
+  const wipeBtn = button("Borrar estudio y evidencias", { id: "wipe", class: "danger", disabled: true });
+  box.append(h("section", { class: "card danger-zone", "aria-labelledby": "wipe-title" }, [
+    h("h2", { id: "wipe-title", text: "Borrar estudio" }),
+    h("p", { id: "wipe-help", text: "Borra el estudio y sus evidencias de este teléfono.\nNo se puede deshacer." }),
+    field("Escribe BORRAR para confirmar", confirmWipe),
+    wipeBtn,
+  ]));
+  confirmWipe.addEventListener("input", () => { wipeBtn.disabled = confirmWipe.value.trim() !== "BORRAR"; });
   box.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(box);
@@ -942,14 +979,15 @@ function screenPrivacidad(study) {
     say("Privacidad guardada.");
     render();
   });
-  box.querySelector("#wipe").addEventListener("click", async () => {
+  wipeBtn.addEventListener("click", async () => {
+    if (confirmWipe.value.trim() !== "BORRAR") return;
     state.studies = state.studies.filter((row) => row.id !== study.id);
     state.interviews = state.interviews.filter((row) => row.studyId !== study.id);
     state.batches = state.batches.filter((row) => row.studyId !== study.id);
     if (state.draft && state.draft.studyId === study.id) state.draft = null;
     state.activeStudyId = state.studies[0]?.id || "";
     await persist();
-    say("Estudio y evidencias borrados de este teléfono");
+    say("Estudio y evidencias borrados de este teléfono", "Borrado ✓");
     location.hash = "#/estudios";
   });
   paint(box);
@@ -1087,6 +1125,16 @@ function screenObsNueva() {
   const err = h("p", { class: "error", role: "alert", id: "obs-error" });
   lugar.setAttribute("aria-describedby", "obs-error");
   box.append(err, button("Guardar ficha", { type: "submit" }));
+  if (Array.isArray(state.obsDraft)) {
+    for (const [name, value] of state.obsDraft) {
+      for (const el of box.querySelectorAll(`[name="${name}"]`)) {
+        if (el.type === "checkbox" || el.type === "radio") { if (el.value === value) el.checked = true; } else el.value = value;
+      }
+    }
+    upd();
+  }
+  box.addEventListener("input", () => { state.obsDraft = [...new FormData(box).entries()].map(([k, v]) => [k, String(v)]); persistSoon(); });
+  box.addEventListener("change", () => { state.obsDraft = [...new FormData(box).entries()].map(([k, v]) => [k, String(v)]); persistSoon(); });
   box.addEventListener("submit", async (event) => {
     event.preventDefault();
     const d = new FormData(box);
@@ -1121,6 +1169,7 @@ function screenObsNueva() {
       pistas: d.getAll("pista").map(String),
       savedAt: Date.now(),
     });
+    state.obsDraft = null;
     await persist();
     say("Ficha guardada en este teléfono.");
     location.hash = "#/observacion";
@@ -1269,6 +1318,12 @@ $("lock-form").addEventListener("submit", async (event) => {
 
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "hidden" || !state?.settings.lockOnLeave) return;
+  // No bloquear con entrevista u observación abierta: Notas de voz, cámara o archivos sacan de la app.
+  if (["/consentimiento", "/entrevista", "/observacion/nueva"].includes(route().path)) {
+    window.clearTimeout(draftTimer);
+    persist();
+    return;
+  }
   {
     key = null;
     locked = true;
