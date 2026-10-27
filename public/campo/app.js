@@ -992,7 +992,8 @@ function screenEvidencias(study) {
     const url = URL.createObjectURL(file);
     const a = h("a", { href: url, download: `evidencias-${study.id}.campo.json` });
     a.click();
-    URL.revokeObjectURL(url);
+    // iOS: si se revoca al tiro, se corta la descarga a Archivos. Se revoca a los 60 s.
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
     err.textContent = "";
     say("Archivo protegido guardado en Descargas. Va sin GPS y sin audio si no hubo permiso.", "Exportado ✓");
   });
