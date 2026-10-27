@@ -247,6 +247,8 @@ img, video { max-width: 100%; height: auto; }
 .hidden { display: none !important; }
 
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--focus) !important; outline-offset: 2px; }
+.check:has(input:focus-visible) { outline: 3px solid var(--focus); outline-offset: 2px; }
 button:focus-visible, nav a:focus-visible { box-shadow: 0 0 0 5px var(--card); }
 
 /* Responsive: en tablet/escritorio el marco crece y conserva lectura cómoda */
