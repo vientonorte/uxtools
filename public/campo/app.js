@@ -1214,6 +1214,7 @@ function screenObsNueva() {
   );
   const err = h("p", { class: "error", role: "alert", id: "obs-error" });
   lugar.setAttribute("aria-describedby", "obs-error");
+  box.querySelector('[name="vi"]').setAttribute("aria-describedby", "obs-error");
   box.append(err, button("Guardar ficha", { type: "submit" }));
   if (Array.isArray(state.obsDraft)) {
     for (const [name, value] of state.obsDraft) {
