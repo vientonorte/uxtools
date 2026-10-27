@@ -995,6 +995,9 @@ function screenEvidencias(study) {
     // iOS: si se revoca al tiro, se corta la descarga a Archivos. Se revoca a los 60 s.
     window.setTimeout(() => URL.revokeObjectURL(url), 60000);
     err.textContent = "";
+    pass.value = "";
+    again.value = "";
+    for (const bar of bars.children) bar.classList.remove("on");
     say("Archivo protegido guardado en Descargas. Va sin GPS y sin audio si no hubo permiso.", "Exportado ✓");
   });
   paint(box);
