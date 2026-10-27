@@ -933,6 +933,46 @@ test('normalizes null and undefined to empty string', function () {
 });
 
 /* ══════════════════════════════════════════════════════════════ */
+/*  CAMPO · updates sin pérdida                                   */
+/* ══════════════════════════════════════════════════════════════ */
+
+section('Campo — service worker y almacenamiento');
+
+var swSrc = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
+var campoSrc = fs.readFileSync(path.join(ROOT, 'public/campo/app.js'), 'utf8');
+
+test('sw.js nunca toca localStorage, IndexedDB ni Clear-Site-Data', function () {
+  var code = swSrc.replace(/\/\/.*$/gm, '');
+  assert.ok(!/localStorage|indexedDB|Clear-Site-Data|storage\.clear/i.test(code));
+});
+
+test('Campo nunca borra su almacén (sin removeItem ni clear)', function () {
+  assert.ok(!/localStorage\.(removeItem|clear)\s*\(/.test(campoSrc));
+});
+
+test('Campo mantiene la clave de almacén campo.etnografia.v1', function () {
+  assert.ok(/const STORE = "campo\.etnografia\.v1"/.test(campoSrc));
+});
+
+test('Campo migra sin borrar: datos de esquema 1 quedan completos', function () {
+  var start = campoSrc.indexOf('const SETTINGS_DEFAULT');
+  var end = campoSrc.indexOf('// Antes de reescribir');
+  var segSrc = 'const SEGMENTS=[["jovenes","J",3]];function segments(){return [];}';
+  var ctx = {};
+  vm.runInNewContext(segSrc + 'const SCHEMA=2;' + campoSrc.slice(start, end) + ';this.migrate=migrate;', ctx);
+  var old = { settings: { retentionDays: 15 }, studies: [{ id: 'x', name: 'Mi estudio' }], interviews: [{ id: 'e1', code: 'P1', notes: [{ t: '00:10', text: 'n' }] }], extra: 'futuro' };
+  var res = ctx.migrate(old);
+  assert.strictEqual(res.changed, true);
+  assert.strictEqual(res.state.schema, 2);
+  assert.strictEqual(res.state.settings.retentionDays, 15);
+  assert.strictEqual(res.state.studies[0].name, 'Mi estudio');
+  assert.strictEqual(res.state.interviews[0].notes.length, 1);
+  assert.strictEqual(res.state.interviews[0].videos.length, 0);
+  assert.strictEqual(res.state.extra, 'futuro');
+  assert.strictEqual(ctx.migrate(res.state).changed, false);
+});
+
+/* ══════════════════════════════════════════════════════════════ */
 /*  RESULT SUMMARY                                               */
 /* ══════════════════════════════════════════════════════════════ */
 

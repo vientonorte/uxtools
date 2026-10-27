@@ -1,3 +1,5 @@
+// Regla Campo: este service worker solo maneja caché HTTP. Nunca toca
+// localStorage, IndexedDB ni Clear-Site-Data: una actualización no borra datos locales.
 const CACHE = 'uxtools-suite-v5';
 const SHELL = [
   '/uxtools/',
