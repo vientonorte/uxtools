@@ -320,7 +320,7 @@ function persistSoon() {
 }
 
 function studyById(id) {
-  return state.studies.find((s) => s.id === id) || state.studies[0];
+  return state.studies.find((s) => s.id === id) || state.studies[0] || null;
 }
 
 function tally(study) {
@@ -378,14 +378,70 @@ function paint(node) {
   main.replaceChildren(node);
 }
 
+function screenSinEstudio() {
+  head("Campo", "Sin estudios", "Crea uno para empezar");
+  const box = h("div", { id: "empty-study" });
+  box.append(h("p", { class: "notice", text: "Todav\u00eda no tienes estudios.\nCrea uno para empezar." }));
+  box.append(button("Crear estudio", { "data-go": "#/nuevo", id: "empty-create" }));
+  paint(box);
+}
+
+const DAY = 24 * 60 * 60 * 1000;
+function dueAt(row) {
+  return row.retainUntil || ((row.savedAt || Date.now()) + state.settings.retentionDays * DAY);
+}
+function deleteAt(row) {
+  return Math.max(dueAt(row), (row.warnedAt || Date.now()) + 3 * DAY);
+}
+function expiring() {
+  if (!state?.settings.autoDelete) return [];
+  const soon = Date.now() + 3 * DAY;
+  return state.interviews.filter((row) => dueAt(row) <= soon);
+}
+function shortDate(ms) {
+  return new Date(ms).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit" });
+}
+function retentionWarning() {
+  const soon = expiring();
+  if (!soon.length) return null;
+  let marked = false;
+  for (const row of soon) if (!row.warnedAt) { row.warnedAt = Date.now(); marked = true; }
+  if (marked) persist();
+  const studyName = (row) => state.studies.find((x) => x.id === row.studyId)?.name || "Estudio";
+  const card = h("section", { class: "card notice", id: "retention-warning", role: "status", "aria-labelledby": "ret-title" }, [
+    h("h2", { id: "ret-title", text: "Se borra pronto" }),
+    h("p", { text: "Estas entrevistas se borran en 72 h o menos.\nExp\u00f3rtalas antes si las necesitas." }),
+    ul(soon.map((row) => row.code + " \u00b7 " + studyName(row) + " \u00b7 se borra el " + shortDate(deleteAt(row)))),
+  ]);
+  const canPostpone = soon.filter((row) => !row.postponed);
+  if (canPostpone.length) card.append(button("Posponer 7 d\u00edas", { id: "postpone" }));
+  else card.append(h("p", { class: "meta", text: "Ya pospusiste una vez." }));
+  card.append(button("Exportar evidencias", { class: "secondary", "data-go": "#/evidencias?study=" + soon[0].studyId }));
+  card.addEventListener("click", async (event) => {
+    if (!(event.target instanceof HTMLElement) || event.target.id !== "postpone") return;
+    for (const row of canPostpone) {
+      row.retainUntil = Math.max(dueAt(row), Date.now()) + 7 * DAY;
+      row.postponed = true;
+      row.warnedAt = null;
+    }
+    await persist();
+    say("Borrado pospuesto 7 d\u00edas.", "Pospuesto \u2713");
+    render();
+  });
+  return card;
+}
+
 function screenEstudios() {
   head("Campo", "Mis estudios", "Tus datos quedan solo en este teléfono, protegidos con tu clave");
   const box = h("div");
+  const warning = retentionWarning();
+  if (warning) box.append(warning);
+  if (!state.studies.length) box.append(h("p", { class: "notice", id: "no-studies", text: "Todav\u00eda no tienes estudios.\nCrea uno para empezar." }));
   for (const study of state.studies) {
     const t = tally(study);
     const card = h("article", { class: "card" }, [
       h("h2", { text: study.name }),
-      h("p", { text: `${t.done} de ${t.quota} entrevistas · hoy` }),
+      h("p", { text: `${t.done} de ${t.quota} entrevistas` }),
     ]);
     card.append(button("Abrir estudio", { "data-go": `#/preparar?study=${study.id}` }));
     box.append(card);
@@ -393,7 +449,7 @@ function screenEstudios() {
   box.append(button("Crear estudio", { "data-go": "#/nuevo" }));
   box.append(h("p", { class: "notice", text: "Sin sincronización en la nube. Respaldo: exportación manual." }));
   if (state.settings.autoDelete) {
-    box.append(h("p", { class: "notice", text: "Borrado automático activo. Aviso en pantalla 72 h antes. Podrás exportar o posponer 7 días una vez." }));
+    box.append(h("p", { class: "notice", text: "Borrado autom\u00e1tico activo.\nTe avisamos aqu\u00ed 72 h antes de borrar." }));
   }
   paint(box);
 }
@@ -541,7 +597,8 @@ function screenPreparar(study) {
 }
 
 function screenLotes(study) {
-  head(study.name, "Lotes del día", "Jueves 22-10 · demo");
+  const today = new Date().toLocaleDateString("es-CL", { weekday: "long", day: "2-digit", month: "2-digit" });
+  head(study.name, "Lotes del d\u00eda", today.charAt(0).toUpperCase() + today.slice(1));
   const box = h("div");
   let rows = state.batches.filter((b) => b.studyId === study.id);
   if (!rows.length) {
@@ -576,10 +633,14 @@ function screenConsent(study, batchId, interviewId) {
     ["audio", "Acepta grabación de audio"],
     ["photos", "Acepta fotos sin rostro"],
   ];
-  const consent = blankConsent();
+  const prior = interviewId
+    ? (state.draft && state.draft.id === interviewId ? state.draft : state.interviews.find((i) => i.id === interviewId)) || null
+    : null;
+  const savedPrior = prior && prior !== state.draft ? prior : null;
+  const consent = { ...blankConsent(), ...(prior && prior.consent) };
   for (const [name, label] of checks) {
     const boxCheck = h("label", { class: "check" }, [
-      input({ type: "checkbox", name }),
+      input({ type: "checkbox", name, checked: consent[name] ? true : null }),
       h("span", { text: label }),
     ]);
     box.append(boxCheck);
@@ -587,7 +648,7 @@ function screenConsent(study, batchId, interviewId) {
   const cloudCard = h("section", { class: "card" }, [
     h("p", { class: "eyebrow", text: "Opcional y separado" }),
     h("label", { class: "check" }, [
-      input({ type: "checkbox", name: "cloud", disabled: state.settings.cloudEnabled ? null : true }),
+      input({ type: "checkbox", name: "cloud", disabled: state.settings.cloudEnabled ? null : true, checked: state.settings.cloudEnabled && consent.cloud ? true : null }),
       h("span", { text: "Acepta transcripción en la nube" }),
     ]),
     h("p", { text: "Opt-in explícito por entrevista: envía audio a un tercero. Si no se marca, el audio nunca sale del teléfono." }),
@@ -596,15 +657,15 @@ function screenConsent(study, batchId, interviewId) {
   box.append(cloudCard);
   const used = new Set(state.interviews.filter((i) => i.studyId === study.id).map((i) => i.code));
   if (state.draft && state.draft.studyId === study.id) used.add(state.draft.code);
-  const current = interviewId && state.draft && state.draft.id === interviewId ? state.draft.code : "";
+  const current = prior ? prior.code : "";
   let seq = state.interviews.filter((i) => i.studyId === study.id).length + 1;
   while (used.has(`P${seq}`)) seq += 1;
   const code = input({ type: "text", name: "code", value: current || `P${seq}`, autocomplete: "off" });
   box.append(field("Código anónimo (no nombre)", code));
-  box.append(button("Iniciar entrevista", { type: "submit", id: "start" }));
+  box.append(button(savedPrior ? "Guardar consentimiento" : "Iniciar entrevista", { type: "submit", id: "start" }));
   box.append(button("Continuar sin consentimiento de audio", { type: "submit", id: "start-no-audio", class: "secondary" }));
   box.append(h("p", { text: "Ningún check es obligatorio. El estado queda guardado en la entrevista y se puede completar después." }));
-  box.addEventListener("submit", (event) => {
+  box.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = new FormData(box);
     const submitter = event.submitter;
@@ -614,6 +675,14 @@ function screenConsent(study, batchId, interviewId) {
       photos: data.get("photos") === "on",
       cloud: state.settings.cloudEnabled && data.get("cloud") === "on",
     };
+    if (savedPrior) {
+      savedPrior.code = String(data.get("code") || "").trim() || savedPrior.code;
+      savedPrior.consent = next;
+      await persist();
+      say("Consentimiento guardado.");
+      location.hash = `#/registro?id=${savedPrior.id}`;
+      return;
+    }
     const existing = interviewId && state.draft && state.draft.id === interviewId ? state.draft : null;
     const draft = existing || {
       id: uid("e"),
@@ -945,7 +1014,7 @@ function screenPrivacidad(study) {
     field("Nueva clave (opcional)", pass),
     field("Retención (días)", days),
     h("label", { class: "check" }, [auto, h("span", { text: "Borrar automáticamente al cumplir el plazo" })]),
-    h("p", { class: "notice", text: "Te avisaremos 72 h antes del borrado. Podrás exportar o posponer 7 días una vez." }),
+    h("p", { class: "notice", text: "Te avisamos en Mis estudios 72 h antes de borrar.\nPuedes exportar o posponer 7 d\u00edas, una vez." }),
     h("label", { class: "check" }, [lockLeave, h("span", { text: "Bloquear al salir de la app" })]),
     h("label", { class: "check" }, [cloud, h("span", { text: "Permitir transcripción en la nube (solo con permiso)" })]),
     err,
@@ -953,7 +1022,7 @@ function screenPrivacidad(study) {
   );
   const confirmWipe = input({ type: "text", id: "wipe-confirm", autocomplete: "off", autocapitalize: "characters", "aria-describedby": "wipe-help" });
   const wipeBtn = button("Borrar estudio y evidencias", { id: "wipe", class: "danger", disabled: true });
-  box.append(h("section", { class: "card danger-zone", "aria-labelledby": "wipe-title" }, [
+  if (study) box.append(h("section", { class: "card danger-zone", "aria-labelledby": "wipe-title" }, [
     h("h2", { id: "wipe-title", text: "Borrar estudio" }),
     h("p", { id: "wipe-help", text: "Borra el estudio y sus evidencias de este teléfono.\nNo se puede deshacer." }),
     field("Escribe BORRAR para confirmar", confirmWipe),
@@ -980,7 +1049,7 @@ function screenPrivacidad(study) {
     render();
   });
   wipeBtn.addEventListener("click", async () => {
-    if (confirmWipe.value.trim() !== "BORRAR") return;
+    if (!study || confirmWipe.value.trim() !== "BORRAR") return;
     state.studies = state.studies.filter((row) => row.id !== study.id);
     state.interviews = state.interviews.filter((row) => row.studyId !== study.id);
     state.batches = state.batches.filter((row) => row.studyId !== study.id);
@@ -995,9 +1064,11 @@ function screenPrivacidad(study) {
 
 function applyRetention() {
   if (!state?.settings.autoDelete) return;
-  const ms = state.settings.retentionDays * 24 * 60 * 60 * 1000;
-  const limit = Date.now() - ms;
-  state.interviews = state.interviews.filter((row) => (row.savedAt || Date.now()) >= limit);
+  // Solo borra lo que ya se avisó en pantalla hace 72 h o más y ya venció.
+  const now = Date.now();
+  const before = state.interviews.length;
+  state.interviews = state.interviews.filter((row) => !(row.warnedAt && now >= dueAt(row) && now - row.warnedAt >= 3 * DAY));
+  if (state.interviews.length !== before) persist();
 }
 
 // ---- Guía de observación v3 + ficha ----
@@ -1185,6 +1256,7 @@ async function render() {
   const study = studyById(params.get("study") || state.activeStudyId);
   if (path === "/estudios") return screenEstudios();
   if (path === "/nuevo") return screenNuevo();
+  if (!study && ["/preparar", "/lotes", "/consentimiento", "/entrevista", "/registro", "/evidencias"].includes(path)) return screenSinEstudio();
   if (path === "/preparar") return screenPreparar(study);
   if (path === "/lotes") return screenLotes(study);
   if (path === "/consentimiento") return screenConsent(study, params.get("batch"), params.get("id"));
@@ -1335,7 +1407,13 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-window.addEventListener("hashchange", () => render());
+window.addEventListener("hashchange", async () => {
+  await render();
+  const title = $("title");
+  if (!title || locked) return;
+  title.setAttribute("tabindex", "-1");
+  title.focus();
+});
 
 load().then(() => {
   if (!location.hash) location.hash = "#/estudios";
