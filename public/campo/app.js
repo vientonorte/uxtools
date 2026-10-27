@@ -1012,7 +1012,8 @@ function screenPrivacidad(study) {
   const cloud = input({ type: "checkbox", name: "cloudEnabled", checked: s.cloudEnabled ? true : null });
   const days = input({ type: "number", name: "retentionDays", min: "1", value: String(s.retentionDays) });
   const pass = input({ type: "password", name: "key", autocomplete: "new-password" });
-  const err = h("p", { class: "error", role: "alert" });
+  const err = h("p", { class: "error", role: "alert", id: "privacy-error" });
+  days.setAttribute("aria-describedby", "privacy-error");
   box.append(
     h("p", { class: "notice", text: "La protección está siempre activa.\nDeja la clave vacía para mantener la actual." }),
     field("Nueva clave (opcional)", pass),
@@ -1037,6 +1038,15 @@ function screenPrivacidad(study) {
     event.preventDefault();
     const data = new FormData(box);
     const nextKey = String(data.get("key") || "");
+    const rawDays = String(data.get("retentionDays") || "").trim();
+    const nDays = Number(rawDays);
+    days.setAttribute("aria-invalid", "false");
+    if (!rawDays || !Number.isInteger(nDays) || nDays < 1) {
+      days.setAttribute("aria-invalid", "true");
+      err.textContent = "La retención tiene que ser de 1 día o más.\nEscribe un número entero, por ejemplo 30.";
+      days.focus();
+      return;
+    }
     if (nextKey && nextKey.length < 8) {
       err.textContent = "La nueva clave necesita 8 caracteres o más.";
       return;
@@ -1044,7 +1054,7 @@ function screenPrivacidad(study) {
     state.settings.autoDelete = data.get("autoDelete") === "on";
     state.settings.lockOnLeave = data.get("lockOnLeave") === "on";
     state.settings.cloudEnabled = data.get("cloudEnabled") === "on";
-    state.settings.retentionDays = Math.max(1, Number(data.get("retentionDays") || 30));
+    state.settings.retentionDays = nDays;
     if (nextKey) key = await makeKey(nextKey);
     applyRetention();
     await persist();
