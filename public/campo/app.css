@@ -275,3 +275,9 @@ textarea { width: 100%; min-height: 88px; font: inherit; padding: 12px; border: 
   .top { grid-template-columns: 1fr; }
   .privacy { justify-self: start; }
 }
+
+.toast { position: fixed; left: 50%; bottom: calc(5.5rem + env(safe-area-inset-bottom)); transform: translateX(-50%); margin: 0; padding: 0.75rem 1.25rem; min-height: 44px; border-radius: 999px; background: #0d1b3d; color: #fff; font-size: 1rem; font-weight: 600; z-index: 50; box-shadow: 0 4px 16px rgba(0,0,0,.25); }
+.toast[hidden] { display: none; }
+.danger-zone { margin-top: 3rem; border: 2px solid #b3261e; }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+.meta, #wipe-help { white-space: pre-line; }
