@@ -950,20 +950,32 @@ test('Campo nunca borra su almacén (sin removeItem ni clear)', function () {
   assert.ok(!/localStorage\.(removeItem|clear)\s*\(/.test(campoSrc));
 });
 
+test('Campo v3 quita Estudio Demo A/B solo si no tiene datos reales', function () {
+  var a = campoSrc.indexOf('function dropDemo'); var b = campoSrc.indexOf('// Antes de reescribir');
+  var ctx = {}; vm.runInNewContext(campoSrc.slice(a, b) + ';this.dropDemo=dropDemo;', ctx);
+  var st = { activeStudyId: 'a', studies: [{ id: 'a', name: 'Estudio Demo A · Línea X' }, { id: 'b', name: 'Estudio Demo B · Feria' }, { id: 's1', name: 'Real' }],
+    interviews: [{ id: 'e0417', code: 'E-0417', studyId: 'a' }, { id: 'e9', code: 'P1', studyId: 'b' }], batches: [{ id: 'l1', studyId: 'a' }], draft: null };
+  ctx.dropDemo(st);
+  assert.deepStrictEqual(st.studies.map(function (x) { return x.id; }), ['b', 's1']);
+  assert.deepStrictEqual(st.interviews.map(function (x) { return x.id; }), ['e9']);
+  assert.strictEqual(st.batches.length, 0);
+  assert.strictEqual(st.activeStudyId, 'b');
+});
+
 test('Campo mantiene la clave de almacén campo.etnografia.v1', function () {
   assert.ok(/const STORE = "campo\.etnografia\.v1"/.test(campoSrc));
 });
 
 test('Campo migra sin borrar: datos de esquema 1 quedan completos', function () {
   var start = campoSrc.indexOf('const SETTINGS_DEFAULT');
-  var end = campoSrc.indexOf('// Antes de reescribir');
+  var end = campoSrc.indexOf('// v3: quita');
   var segSrc = 'const SEGMENTS=[["jovenes","J",3]];function segments(){return [];}';
   var ctx = {};
-  vm.runInNewContext(segSrc + 'const SCHEMA=2;' + campoSrc.slice(start, end) + ';this.migrate=migrate;', ctx);
+  vm.runInNewContext(segSrc + 'const SCHEMA=3;function dropDemo(){}' + campoSrc.slice(start, end) + ';this.migrate=migrate;', ctx);
   var old = { settings: { retentionDays: 15 }, studies: [{ id: 'x', name: 'Mi estudio' }], interviews: [{ id: 'e1', code: 'P1', notes: [{ t: '00:10', text: 'n' }] }], extra: 'futuro' };
   var res = ctx.migrate(old);
   assert.strictEqual(res.changed, true);
-  assert.strictEqual(res.state.schema, 2);
+  assert.strictEqual(res.state.schema, 3);
   assert.strictEqual(res.state.settings.retentionDays, 15);
   assert.strictEqual(res.state.studies[0].name, 'Mi estudio');
   assert.strictEqual(res.state.interviews[0].notes.length, 1);
