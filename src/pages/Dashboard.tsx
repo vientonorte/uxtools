@@ -607,11 +607,11 @@ export default function Dashboard() {
               </div>
               <h2 className="module-title" id="mod-campo-title">Campo · etnografía</h2>
               <p className="module-desc">
-                Cuaderno de campo móvil para observación etnográfica: guía, notas y evidencias por sesión. Datos cifrados en el dispositivo, solo códigos de participante, sin analítica ni terceros.
+                Cuaderno de campo móvil para observación etnográfica: guía, notas y evidencias por sesión. Datos cifrados en el dispositivo con tu passkey, solo códigos de participante, sin analítica ni terceros.
               </p>
               <div className="module-meta">
                 <span className="module-meta-item">
-                  <span className="module-meta-icon" aria-hidden="true">🔒</span>Acceso privado · AES-GCM · local · noindex
+                  <span className="module-meta-icon" aria-hidden="true">🔒</span>Acceso privado · passkey · AES-GCM local · noindex
                 </span>
               </div>
               <div className="module-tags" aria-label="Funciones">
@@ -624,12 +624,10 @@ export default function Dashboard() {
             <div className="module-card-footer">
               <a
                 className="btn-module-open"
-                href="https://campo.vientonorte.io"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Abrir Campo · etnografía, acceso privado (se abre en una pestaña nueva)"
+                href="/uxtools/campo/"
+                aria-label="Abrir Campo · etnografía (acceso privado con passkey)"
               >
-                Abrir Campo ↗
+                Abrir Campo →
               </a>
             </div>
           </article>
