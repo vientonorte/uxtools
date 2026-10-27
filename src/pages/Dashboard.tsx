@@ -611,7 +611,7 @@ export default function Dashboard() {
               </p>
               <div className="module-meta">
                 <span className="module-meta-item">
-                  <span className="module-meta-icon" aria-hidden="true">🔒</span>AES-GCM · local · noindex
+                  <span className="module-meta-icon" aria-hidden="true">🔒</span>Acceso privado · AES-GCM · local · noindex
                 </span>
               </div>
               <div className="module-tags" aria-label="Funciones">
@@ -627,7 +627,7 @@ export default function Dashboard() {
                 href="https://campo.vientonorte.io"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Abrir Campo · etnografía (se abre en una pestaña nueva)"
+                aria-label="Abrir Campo · etnografía, acceso privado (se abre en una pestaña nueva)"
               >
                 Abrir Campo ↗
               </a>
