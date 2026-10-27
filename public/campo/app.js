@@ -762,7 +762,11 @@ function screenEntrevista(draft, study) {
   box.append(button("Terminar y registrar", { id: "finish" }));
 
   function drawLists() {
-    audioList.replaceChildren(...draft.audio.map((a) => h("p", { text: a.name })));
+    const kb = (n) => (n ? ` · ${Math.max(1, Math.round(n / 1024))} KB` : "");
+    audioList.replaceChildren(
+      ...draft.audio.map((a) => h("p", { text: `Audio: ${a.name}${kb(a.bytes)}` })),
+      ...draft.photos.map((p) => h("p", { text: `Foto: ${p.name}${kb(p.bytes)}` })),
+    );
     notes.replaceChildren(...draft.notes.map((n) => h("p", { text: `${n.t} · ${n.text}` })));
     tags.replaceChildren(...TAGS.map((tag) => button(tag, {
       class: "chip",
@@ -836,6 +840,7 @@ function screenEntrevista(draft, study) {
     if (!file) return;
     draft.photos.push({ name: file.name, bytes: file.size });
     await persist();
+    drawLists();
     say("Foto anotada: nombre y tamaño. La foto queda en tu galería.", "Anotado ✓");
   });
   paint(box);
