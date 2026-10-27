@@ -1,5 +1,7 @@
 import { GUIA } from "./guia-data.js";
-const STORE = "campo.etnografia.v1";
+const STORE = "campo.etnografia.v1"; // la clave no cambia entre versiones: así una actualización nunca "pierde" el estudio
+const BACKUP = "campo.etnografia.v1.antes-de-migrar"; // copia cifrada previa a cada migración
+const SCHEMA = 2;
 const TABS = {
   "/estudios": "estudios",
   "/nuevo": "estudios",
@@ -60,6 +62,7 @@ function segments(quotas = [3, 3, 2, 2], done = [0, 0, 0, 0]) {
 
 function seed() {
   return {
+    schema: SCHEMA,
     settings: {
       encrypt: true,
       retentionDays: 30,
@@ -111,6 +114,48 @@ function seed() {
     ],
     draft: null,
   };
+}
+
+// ── Esquema y migración ────────────────────────────────────────────────
+// Regla: migrar solo AGREGA o completa campos. Nunca borra estudios, entrevistas,
+// lotes, fichas ni claves desconocidas (pueden venir de una versión más nueva).
+const SETTINGS_DEFAULT = { encrypt: true, retentionDays: 30, autoDelete: false, lockOnLeave: true, cloudEnabled: false };
+function migrate(st) {
+  const from = Number(st?.schema) || 1;
+  if (!st || typeof st !== "object") return { state: st, from, changed: false };
+  if (from >= SCHEMA) return { state: st, from, changed: false };
+  st.settings = { ...SETTINGS_DEFAULT, ...(st.settings || {}) };
+  for (const k of ["studies", "interviews", "batches", "observations"]) if (!Array.isArray(st[k])) st[k] = [];
+  for (const study of st.studies) {
+    if (!Array.isArray(study.segments)) study.segments = segments();
+    if (!Array.isArray(study.questions)) study.questions = [];
+  }
+  const rows = [...st.interviews, ...(st.draft ? [st.draft] : [])];
+  for (const row of rows) {
+    for (const k of ["notes", "tags", "audio", "photos", "videos"]) if (!Array.isArray(row[k])) row[k] = [];
+    row.consent = { participate: false, audio: false, photos: false, cloud: false, ...(row.consent || {}) };
+  }
+  if (st.draft === undefined) st.draft = null;
+  st.schema = SCHEMA;
+  return { state: st, from, changed: true };
+}
+
+// Antes de reescribir datos de una versión anterior, deja la copia cifrada original aparte.
+let backupDone = false; // una sola copia por apertura: la más antigua
+function keepBackup() {
+  if (backupDone) return;
+  backupDone = true;
+  const raw = localStorage.getItem(STORE);
+  if (raw) localStorage.setItem(BACKUP, raw);
+}
+
+async function upgrade() {
+  const res = migrate(state);
+  state = res.state;
+  if (res.changed) {
+    keepBackup();
+    await persist();
+  }
 }
 
 function b64(bytes) {
@@ -1383,7 +1428,7 @@ $("lock-passkey").addEventListener("click", async () => {
   try {
     if (lockMode !== "unlock") {
       key = await makePasskeyKey();
-      state = lockMode === "migrate" ? pendingPlain : seed();
+      state = lockMode === "migrate" ? migrate(pendingPlain).state : seed();
       pendingPlain = null;
       state.settings.encrypt = true;
       if (lockMode === "migrate") state.settings.lockOnLeave = true;
@@ -1394,6 +1439,7 @@ $("lock-passkey").addEventListener("click", async () => {
     const k = await passkeyKeyFromBlob(blob);
     state = await decryptWithKey(blob, k.aes);
     key = k;
+    await upgrade();
     return finishUnlock();
   } catch (err) {
     $("lock-error").textContent = String(err?.message) === "no-prf"
@@ -1411,7 +1457,7 @@ $("lock-form").addEventListener("submit", async (event) => {
       return;
     }
     key = await makeKey(pass);
-    state = lockMode === "migrate" ? pendingPlain : seed();
+    state = lockMode === "migrate" ? migrate(pendingPlain).state : seed();
     pendingPlain = null;
     state.settings.encrypt = true;
     if (lockMode === "migrate") state.settings.lockOnLeave = true;
@@ -1428,10 +1474,12 @@ $("lock-form").addEventListener("submit", async (event) => {
     state = await decryptJSON(blob, pass);
     if ((Number(blob.iter) || LEGACY_ITER) < ITER || "exportPass" in state) {
       key = await makeKey(pass);
+      keepBackup();
       await persist(); // migración a 600k
     } else {
       key = { aes: await derive(pass, unb64(blob.salt), ITER), salt: unb64(blob.salt) };
     }
+    await upgrade();
     locked = false;
     $("lock").hidden = true;
     $("lock-error").textContent = "";
