@@ -762,7 +762,11 @@ function screenEntrevista(draft, study) {
   box.append(button("Terminar y registrar", { id: "finish" }));
 
   function drawLists() {
-    audioList.replaceChildren(...draft.audio.map((a) => h("p", { text: a.name })));
+    const kb = (n) => (n ? ` · ${Math.max(1, Math.round(n / 1024))} KB` : "");
+    audioList.replaceChildren(
+      ...draft.audio.map((a) => h("p", { text: `Audio: ${a.name}${kb(a.bytes)}` })),
+      ...draft.photos.map((p) => h("p", { text: `Foto: ${p.name}${kb(p.bytes)}` })),
+    );
     notes.replaceChildren(...draft.notes.map((n) => h("p", { text: `${n.t} · ${n.text}` })));
     tags.replaceChildren(...TAGS.map((tag) => button(tag, {
       class: "chip",
@@ -836,6 +840,7 @@ function screenEntrevista(draft, study) {
     if (!file) return;
     draft.photos.push({ name: file.name, bytes: file.size });
     await persist();
+    drawLists();
     say("Foto anotada: nombre y tamaño. La foto queda en tu galería.", "Anotado ✓");
   });
   paint(box);
@@ -992,8 +997,12 @@ function screenEvidencias(study) {
     const url = URL.createObjectURL(file);
     const a = h("a", { href: url, download: `evidencias-${study.id}.campo.json` });
     a.click();
-    URL.revokeObjectURL(url);
+    // iOS: si se revoca al tiro, se corta la descarga a Archivos. Se revoca a los 60 s.
+    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
     err.textContent = "";
+    pass.value = "";
+    again.value = "";
+    for (const bar of bars.children) bar.classList.remove("on");
     say("Archivo protegido guardado en Descargas. Va sin GPS y sin audio si no hubo permiso.", "Exportado ✓");
   });
   paint(box);
@@ -1002,13 +1011,15 @@ function screenEvidencias(study) {
 function screenPrivacidad(study) {
   head("", "Privacidad", "Tus datos quedan protegidos en este teléfono");
   const box = h("form");
+  box.noValidate = true; // el error de retención se muestra en la app, no en el globo del navegador
   const s = state.settings;
   const auto = input({ type: "checkbox", name: "autoDelete", checked: s.autoDelete ? true : null });
   const lockLeave = input({ type: "checkbox", name: "lockOnLeave", checked: s.lockOnLeave ? true : null });
   const cloud = input({ type: "checkbox", name: "cloudEnabled", checked: s.cloudEnabled ? true : null });
   const days = input({ type: "number", name: "retentionDays", min: "1", value: String(s.retentionDays) });
   const pass = input({ type: "password", name: "key", autocomplete: "new-password" });
-  const err = h("p", { class: "error", role: "alert" });
+  const err = h("p", { class: "error", role: "alert", id: "privacy-error" });
+  days.setAttribute("aria-describedby", "privacy-error");
   box.append(
     h("p", { class: "notice", text: "La protección está siempre activa.\nDeja la clave vacía para mantener la actual." }),
     field("Nueva clave (opcional)", pass),
@@ -1033,6 +1044,15 @@ function screenPrivacidad(study) {
     event.preventDefault();
     const data = new FormData(box);
     const nextKey = String(data.get("key") || "");
+    const rawDays = String(data.get("retentionDays") || "").trim();
+    const nDays = Number(rawDays);
+    days.setAttribute("aria-invalid", "false");
+    if (!rawDays || !Number.isInteger(nDays) || nDays < 1) {
+      days.setAttribute("aria-invalid", "true");
+      err.textContent = "La retención tiene que ser de 1 día o más.\nEscribe un número entero, por ejemplo 30.";
+      days.focus();
+      return;
+    }
     if (nextKey && nextKey.length < 8) {
       err.textContent = "La nueva clave necesita 8 caracteres o más.";
       return;
@@ -1040,7 +1060,7 @@ function screenPrivacidad(study) {
     state.settings.autoDelete = data.get("autoDelete") === "on";
     state.settings.lockOnLeave = data.get("lockOnLeave") === "on";
     state.settings.cloudEnabled = data.get("cloudEnabled") === "on";
-    state.settings.retentionDays = Math.max(1, Number(data.get("retentionDays") || 30));
+    state.settings.retentionDays = nDays;
     if (nextKey) key = await makeKey(nextKey);
     applyRetention();
     await persist();
@@ -1195,6 +1215,7 @@ function screenObsNueva() {
   );
   const err = h("p", { class: "error", role: "alert", id: "obs-error" });
   lugar.setAttribute("aria-describedby", "obs-error");
+  box.querySelector('[name="vi"]').setAttribute("aria-describedby", "obs-error");
   box.append(err, button("Guardar ficha", { type: "submit" }));
   if (Array.isArray(state.obsDraft)) {
     for (const [name, value] of state.obsDraft) {
