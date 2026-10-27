@@ -598,6 +598,40 @@ export default function Dashboard() {
             </div>
           </article>
 
+          {/* Campo · etnografía */}
+          <article className="module-card" id="mod-campo" aria-labelledby="mod-campo-title">
+            <div className="module-card-inner">
+              <div className="module-top">
+                <div className="module-icon-wrap" aria-hidden="true">🧭</div>
+                <span className="badge badge-live module-badge">LIVE</span>
+              </div>
+              <h2 className="module-title" id="mod-campo-title">Campo · etnografía</h2>
+              <p className="module-desc">
+                Cuaderno de campo móvil para observación etnográfica: guía, notas y evidencias por sesión. Datos cifrados en el dispositivo con tu passkey, solo códigos de participante, sin analítica ni terceros.
+              </p>
+              <div className="module-meta">
+                <span className="module-meta-item">
+                  <span className="module-meta-icon" aria-hidden="true">🔒</span>Acceso privado · passkey · AES-GCM local · noindex
+                </span>
+              </div>
+              <div className="module-tags" aria-label="Funciones">
+                <span className="mod-tag">Guía</span>
+                <span className="mod-tag">Notas</span>
+                <span className="mod-tag">Evidencias</span>
+                <span className="mod-tag">Cifrado</span>
+              </div>
+            </div>
+            <div className="module-card-footer">
+              <a
+                className="btn-module-open"
+                href="/uxtools/campo/"
+                aria-label="Abrir Campo · etnografía (acceso privado con passkey)"
+              >
+                Abrir Campo →
+              </a>
+            </div>
+          </article>
+
           {/* VOC */}
           <article className="module-card" id="mod-voc">
             <div className="module-card-inner">

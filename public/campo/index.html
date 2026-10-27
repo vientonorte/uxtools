@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+  <head>
+  <meta name="robots" content="noindex">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d1b3d" />
+    <title>Campo · etnografía</title>
+    <link rel="stylesheet" href="./app.css" />
+  </head>
+  <body>
+    <div class="phone">
+      <div id="lock" class="lock" hidden>
+        <p class="eyebrow">Bloqueado</p>
+        <h1>Los datos siguen en este teléfono</h1>
+        <p id="lock-help"></p>
+        <button type="button" id="lock-passkey" hidden>Desbloquear con passkey</button>
+        <p id="lock-or" class="notice" hidden>o con la clave del investigador (PBKDF2 600.000)</p>
+        <form id="lock-form">
+          <label class="field">
+            <span>Clave del investigador</span>
+            <input id="lock-pass" type="password" autocomplete="current-password" />
+          </label>
+          <label class="field" id="lock-again-field" hidden>
+            <span>Confirmar clave</span>
+            <input id="lock-again" type="password" autocomplete="new-password" />
+          </label>
+          <button type="submit" id="lock-submit">Desbloquear</button>
+        </form>
+        <p id="lock-error" class="error" role="alert"></p>
+        <button type="button" id="lock-open" hidden>Desbloquear</button>
+      </div>
+      <header class="top">
+        <button type="button" id="back" class="text-btn">‹ Volver</button>
+        <p id="eyebrow" class="eyebrow"></p>
+        <h1 id="title"></h1>
+        <p id="subtitle"></p>
+        <button type="button" id="privacy" class="text-btn privacy">Privacidad</button>
+      </header>
+      <main id="main"></main>
+      <nav id="tabbar" aria-label="Secciones de campo">
+        <a href="#/estudios" data-tab="estudios">Estudios</a>
+        <a href="#/lotes" data-tab="campo">Campo</a>
+        <a href="#/registro" data-tab="registro">Registro</a>
+        <a href="#/evidencias" data-tab="evidencias">Evidencias</a>
+        <a href="#/guia" data-tab="guia">Guía</a>
+      </nav>
+    </div>
+    <p id="live" class="live" aria-live="polite"></p>
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>
