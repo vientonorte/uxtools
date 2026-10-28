@@ -1,6 +1,9 @@
-import { GUIA } from "./guia-data.js";
+import { GUIA } from "./guia-data.js?v=4";
+// BUILD debe coincidir con <meta name="campo-build"> y con los ?v= de index.html.
+// Si no coinciden, Safari está mezclando archivos de dos versiones (caché de GitHub Pages, max-age=600).
+const BUILD = "4";
 const STORE = "campo.etnografia.v1"; // la clave no cambia entre versiones: así una actualización nunca "pierde" el estudio
-const BACKUP = "campo.etnografia.v1.antes-de-migrar"; // copia cifrada previa a cada migración
+const BACKUP = STORE + ".antes-de-migrar"; // copia cifrada previa a cada migración
 const SCHEMA = 3;
 const TABS = {
   "/estudios": "estudios",
@@ -1109,6 +1112,7 @@ function screenPrivacidad(study) {
     h("label", { class: "check" }, [cloud, h("span", { text: "Permitir transcripción en la nube (solo con permiso)" })]),
     err,
     button("Guardar privacidad", { type: "submit" }),
+    h("p", { class: "meta", id: "build", text: `Versión de la app: ${BUILD}` }),
   );
   const confirmWipe = input({ type: "text", id: "wipe-confirm", autocomplete: "off", autocapitalize: "characters", "aria-describedby": "wipe-help" });
   const wipeBtn = button("Borrar estudio y evidencias", { id: "wipe", class: "danger", disabled: true });
@@ -1534,6 +1538,24 @@ window.addEventListener("hashchange", async () => {
   title.setAttribute("tabindex", "-1");
   title.focus();
 });
+
+// Versión mezclada (index.html viejo en caché + app.js nuevo): avisar y recargar sin caché.
+// No toca localStorage: solo vuelve a pedir los archivos de la app.
+function checkBuild() {
+  const meta = document.querySelector('meta[name="campo-build"]')?.content || "";
+  if (meta === BUILD) return true;
+  const bar = h("div", { class: "notice update-bar", role: "alert", id: "update-bar" }, [
+    h("p", { text: "Hay una versión nueva de Campo. Tus datos se mantienen." }),
+    button("Actualizar ahora", { id: "update-now" }),
+  ]);
+  document.body.prepend(bar);
+  $("update-now").addEventListener("click", async () => {
+    try { await Promise.all(["./", "./index.html", `./app.js?v=${BUILD}`, `./app.css?v=${BUILD}`, `./guia-data.js?v=${BUILD}`].map((u) => fetch(u, { cache: "reload" }))); } catch {}
+    location.reload();
+  });
+  return false;
+}
+checkBuild();
 
 load().then(() => {
   if (!location.hash) location.hash = "#/estudios";

@@ -287,3 +287,5 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
 /* Autoguardado: «Guardado hh:mm» siempre visible bajo el título */
 .saved { margin: 4px 0 0; font-size: 1rem; color: var(--muted); }
 .saved::before { content: "✓ "; color: var(--vn-primitive-success); }
+
+.update-bar { position: sticky; top: 0; z-index: 50; margin: 0; }

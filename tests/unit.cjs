@@ -984,6 +984,22 @@ test('Campo migra sin borrar: datos de esquema 1 quedan completos', function () 
   assert.strictEqual(ctx.migrate(res.state).changed, false);
 });
 
+test('Campo: BUILD de app.js = meta campo-build = ?v= de todos los archivos (sin versiones mezcladas en caché)', function () {
+  var html = fs.readFileSync(path.join(ROOT, 'public/campo/index.html'), 'utf8');
+  var build = (campoSrc.match(/const BUILD = "([^"]+)"/) || [])[1];
+  assert.ok(build, 'falta BUILD');
+  assert.ok(html.includes('<meta name="campo-build" content="' + build + '"'), 'meta campo-build distinto');
+  assert.ok(html.includes('./app.js?v=' + build), 'app.js sin ?v=');
+  assert.ok(html.includes('./app.css?v=' + build), 'app.css sin ?v=');
+  assert.ok(campoSrc.includes('./guia-data.js?v=' + build), 'guia-data.js sin ?v=');
+});
+
+test('Campo: el aviso de versión nueva no toca localStorage', function () {
+  var a = campoSrc.indexOf('function checkBuild'); var b = campoSrc.indexOf('checkBuild();', a);
+  assert.ok(a > 0 && b > a);
+  assert.ok(!/localStorage/.test(campoSrc.slice(a, b)));
+});
+
 /* ══════════════════════════════════════════════════════════════ */
 /*  RESULT SUMMARY                                               */
 /* ══════════════════════════════════════════════════════════════ */
