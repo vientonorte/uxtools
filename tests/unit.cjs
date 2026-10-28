@@ -1000,6 +1000,25 @@ test('Campo: el aviso de versión nueva no toca localStorage', function () {
   assert.ok(!/localStorage/.test(campoSrc.slice(a, b)));
 });
 
+test('Campo: importar fusiona sin duplicar (id o código) y nunca borra', function () {
+  var a = campoSrc.indexOf('const BACKUP_KINDS'); var b = campoSrc.indexOf('globalThis.__campoMerge');
+  var ctx = {}; vm.runInNewContext(campoSrc.slice(a, b) + ';this.merge=mergeBackup;', ctx);
+  var st = { activeStudyId: '', studies: [{ id: 's1', name: 'Mío' }], interviews: [], batches: [{ id: 'l1', studyId: 's1', name: 'Hoy' }], observations: [{ id: 'o1', code: 'OBS-27-10-BAQ-1', vi: 'local' }] };
+  var data = { studies: [{ id: 's1', name: 'Otro' }, { id: 's2', name: 'Nuevo' }], interviews: [{ id: 'e1', code: 'P1' }], batches: [{ id: 'l1', name: 'X' }, { id: 'l2', studyId: 's2' }], observations: [{ id: 'oX', code: 'OBS-27-10-BAQ-1', vi: 'archivo' }, { id: 'o2', code: 'OBS-28-10-BAQ-1' }] };
+  var added = ctx.merge(st, data);
+  assert.strictEqual(added.observations, 1); assert.strictEqual(added.batches, 1); assert.strictEqual(added.studies, 1); assert.strictEqual(added.interviews, 1);
+  assert.strictEqual(st.observations[0].vi, 'local'); assert.strictEqual(st.studies[0].name, 'Mío'); assert.strictEqual(st.batches[0].name, 'Hoy');
+  assert.strictEqual(st.observations.length, 2); assert.strictEqual(st.activeStudyId, 's1');
+  var again = ctx.merge(st, data);
+  assert.strictEqual(again.observations + again.batches + again.studies + again.interviews, 0);
+});
+
+test('Campo: el respaldo incluye fichas y lotes', function () {
+  assert.ok(/BACKUP_KINDS = \["studies", "interviews", "batches", "observations"\]/.test(campoSrc));
+  assert.ok(/batches: state\.batches\.filter/.test(campoSrc), 'Evidencias sin lotes');
+  assert.ok(campoSrc.includes('"Exportar fichas"'));
+});
+
 /* ══════════════════════════════════════════════════════════════ */
 /*  RESULT SUMMARY                                               */
 /* ══════════════════════════════════════════════════════════════ */

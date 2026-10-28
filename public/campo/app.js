@@ -1,7 +1,7 @@
-import { GUIA } from "./guia-data.js?v=4";
+import { GUIA } from "./guia-data.js?v=5";
 // BUILD debe coincidir con <meta name="campo-build"> y con los ?v= de index.html.
 // Si no coinciden, Safari está mezclando archivos de dos versiones (caché de GitHub Pages, max-age=600).
-const BUILD = "4";
+const BUILD = "5";
 const STORE = "campo.etnografia.v1"; // la clave no cambia entre versiones: así una actualización nunca "pierde" el estudio
 const BACKUP = STORE + ".antes-de-migrar"; // copia cifrada previa a cada migración
 const SCHEMA = 3;
@@ -17,6 +17,7 @@ const TABS = {
   "/privacidad": "estudios",
   "/guia": "guia",
   "/observacion": "guia",
+  "/respaldo": "guia",
   "/observacion/nueva": "guia",
 };
 
@@ -995,6 +996,26 @@ function strength(pass) {
   return n;
 }
 
+// iOS Safari: la descarga por <a download> de un blob suele fallar. Orden: compartir archivo
+// (Guardar en Archivos / iCloud) → descarga → abrir en pestaña nueva.
+async function saveFile(blob, name) {
+  try {
+    const f = new File([blob], name, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [f] })) {
+      await navigator.share({ files: [f], title: name });
+      return "share";
+    }
+  } catch (e) {
+    if (e && e.name === "AbortError") return "cancel";
+  }
+  const url = URL.createObjectURL(blob);
+  const a = h("a", { href: url, download: name });
+  document.body.append(a); a.click(); a.remove();
+  if (!("download" in HTMLAnchorElement.prototype)) window.open(url, "_blank");
+  window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return "download";
+}
+
 function screenEvidencias(study) {
   head(study.name, "Evidencias", "Elige qué exportar");
   const rows = state.interviews.filter((row) => row.studyId === study.id);
@@ -1064,14 +1085,11 @@ function screenEvidencias(study) {
         audio: includeAudio && row.consent.cloud ? row.audio.map((a) => a.name) : [],
       })) : [],
       observations: data.get("observations") ? obsList() : [],
+      batches: state.batches.filter((b) => b.studyId === study.id),
     };
     const packed = await encryptJSON(payload, passphrase);
     const file = new Blob([JSON.stringify(packed)], { type: "application/json" });
-    const url = URL.createObjectURL(file);
-    const a = h("a", { href: url, download: `evidencias-${study.id}.campo.json` });
-    a.click();
-    // iOS: si se revoca al tiro, se corta la descarga a Archivos. Se revoca a los 60 s.
-    window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if ((await saveFile(file, `evidencias-${study.id}.campo.json`)) === "cancel") return;
     err.textContent = "";
     pass.value = "";
     again.value = "";
@@ -1228,6 +1246,7 @@ function screenObsLista() {
   head("Guía", "Fichas de observación", "Guardadas solo en este teléfono");
   const box = h("div");
   box.append(button("Crear ficha", { "data-go": "#/observacion/nueva" }));
+  box.append(button("Exportar fichas", { class: "secondary", id: "export-fichas", "data-go": "#/respaldo" }));
   const rows = obsList();
   if (!rows.length) box.append(h("p", { class: "notice", text: "Todavía no hay fichas." }));
   for (const o of [...rows].reverse()) {
@@ -1244,6 +1263,103 @@ function screenObsLista() {
       button("Editar ficha", { class: "secondary", "data-go": `#/observacion/nueva?id=${o.id}`, "aria-label": `Editar ficha ${o.code}` }),
     ]));
   }
+  paint(box);
+}
+
+// ── Respaldo completo: exportar / importar ─────────────────────────────
+// El archivo va siempre cifrado (misma clave del archivo que Evidencias).
+// Importar FUSIONA: agrega lo que falta por id (o por código) y nunca borra ni sobrescribe.
+const BACKUP_KINDS = ["studies", "interviews", "batches", "observations"];
+function backupPayload() {
+  const out = { kind: "campo-respaldo", version: 1, build: BUILD, schema: SCHEMA, exportedAt: new Date().toISOString() };
+  for (const k of BACKUP_KINDS) out[k] = JSON.parse(JSON.stringify(state[k] || []));
+  return out;
+}
+function mergeBackup(st, data) {
+  const added = {};
+  for (const k of BACKUP_KINDS) {
+    if (!Array.isArray(st[k])) st[k] = [];
+    const ids = new Set(st[k].map((x) => x && x.id).filter(Boolean));
+    const codes = new Set(st[k].map((x) => x && x.code).filter(Boolean));
+    added[k] = 0;
+    for (const row of Array.isArray(data?.[k]) ? data[k] : []) {
+      if (!row || typeof row !== "object") continue;
+      if ((row.id && ids.has(row.id)) || (row.code && codes.has(row.code))) continue;
+      st[k].push(row);
+      if (row.id) ids.add(row.id);
+      if (row.code) codes.add(row.code);
+      added[k] += 1;
+    }
+  }
+  if (!st.activeStudyId && st.studies[0]) st.activeStudyId = st.studies[0].id;
+  return added;
+}
+globalThis.__campoMerge = mergeBackup; // para pruebas unitarias
+
+function screenRespaldo() {
+  head("Guía", "Exportar e importar fichas", "Respaldo cifrado de fichas, lotes, estudios y registros");
+  const box = h("div");
+  const counts = `Fichas: ${obsList().length} · Lotes: ${state.batches.length} · Estudios: ${state.studies.length} · Registros: ${state.interviews.length}`;
+  box.append(h("p", { class: "notice", text: counts }));
+  const ex = h("form", { id: "respaldo-export" });
+  const pass = input({ type: "password", name: "pass", autocomplete: "new-password" });
+  const again = input({ type: "password", name: "again", autocomplete: "new-password" });
+  const err = h("p", { class: "error", role: "alert", id: "respaldo-error" });
+  pass.setAttribute("aria-describedby", "respaldo-error");
+  ex.append(h("section", { class: "card" }, [
+    h("h2", { text: "Exportar" }),
+    field("Clave del archivo", pass),
+    field("Repite la clave", again),
+    err,
+    button("Exportar fichas", { type: "submit", id: "respaldo-go" }),
+  ]));
+  ex.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (pass.value.length < 8 || pass.value !== again.value) {
+      err.textContent = "Las claves no coinciden o son muy cortas.\nEscribe la misma clave dos veces, con 8 caracteres o más.";
+      return;
+    }
+    const packed = await encryptJSON(backupPayload(), pass.value);
+    const stamp = new Date().toISOString().slice(0, 10);
+    const how = await saveFile(new Blob([JSON.stringify(packed)], { type: "application/json" }), `campo-respaldo-${stamp}.campo.json`);
+    if (how === "cancel") return;
+    err.textContent = ""; pass.value = ""; again.value = "";
+    say(how === "share" ? "Respaldo cifrado listo para guardar en Archivos." : "Respaldo cifrado guardado en Descargas.", "Exportado ✓");
+  });
+  const im = h("form", { id: "respaldo-import" });
+  const file = input({ type: "file", name: "file", accept: ".json,application/json" });
+  const ipass = input({ type: "password", name: "ipass", autocomplete: "current-password" });
+  const ierr = h("p", { class: "error", role: "alert", id: "import-error" });
+  ipass.setAttribute("aria-describedby", "import-error");
+  im.append(h("section", { class: "card" }, [
+    h("h2", { text: "Importar" }),
+    h("p", { class: "notice", text: "Suma lo que falta. No borra ni cambia lo que ya tienes." }),
+    field("Archivo de respaldo", file),
+    field("Clave del archivo", ipass),
+    ierr,
+    button("Importar fichas", { type: "submit", id: "import-go" }),
+  ]));
+  im.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const f = file.files && file.files[0];
+    if (!f) { ierr.textContent = "Elige un archivo de respaldo."; return; }
+    let data;
+    try {
+      const blob = JSON.parse(await f.text());
+      data = blob && blob.enc ? await decryptJSON(blob, ipass.value) : blob;
+    } catch {
+      ierr.textContent = "No se pudo abrir el archivo. Revisa la clave.";
+      return;
+    }
+    if (!data || !BACKUP_KINDS.some((k) => Array.isArray(data[k]))) { ierr.textContent = "El archivo no tiene fichas ni lotes."; return; }
+    keepBackup();
+    const added = mergeBackup(state, data);
+    await persist();
+    ierr.textContent = ""; ipass.value = "";
+    say(`Importado: ${added.observations} fichas, ${added.batches} lotes, ${added.studies} estudios, ${added.interviews} registros.`, "Importado ✓");
+    render();
+  });
+  box.append(ex, im);
   paint(box);
 }
 
@@ -1402,6 +1518,7 @@ async function render() {
   if (path === "/guia") return screenGuia();
   if (path === "/observacion") return screenObsLista();
   if (path === "/observacion/nueva") return screenObsNueva(params.get("id"));
+  if (path === "/respaldo") return screenRespaldo();
   location.hash = "#/estudios";
 }
 
@@ -1419,6 +1536,7 @@ function goBack() {
     "/privacidad": "#/estudios",
     "/guia": "#/estudios",
     "/observacion": "#/guia",
+    "/respaldo": "#/observacion",
     "/observacion/nueva": "#/observacion",
   };
   location.hash = map[path] || "#/estudios";
