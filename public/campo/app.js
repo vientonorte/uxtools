@@ -1621,7 +1621,7 @@ function screenMsLista() {
       medio ? h("p", { text: `Medio de pago: ${medio}` }) : null,
       m.total != null ? h("p", { text: `Tiempo total: ${m.total} min` }) : m.total_raw ? h("p", { text: `Tiempo total (texto original): ${m.total_raw}` }) : null,
       m.saldoIni != null || m.saldoFin != null ? h("p", { text: `Saldo: ${clp(m.saldoIni)} → ${clp(m.saldoFin)}` }) : null,
-      m.foto ? h("p", { text: `Foto N° ${m.foto}` }) : null,
+      m.foto ? h("p", { text: `Foto N° ${m.foto}${m.fotoOk ? " · caras difuminadas ✓" : ""}` }) : null,
       m.audio?.length ? h("p", { text: `Nota de voz: ${m.audio.map((a) => a.name).join(", ")}` }) : null,
       m.intentos || m.mensaje ? h("p", { text: `Intentos: ${m.intentos || "—"} · Mensaje: ${m.mensaje ? `«${m.mensaje}»` : "—"}` }) : null,
       m.sentir ? h("p", { text: `Lo que sentí: ${m.sentir}` }) : null,
@@ -1702,7 +1702,9 @@ function screenMsNueva(editId) {
     field("¿Pediste ayuda? ¿Quién te ayudó? (rol, no nombre)", txt("ayuda", "Ej.: cajera de boletería")),
     field("Saldo antes (pesos CLP)", input({ type: "number", name: "saldoIni", step: "1", inputmode: "numeric" })),
     field("Saldo después (pesos CLP)", input({ type: "number", name: "saldoFin", step: "1", inputmode: "numeric" })),
-    field("Foto · número de referencia (sin personas)", txt("foto", null, { inputmode: "numeric" })),
+    field("Fotos o capturas · n.º o enlace", txt("foto", "Ej.: 12 o enlace a la carpeta")),
+    h("label", { class: "check" }, [input({ type: "checkbox", name: "fotoOk", value: "si", id: "ms-foto-ok" }), h("span", { text: "Caras difuminadas o sin personas (obligatorio si hay foto o enlace)" })]),
+    h("p", { class: "meta", text: "Solo equipos, carteles y pantallas.\nNo anotes nombres ni datos personales." }),
     msAudioBtn, h("p", { class: "meta", text: "Graba con Notas de voz, solo tu voz.\nAquí se anota solo el nombre y el tamaño del clip." }), msAudioList, msAudioInput,
     field("Qué mediste (lo propio del escenario)", area("medir")),
     field("Lo que sentí (una frase en primera persona)", area("sentir", null, true)),
@@ -1711,7 +1713,7 @@ function screenMsNueva(editId) {
   const err = h("p", { class: "error", role: "alert", id: "ms-error" });
   punto.setAttribute("aria-describedby", "ms-error");
   box.querySelector('[name="sentir"]').setAttribute("aria-describedby", "ms-error");
-  for (const k of ["espera", "uso", "obs"]) box.querySelector(`[name="${k}"]`).setAttribute("aria-describedby", "ms-error");
+  for (const k of ["espera", "uso", "obs", "foto", "fotoOk"]) box.querySelector(`[name="${k}"]`).setAttribute("aria-describedby", "ms-error");
   box.append(err, button(editing ? "Guardar cambios" : "Guardar ficha", { type: "submit", id: "ms-save" }));
   if (editing) {
     // P0 QA 29-oct: borrar una ficha (prueba, error o dato sensible), con paso de confirmación.
@@ -1736,11 +1738,12 @@ function screenMsNueva(editId) {
   const fillFrom = (pairs) => {
     for (const [name, value] of pairs) {
       for (const el of box.querySelectorAll(`[name="${name}"]`)) {
-        if (el.type === "radio") el.checked = el.value === value; else el.value = value ?? "";
+        if (el.type === "radio" || el.type === "checkbox") el.checked = el.value === value; else el.value = value ?? "";
       }
     }
   };
   if (editing) fillFrom(MS_FIELDS.map((k) => [k, editing[k] == null ? "" : String(editing[k])]));
+  if (editing) box.querySelector('[name="fotoOk"]').checked = !!editing.fotoOk;
   else if (Array.isArray(state.msDraft)) fillFrom(state.msDraft);
   else fillFrom([["studyId", defaultMsStudy(state)]]);
   upd();
@@ -1768,6 +1771,15 @@ function screenMsNueva(editId) {
       const names = badTime.map((k) => (k === "espera" ? "la espera" : "el uso")).join(" y ");
       err.textContent = `Revisa ${names}: debe ser 0 o más minutos.\nNo se guardó; tu dato sigue en el campo.`;
       box.querySelector(`[name="${badTime[0]}"]`).focus();
+      return;
+    }
+    // P0 QA 29-oct: evidencia solo con control de anonimización.
+    row.fotoOk = d.get("fotoOk") === "si";
+    const fotoOkEl = box.querySelector('[name="fotoOk"]');
+    fotoOkEl.setAttribute("aria-invalid", row.foto && !row.fotoOk ? "true" : "false");
+    if (row.foto && !row.fotoOk) {
+      err.textContent = "Marca «caras difuminadas o sin personas» para guardar la foto o el enlace.\nSi tiene caras, difumínalas antes.";
+      fotoOkEl.focus();
       return;
     }
     row.obs = row.obs.toUpperCase();

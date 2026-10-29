@@ -62,6 +62,7 @@ export async function run({ fresh, unlock, ok, wait, noPlain, axe, PASS, SENT, S
   await page.fill('input[name="saldoIni"]', "1500");
   await page.fill('input[name="saldoFin"]', "800");
   await page.fill('input[name="foto"]', "12");
+  await page.check('input[name="fotoOk"]');
   await page.setInputFiles("#ms-audio-file", { name: "EJEMPLO-voz.m4a", mimeType: "audio/mp4", buffer: Buffer.from("x") });
   ok("mystery", "nota de voz anotada", (await page.textContent("#ms-audio-list")).includes("EJEMPLO-voz.m4a"));
   await page.click("#ms-save"); await wait(page, 700);
