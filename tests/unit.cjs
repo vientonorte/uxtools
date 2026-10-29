@@ -1014,7 +1014,7 @@ test('Campo: importar fusiona sin duplicar (id o código) y nunca borra', functi
 });
 
 test('Campo: el respaldo incluye fichas y lotes', function () {
-  assert.ok(/BACKUP_KINDS = \["studies", "interviews", "batches", "observations"\]/.test(campoSrc));
+  assert.ok(/BACKUP_KINDS = \["studies", "interviews", "batches", "observations", "mystery"\]/.test(campoSrc));
   assert.ok(/batches: state\.batches\.filter/.test(campoSrc), 'Evidencias sin lotes');
   assert.ok(campoSrc.includes('"Exportar fichas"'));
 });
