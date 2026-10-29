@@ -127,6 +127,7 @@ if (ITEMS.has("2")) { const m = await import("./e2e-item2.mjs"); await m.run({ f
 if (ITEMS.has("3")) { const m = await import("./e2e-item3.mjs"); await m.run({ fresh, setup, unlock, ok, wait, noPlain, axe, rawBlob, startInterview, hide, show, PASS, SENT, STORE, U }); }
 if (ITEMS.has("R")) { const m = await import("./e2e-regresion.mjs"); await m.run({ fresh, unlock, ok, wait, noPlain, STORE, U }); }
 if (ITEMS.has("E")) { const m = await import("./e2e-export.mjs"); await m.run({ fresh, setup, unlock, ok, wait, noPlain, STORE, U, SENT }); }
+if (ITEMS.has("M")) { const m = await import("./e2e-mystery.mjs"); await m.run({ fresh, unlock, ok, wait, noPlain, axe, PASS, SENT, STORE, U }); }
 if (ITEMS.has("4")) { const m = await import("./e2e-item4.mjs"); await m.run({ fresh, setup, unlock, ok, wait, noPlain, axe, rawBlob, startInterview, PASS, SENT, STORE, U }); }
 
 await browser.close();
