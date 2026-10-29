@@ -1,7 +1,7 @@
-import { GUIA } from "./guia-data.js?v=6";
+import { GUIA } from "./guia-data.js?v=7";
 // BUILD debe coincidir con <meta name="campo-build"> y con los ?v= de index.html.
 // Si no coinciden, Safari está mezclando archivos de dos versiones (caché de GitHub Pages, max-age=600).
-const BUILD = "6";
+const BUILD = "7";
 const STORE = "campo.etnografia.v1"; // la clave no cambia entre versiones: así una actualización nunca "pierde" el estudio
 const BACKUP = STORE + ".antes-de-migrar"; // copia cifrada previa a cada migración
 const SCHEMA = 4; // v4: agrega state.mystery (fichas de mystery shopper)
@@ -1680,6 +1680,7 @@ function screenMsNueva(editId) {
   const err = h("p", { class: "error", role: "alert", id: "ms-error" });
   punto.setAttribute("aria-describedby", "ms-error");
   box.querySelector('[name="sentir"]').setAttribute("aria-describedby", "ms-error");
+  for (const k of ["espera", "uso"]) box.querySelector(`[name="${k}"]`).setAttribute("aria-describedby", "ms-error");
   box.append(err, button(editing ? "Guardar cambios" : "Guardar ficha", { type: "submit", id: "ms-save" }));
   const fillFrom = (pairs) => {
     for (const [name, value] of pairs) {
@@ -1708,6 +1709,15 @@ function screenMsNueva(editId) {
     }
     row.total = msTotal(row);
     row.audio = audio;
+    // P0 QA 29-oct: un tiempo negativo o ilegible no se borra en silencio; se avisa y no se guarda.
+    const badTime = ["espera", "uso"].filter((k) => String(d.get(k) || "").trim() && row[k] === null);
+    for (const k of ["espera", "uso"]) box.querySelector(`[name="${k}"]`).setAttribute("aria-invalid", badTime.includes(k) ? "true" : "false");
+    if (badTime.length) {
+      const names = badTime.map((k) => (k === "espera" ? "la espera" : "el uso")).join(" y ");
+      err.textContent = `Revisa ${names}: debe ser 0 o más minutos.\nNo se guardó; tu dato sigue en el campo.`;
+      box.querySelector(`[name="${badTime[0]}"]`).focus();
+      return;
+    }
     const missing = [];
     if (!row.punto) missing.push("el punto");
     if (!row.sentir) missing.push("lo que sentiste");
