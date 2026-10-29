@@ -46,7 +46,7 @@ export async function run({ fresh, unlock, ok, wait, noPlain, axe, PASS, SENT, S
   await page.click("#ms-save"); await wait(page);
   ok("mystery", "validación · foco en Punto", await page.evaluate(() => document.activeElement?.name === "punto"));
   ok("mystery", "validación · mensaje", (await page.textContent("#ms-error")).includes("Falta el punto y lo que sentiste"));
-  await page.fill('input[name="punto"]', "EJEMPLO Unión Latinoamericana");
+  await page.selectOption('select[name="punto"]', "ULA");
   await page.check('input[name="escenario"][value="1"]');
   ok("mystery", "qué medir cambia con escenario", (await page.textContent("#ms-medir")).includes("tótem funcionaba"));
   await page.check('input[name="medio"][value="qr"]');

@@ -1508,9 +1508,20 @@ const MS_ESCENARIOS = [
   ["8", "Corte de servicio", "Cómo te enteraste · señalética · tiempo extra · costo extra"],
 ];
 const MS_MEDIOS = [["bip", "bip!"], ["qr", "QR"], ["tarjeta", "Tarjeta bancaria"], ["efectivo", "Efectivo"]];
-const MS_TEXT = ["punto", "when", "escenario", "medio", "afluencia", "clima", "intentos", "mensaje", "ayuda", "medir", "sentir", "pista", "studyId", "salida", "foto"];
+const MS_TEXT = ["punto", "puntoOtro", "when", "escenario", "medio", "afluencia", "clima", "intentos", "mensaje", "ayuda", "medir", "sentir", "pista", "studyId", "salida", "foto"];
 const MS_NUM = { espera: "min", uso: "min", saldoIni: "clp", saldoFin: "clp" };
 const MS_FIELDS = [...MS_TEXT, ...Object.keys(MS_NUM)];
+// P0 QA 29-oct: «Punto» usa códigos de lugar. Fuentes: deck Proceso «Dónde se reparten los QR» (12 puntos),
+// points.json del afiche (MAT y códigos nuevos por lugar real CMO…IRZ) y PLAN-OBS-CONTEXTUAL 28-oct (PEN, NOS).
+const MS_PUNTOS = [
+  ["GEN", "General (sin punto)"], ["LLE", "Los Leones (L1/L6)"], ["UCA", "Universidad Católica (L1)"],
+  ["UCH", "Universidad de Chile (L1/L3)"], ["LHE", "Los Héroes (L1/L2)"], ["ECE", "Estación Central (L1 + Tren Nos)"],
+  ["BAQ", "Baquedano (L1/L5)"], ["ULA", "Unión Latinoamericana (L1)"], ["LRE", "Las Rejas (L1)"],
+  ["PAJ", "Pajaritos (L1 + paradero)"], ["SPA", "San Pablo (L1/L5)"], ["PMA", "Plaza de Maipú (L5)"],
+  ["MAT", "Av. Matta, control de pago (L3)"], ["PEN", "Peñalolén Alto, paraderos"], ["NOS", "Estación Tren Nos, San Bernardo"],
+  ["CMO", "Compañía de Jesús con Morandé"], ["PZA", "Plaza de Armas"], ["PBU", "Parque Bustamante"],
+  ["BEA", "Bellas Artes"], ["SIS", "Santa Isabel"], ["IRZ", "Irarrázaval"],
+];
 const MS_SALIDAS = [["MS-1", "MS-1 · Jue 30-oct · escenarios 1, 2, 7"], ["MS-2", "MS-2 · Mar 4-nov · escenarios 4, 5, 6"], ["MS-3", "MS-3 · Jue 6-nov · escenarios 3, 6"], ["MS-4", "MS-4 · Si hay corte anunciado · escenario 8"]];
 
 // Minutos como número: «2:30» → 2.5, «3» → 3, «1,5» → 1.5. null si no se puede.
@@ -1603,7 +1614,7 @@ function screenMsLista() {
     const medio = MS_MEDIOS.find(([v]) => v === m.medio)?.[1] || "";
     box.append(h("article", { class: "card" }, [
       h("h2", { text: m.code }),
-      h("p", { class: "meta", text: `${m.punto} · ${String(m.when || "").replace("T", " ")} · ${m.escenario}. ${esc}` }),
+      h("p", { class: "meta", text: `${m.punto === "otro" ? `Otro: ${m.puntoOtro || "—"}` : m.punto} · ${String(m.when || "").replace("T", " ")} · ${m.escenario}. ${esc}` }),
       h("p", { text: `Estudio: ${studyById(m.studyId)?.name || "sin estudio"} · Salida: ${m.salida || "sin salida"}` }),
       medio ? h("p", { text: `Medio de pago: ${medio}` }) : null,
       m.total != null ? h("p", { text: `Tiempo total: ${m.total} min` }) : m.total_raw ? h("p", { text: `Tiempo total (texto original): ${m.total_raw}` }) : null,
@@ -1623,7 +1634,18 @@ function screenMsNueva(editId) {
   const editing = editId ? msList().find((m) => m.id === editId) || null : null;
   head("Guía", editing ? `Editar ${editing.code}` : "Nueva ficha de mystery", "Sin nombres ni rostros · montos y tiempos tal cual");
   const box = h("form", { novalidate: true, id: "ms-form" });
-  const punto = input({ type: "text", name: "punto", required: true, placeholder: "Ej.: Unión Latinoamericana" });
+  // Fichas antiguas con texto libre: si no es un código conocido, se conserva como opción para no perder el dato.
+  const legacy = editing && editing.punto && !MS_PUNTOS.some(([c]) => c === editing.punto) && editing.punto !== "otro" ? editing.punto : "";
+  const punto = h("select", { name: "punto", required: true }, [
+    h("option", { value: "", text: "Elige el punto" }),
+    ...MS_PUNTOS.map(([c, l]) => h("option", { value: c, text: `${c} · ${l}` })),
+    legacy ? h("option", { value: legacy, text: `${legacy} (texto anterior)` }) : null,
+    h("option", { value: "otro", text: "Otro (descríbelo abajo)" }),
+  ]);
+  const puntoOtro = input({ type: "text", name: "puntoOtro", id: "ms-punto-otro", placeholder: "Lugar real, sin nombres de personas" });
+  const puntoOtroField = field("Otro punto · ¿dónde?", puntoOtro);
+  const syncOtro = () => { puntoOtroField.hidden = punto.value !== "otro"; };
+  punto.addEventListener("change", syncOtro);
   const when = input({ type: "datetime-local", name: "when", required: true, value: nowLocal() });
   const code = h("p", { class: "meta", id: "ms-code" });
   const medir = h("p", { class: "notice", id: "ms-medir" });
@@ -1657,6 +1679,7 @@ function screenMsNueva(editId) {
     field("Estudio", h("select", { name: "studyId" }, [h("option", { value: "", text: "Sin estudio" }), ...state.studies.map((x) => h("option", { value: x.id, text: x.name }))])),
     radios("salida", MS_SALIDAS, "Salida"),
     field("Punto", punto),
+    puntoOtroField,
     field("Fecha y hora", when),
     radios("escenario", MS_ESCENARIOS.map(([n, name]) => [n, `${n} · ${name}`]), "Escenario"),
     medir,
@@ -1713,6 +1736,7 @@ function screenMsNueva(editId) {
   else if (Array.isArray(state.msDraft)) fillFrom(state.msDraft);
   else fillFrom([["studyId", defaultMsStudy(state)]]);
   upd();
+  syncOtro();
   box.addEventListener("change", upd);
   box.addEventListener("input", upd);
   when.addEventListener("input", upd);
@@ -1739,6 +1763,8 @@ function screenMsNueva(editId) {
       return;
     }
     const missing = [];
+    if (row.punto !== "otro") row.puntoOtro = "";
+    if (row.punto === "otro" && !row.puntoOtro) row.punto = "";
     if (!row.punto) missing.push("el punto");
     if (!row.sentir) missing.push("lo que sentiste");
     punto.setAttribute("aria-invalid", row.punto ? "false" : "true");
