@@ -1682,6 +1682,26 @@ function screenMsNueva(editId) {
   box.querySelector('[name="sentir"]').setAttribute("aria-describedby", "ms-error");
   for (const k of ["espera", "uso"]) box.querySelector(`[name="${k}"]`).setAttribute("aria-describedby", "ms-error");
   box.append(err, button(editing ? "Guardar cambios" : "Guardar ficha", { type: "submit", id: "ms-save" }));
+  if (editing) {
+    // P0 QA 29-oct: borrar una ficha (prueba, error o dato sensible), con paso de confirmación.
+    const delBtn = button("Borrar ficha", { type: "button", id: "ms-delete", class: "danger" });
+    const yes = button(`Sí, borrar ${editing.code}`, { type: "button", id: "ms-delete-yes", class: "danger" });
+    const no = button("Cancelar", { type: "button", id: "ms-delete-no", class: "secondary" });
+    const confirmBox = h("div", { id: "ms-delete-confirm", role: "alertdialog", "aria-labelledby": "ms-delete-q" }, [
+      h("p", { class: "notice", id: "ms-delete-q", text: `¿Borrar la ficha ${editing.code}?\nNo se puede deshacer.` }), yes, no,
+    ]);
+    confirmBox.hidden = true;
+    delBtn.addEventListener("click", () => { confirmBox.hidden = false; delBtn.hidden = true; no.focus(); });
+    no.addEventListener("click", () => { confirmBox.hidden = true; delBtn.hidden = false; delBtn.focus(); });
+    yes.addEventListener("click", async () => {
+      const i = msList().indexOf(editing);
+      if (i >= 0) msList().splice(i, 1);
+      await persist();
+      say(`Ficha ${editing.code} borrada.`, "Borrada ✓");
+      location.hash = "#/mystery";
+    });
+    box.append(delBtn, confirmBox);
+  }
   const fillFrom = (pairs) => {
     for (const [name, value] of pairs) {
       for (const el of box.querySelectorAll(`[name="${name}"]`)) {
