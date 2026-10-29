@@ -1508,7 +1508,7 @@ const MS_ESCENARIOS = [
   ["8", "Corte de servicio", "Cómo te enteraste · señalética · tiempo extra · costo extra"],
 ];
 const MS_MEDIOS = [["bip", "bip!"], ["qr", "QR"], ["tarjeta", "Tarjeta bancaria"], ["efectivo", "Efectivo"]];
-const MS_TEXT = ["punto", "puntoOtro", "when", "escenario", "medio", "afluencia", "clima", "intentos", "mensaje", "ayuda", "medir", "sentir", "pista", "studyId", "salida", "foto"];
+const MS_TEXT = ["punto", "puntoOtro", "obs", "when", "escenario", "medio", "afluencia", "clima", "intentos", "mensaje", "ayuda", "medir", "sentir", "pista", "studyId", "salida", "foto"];
 const MS_NUM = { espera: "min", uso: "min", saldoIni: "clp", saldoFin: "clp" };
 const MS_FIELDS = [...MS_TEXT, ...Object.keys(MS_NUM)];
 // P0 QA 29-oct: «Punto» usa códigos de lugar. Fuentes: deck Proceso «Dónde se reparten los QR» (12 puntos),
@@ -1573,6 +1573,7 @@ function normalizeMystery(st) {
     if (m.studyId === undefined) { m.studyId = defaultMsStudy(st); changed = true; }
     if (m.salida === undefined) { m.salida = ""; changed = true; }
     if (m.foto === undefined) { m.foto = ""; changed = true; }
+    if (m.obs === undefined) { m.obs = ""; changed = true; }
   }
   return changed;
 }
@@ -1616,6 +1617,7 @@ function screenMsLista() {
       h("h2", { text: m.code }),
       h("p", { class: "meta", text: `${m.punto === "otro" ? `Otro: ${m.puntoOtro || "—"}` : m.punto} · ${String(m.when || "").replace("T", " ")} · ${m.escenario}. ${esc}` }),
       h("p", { text: `Estudio: ${studyById(m.studyId)?.name || "sin estudio"} · Salida: ${m.salida || "sin salida"}` }),
+      h("p", { text: `Sesión OBS: ${m.obs || "sin sesión"}` }),
       medio ? h("p", { text: `Medio de pago: ${medio}` }) : null,
       m.total != null ? h("p", { text: `Tiempo total: ${m.total} min` }) : m.total_raw ? h("p", { text: `Tiempo total (texto original): ${m.total_raw}` }) : null,
       m.saldoIni != null || m.saldoFin != null ? h("p", { text: `Saldo: ${clp(m.saldoIni)} → ${clp(m.saldoFin)}` }) : null,
@@ -1643,6 +1645,9 @@ function screenMsNueva(editId) {
     h("option", { value: "otro", text: "Otro (descríbelo abajo)" }),
   ]);
   const puntoOtro = input({ type: "text", name: "puntoOtro", id: "ms-punto-otro", placeholder: "Lugar real, sin nombres de personas" });
+  // P0 QA 29-oct: vínculo del viaje (ficha MS) con su sesión de observación paralela.
+  const obsSes = input({ type: "text", name: "obs", id: "ms-obs", list: "ms-obs-list", autocapitalize: "characters", placeholder: "Ej.: OBS-29-10-PAJ-1" });
+  const obsList_ = h("datalist", { id: "ms-obs-list" }, obsList().map((o) => h("option", { value: o.code })));
   const puntoOtroField = field("Otro punto · ¿dónde?", puntoOtro);
   const syncOtro = () => { puntoOtroField.hidden = punto.value !== "otro"; };
   punto.addEventListener("change", syncOtro);
@@ -1680,6 +1685,9 @@ function screenMsNueva(editId) {
     radios("salida", MS_SALIDAS, "Salida"),
     field("Punto", punto),
     puntoOtroField,
+    field("Sesión OBS en paralelo (código)", obsSes),
+    obsList_,
+    h("p", { class: "meta", text: "Formato OBS-DD-MM-LUGAR-N.\nVacío si este viaje no tuvo sesión de observación." }),
     field("Fecha y hora", when),
     radios("escenario", MS_ESCENARIOS.map(([n, name]) => [n, `${n} · ${name}`]), "Escenario"),
     medir,
@@ -1703,7 +1711,7 @@ function screenMsNueva(editId) {
   const err = h("p", { class: "error", role: "alert", id: "ms-error" });
   punto.setAttribute("aria-describedby", "ms-error");
   box.querySelector('[name="sentir"]').setAttribute("aria-describedby", "ms-error");
-  for (const k of ["espera", "uso"]) box.querySelector(`[name="${k}"]`).setAttribute("aria-describedby", "ms-error");
+  for (const k of ["espera", "uso", "obs"]) box.querySelector(`[name="${k}"]`).setAttribute("aria-describedby", "ms-error");
   box.append(err, button(editing ? "Guardar cambios" : "Guardar ficha", { type: "submit", id: "ms-save" }));
   if (editing) {
     // P0 QA 29-oct: borrar una ficha (prueba, error o dato sensible), con paso de confirmación.
@@ -1760,6 +1768,14 @@ function screenMsNueva(editId) {
       const names = badTime.map((k) => (k === "espera" ? "la espera" : "el uso")).join(" y ");
       err.textContent = `Revisa ${names}: debe ser 0 o más minutos.\nNo se guardó; tu dato sigue en el campo.`;
       box.querySelector(`[name="${badTime[0]}"]`).focus();
+      return;
+    }
+    row.obs = row.obs.toUpperCase();
+    const obsOk = !row.obs || /^OBS-\d{2}-\d{2}-[A-Z]{3}-\d+$/.test(row.obs);
+    obsSes.setAttribute("aria-invalid", obsOk ? "false" : "true");
+    if (!obsOk) {
+      err.textContent = "La sesión OBS no tiene el formato OBS-DD-MM-LUGAR-N.\nCorrígela o déjala vacía.";
+      obsSes.focus();
       return;
     }
     const missing = [];
