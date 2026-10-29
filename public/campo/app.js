@@ -1,10 +1,10 @@
-import { GUIA } from "./guia-data.js?v=5";
+import { GUIA } from "./guia-data.js?v=6";
 // BUILD debe coincidir con <meta name="campo-build"> y con los ?v= de index.html.
 // Si no coinciden, Safari está mezclando archivos de dos versiones (caché de GitHub Pages, max-age=600).
-const BUILD = "5";
+const BUILD = "6";
 const STORE = "campo.etnografia.v1"; // la clave no cambia entre versiones: así una actualización nunca "pierde" el estudio
 const BACKUP = STORE + ".antes-de-migrar"; // copia cifrada previa a cada migración
-const SCHEMA = 3;
+const SCHEMA = 4; // v4: agrega state.mystery (fichas de mystery shopper)
 const TABS = {
   "/estudios": "estudios",
   "/nuevo": "estudios",
@@ -19,6 +19,8 @@ const TABS = {
   "/observacion": "guia",
   "/respaldo": "guia",
   "/observacion/nueva": "guia",
+  "/mystery": "guia",
+  "/mystery/nueva": "guia",
 };
 
 const SEGMENTS = [
@@ -79,6 +81,7 @@ function seed() {
     interviews: [],
     batches: [],
     observations: [],
+    mystery: [],
     draft: null,
   };
 }
@@ -92,7 +95,7 @@ function migrate(st) {
   if (!st || typeof st !== "object") return { state: st, from, changed: false };
   if (from >= SCHEMA) return { state: st, from, changed: false };
   st.settings = { ...SETTINGS_DEFAULT, ...(st.settings || {}) };
-  for (const k of ["studies", "interviews", "batches", "observations"]) if (!Array.isArray(st[k])) st[k] = [];
+  for (const k of ["studies", "interviews", "batches", "observations", "mystery"]) if (!Array.isArray(st[k])) st[k] = [];
   for (const study of st.studies) {
     if (!Array.isArray(study.segments)) study.segments = segments();
     if (!Array.isArray(study.questions)) study.questions = [];
@@ -1221,6 +1224,7 @@ function screenGuia() {
   box.append(h("p", { class: "notice", text: `Objetivo: ${GUIA.objetivo}` }));
   box.append(button("Crear ficha de observación", { "data-go": "#/observacion/nueva" }));
   box.append(button(`Ver mis fichas (${obsList().length})`, { "data-go": "#/observacion", class: "secondary" }));
+  box.append(button(`Mystery shopper (${msList().length})`, { "data-go": "#/mystery", class: "secondary", id: "go-mystery" }));
   box.append(fold("Antes de salir · Al registrar", [ul(GUIA.antes)], true));
   box.append(fold("Sesiones", GUIA.sesiones.map((s) => h("div", { class: "session" }, [
     h("h3", { text: `${s.id} · ${s.dia}` }),
@@ -1269,7 +1273,7 @@ function screenObsLista() {
 // ── Respaldo completo: exportar / importar ─────────────────────────────
 // El archivo va siempre cifrado (misma clave del archivo que Evidencias).
 // Importar FUSIONA: agrega lo que falta por id (o por código) y nunca borra ni sobrescribe.
-const BACKUP_KINDS = ["studies", "interviews", "batches", "observations"];
+const BACKUP_KINDS = ["studies", "interviews", "batches", "observations", "mystery"];
 function backupPayload() {
   const out = { kind: "campo-respaldo", version: 1, build: BUILD, schema: SCHEMA, exportedAt: new Date().toISOString() };
   for (const k of BACKUP_KINDS) out[k] = JSON.parse(JSON.stringify(state[k] || []));
@@ -1299,7 +1303,7 @@ globalThis.__campoMerge = mergeBackup; // para pruebas unitarias
 function screenRespaldo() {
   head("Guía", "Exportar e importar fichas", "Respaldo cifrado de fichas, lotes, estudios y registros");
   const box = h("div");
-  const counts = `Fichas: ${obsList().length} · Lotes: ${state.batches.length} · Estudios: ${state.studies.length} · Registros: ${state.interviews.length}`;
+  const counts = `Fichas: ${obsList().length} · Mystery: ${msList().length} · Lotes: ${state.batches.length} · Estudios: ${state.studies.length} · Registros: ${state.interviews.length}`;
   box.append(h("p", { class: "notice", text: counts }));
   const ex = h("form", { id: "respaldo-export" });
   const pass = input({ type: "password", name: "pass", autocomplete: "new-password" });
@@ -1356,7 +1360,7 @@ function screenRespaldo() {
     const added = mergeBackup(state, data);
     await persist();
     ierr.textContent = ""; ipass.value = "";
-    say(`Importado: ${added.observations} fichas, ${added.batches} lotes, ${added.studies} estudios, ${added.interviews} registros.`, "Importado ✓");
+    say(`Importado: ${added.observations} fichas, ${added.mystery} mystery, ${added.batches} lotes, ${added.studies} estudios, ${added.interviews} registros.`, "Importado ✓");
     render();
   });
   box.append(ex, im);
@@ -1485,6 +1489,150 @@ function screenObsNueva(editId) {
   paint(box);
 }
 
+// ---- Mystery shopper (Guía 05 · FRUTA · Maas Chile, Figma 290:27) ----
+// Una ficha por escenario. Se guarda en state.mystery, aparte de las fichas de observación.
+const MS_ESCENARIOS = [
+  ["1", "Recargar en tótem", "Tiempo de espera y de uso · intentos · mensajes de error · si el tótem funcionaba"],
+  ["2", "Recargar en boletería", "Largo de la fila (personas) · tiempo total · medios de pago aceptados"],
+  ["3", "Recargar en almacén del barrio", "¿Había cartel? · ¿había sistema? · monto mínimo · comisión (si la hay) · tiempo"],
+  ["4", "Pagar con bip!, QR o tarjeta bancaria", "Tiempo en el validador · intentos · qué muestra la pantalla · si el conductor interviene"],
+  ["5", "Transbordo", "Tiempo de caminata · ¿cobró de nuevo? · señalética"],
+  ["6", "Saldo bajo o negativo", "Mensaje en el validador · qué pasa después · cómo recargas desde ahí"],
+  ["7", "Pedir información al personal", "Tiempo hasta la respuesta · si la respuesta fue clara · si te derivaron a otro lugar"],
+  ["8", "Corte de servicio", "Cómo te enteraste · señalética · tiempo extra · costo extra"],
+];
+const MS_MEDIOS = [["bip", "bip!"], ["qr", "QR"], ["tarjeta", "Tarjeta bancaria"], ["efectivo", "Efectivo"]];
+const MS_FIELDS = ["punto", "when", "escenario", "medio", "afluencia", "clima", "espera", "uso", "total", "intentos", "mensaje", "ayuda", "saldoIni", "saldoFin", "medir", "sentir", "pista"];
+
+function msList() {
+  if (!Array.isArray(state.mystery)) state.mystery = [];
+  return state.mystery;
+}
+
+function msCode(when) {
+  const d = when ? new Date(when) : new Date();
+  const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+  const prefix = `MS-${ymd}-`;
+  const n = msList().filter((m) => String(m.code || "").startsWith(prefix)).length + 1;
+  return `${prefix}${String(n).padStart(2, "0")}`;
+}
+
+function screenMsLista() {
+  head("Guía", "Mystery shopper", "Una ficha por escenario · solo en este teléfono");
+  const box = h("div");
+  box.append(h("p", { class: "notice", text: "Regla de oro: viajas como usuario real, pagas siempre el pasaje y no engañas ni perjudicas a nadie." }));
+  box.append(button("Crear ficha de mystery", { "data-go": "#/mystery/nueva", id: "ms-create" }));
+  box.append(fold("Escenarios", MS_ESCENARIOS.map(([n, name, medir]) => h("p", {}, [h("strong", { text: `${n} · ${name}: ` }), document.createTextNode(medir)]))));
+  box.append(fold("Ética", [ul([
+    "No grabes ni fotografíes a personas. No registres nombres de trabajadores ni de pasajeros.",
+    "No evadas nunca. Pagas siempre el pasaje.",
+    "No hagas reclamos ni evalúes al personal: evaluamos el sistema.",
+    "Si algo se vuelve incómodo o inseguro, lo abandonas y lo anotas.",
+  ])]));
+  const rows = msList();
+  if (!rows.length) box.append(h("p", { class: "notice", text: "Todavía no hay fichas de mystery." }));
+  for (const m of [...rows].reverse()) {
+    const esc = MS_ESCENARIOS.find(([n]) => n === m.escenario)?.[1] || "";
+    const medio = MS_MEDIOS.find(([v]) => v === m.medio)?.[1] || "";
+    box.append(h("article", { class: "card" }, [
+      h("h2", { text: m.code }),
+      h("p", { class: "meta", text: `${m.punto} · ${String(m.when || "").replace("T", " ")} · ${m.escenario}. ${esc}` }),
+      medio ? h("p", { text: `Medio de pago: ${medio}` }) : null,
+      m.total ? h("p", { text: `Tiempo total: ${m.total}` }) : null,
+      m.intentos || m.mensaje ? h("p", { text: `Intentos: ${m.intentos || "—"} · Mensaje: ${m.mensaje ? `«${m.mensaje}»` : "—"}` }) : null,
+      m.sentir ? h("p", { text: `Lo que sentí: ${m.sentir}` }) : null,
+      m.pista ? h("p", { text: `Pista para Maas: ${m.pista}` }) : null,
+      button("Editar ficha", { class: "secondary", "data-go": `#/mystery/nueva?id=${m.id}`, "aria-label": `Editar ficha ${m.code}` }),
+    ]));
+  }
+  paint(box);
+}
+
+function screenMsNueva(editId) {
+  const editing = editId ? msList().find((m) => m.id === editId) || null : null;
+  head("Guía", editing ? `Editar ${editing.code}` : "Nueva ficha de mystery", "Sin nombres ni rostros · montos y tiempos tal cual");
+  const box = h("form", { novalidate: true, id: "ms-form" });
+  const punto = input({ type: "text", name: "punto", required: true, placeholder: "Ej.: Unión Latinoamericana" });
+  const when = input({ type: "datetime-local", name: "when", required: true, value: nowLocal() });
+  const code = h("p", { class: "meta", id: "ms-code" });
+  const medir = h("p", { class: "notice", id: "ms-medir" });
+  const upd = () => {
+    code.textContent = `Código: ${editing ? editing.code : msCode(when.value)}`;
+    const sel = box.querySelector('[name="escenario"]:checked')?.value || "1";
+    medir.textContent = `Qué medir: ${MS_ESCENARIOS.find(([n]) => n === sel)[2]}`;
+  };
+  const area = (name, ph, req) => h("textarea", { name, rows: "3", placeholder: ph || null, required: req || null });
+  const txt = (name, ph, extra = {}) => input({ type: "text", name, placeholder: ph || null, ...extra });
+  box.append(
+    code,
+    field("Punto", punto),
+    field("Fecha y hora", when),
+    radios("escenario", MS_ESCENARIOS.map(([n, name]) => [n, `${n} · ${name}`]), "Escenario"),
+    medir,
+    radios("medio", MS_MEDIOS, "Medio de pago"),
+    radios("afluencia", [["media", "Media"], ["baja", "Baja"], ["alta", "Alta"]], "Afluencia"),
+    field("Clima", txt("clima", "Ej.: soleado, lluvia")),
+    field("Espera (min:s)", txt("espera", "Ej.: 2:30", { inputmode: "numeric" })),
+    field("Uso (min:s)", txt("uso", "Ej.: 0:45", { inputmode: "numeric" })),
+    field("Tiempo total (min:s)", txt("total", "Ej.: 3:15", { inputmode: "numeric" })),
+    field("N.º de intentos", input({ type: "number", name: "intentos", min: "0", inputmode: "numeric" })),
+    field("Mensaje literal del equipo", txt("mensaje", "Cópialo tal como sale")),
+    field("¿Pediste ayuda? ¿Quién te ayudó? (rol, no nombre)", txt("ayuda", "Ej.: cajera de boletería")),
+    field("Saldo inicial", txt("saldoIni", null, { inputmode: "numeric" })),
+    field("Saldo final", txt("saldoFin", null, { inputmode: "numeric" })),
+    field("Qué mediste (lo propio del escenario)", area("medir")),
+    field("Lo que sentí (una frase en primera persona)", area("sentir", null, true)),
+    field("Pista para Maas · ¿qué resolvería la app aquí?", area("pista")),
+  );
+  const err = h("p", { class: "error", role: "alert", id: "ms-error" });
+  punto.setAttribute("aria-describedby", "ms-error");
+  box.querySelector('[name="sentir"]').setAttribute("aria-describedby", "ms-error");
+  box.append(err, button(editing ? "Guardar cambios" : "Guardar ficha", { type: "submit", id: "ms-save" }));
+  const fillFrom = (pairs) => {
+    for (const [name, value] of pairs) {
+      for (const el of box.querySelectorAll(`[name="${name}"]`)) {
+        if (el.type === "radio") el.checked = el.value === value; else el.value = value ?? "";
+      }
+    }
+  };
+  if (editing) fillFrom(MS_FIELDS.map((k) => [k, editing[k] == null ? "" : String(editing[k])]));
+  else if (Array.isArray(state.msDraft)) fillFrom(state.msDraft);
+  upd();
+  box.addEventListener("change", upd);
+  when.addEventListener("input", upd);
+  const keep = () => { if (!editing) { state.msDraft = [...new FormData(box).entries()].map(([k, v]) => [k, String(v)]); persistSoon(); } };
+  box.addEventListener("input", keep);
+  box.addEventListener("change", keep);
+  box.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const d = new FormData(box);
+    const row = Object.fromEntries(MS_FIELDS.map((k) => [k, String(d.get(k) || "").trim()]));
+    const missing = [];
+    if (!row.punto) missing.push("el punto");
+    if (!row.sentir) missing.push("lo que sentiste");
+    punto.setAttribute("aria-invalid", row.punto ? "false" : "true");
+    box.querySelector('[name="sentir"]').setAttribute("aria-invalid", row.sentir ? "false" : "true");
+    if (missing.length) {
+      err.textContent = `Falta ${missing.join(" y ")}.\nCompleta el campo marcado para guardar.`;
+      box.querySelector(row.punto ? '[name="sentir"]' : '[name="punto"]').focus();
+      return;
+    }
+    if (!row.when) row.when = nowLocal();
+    if (editing) {
+      Object.assign(editing, row, { editedAt: Date.now() });
+      await persist();
+      say("Ficha actualizada.");
+    } else {
+      msList().push({ id: uid("ms"), code: msCode(row.when), ...row, savedAt: Date.now() });
+      state.msDraft = null;
+      await persist();
+      say("Ficha de mystery guardada en este teléfono.");
+    }
+    location.hash = "#/mystery";
+  });
+  paint(box);
+}
+
 async function render() {
   if (locked || !state) return;
   applyRetention();
@@ -1519,6 +1667,8 @@ async function render() {
   if (path === "/observacion") return screenObsLista();
   if (path === "/observacion/nueva") return screenObsNueva(params.get("id"));
   if (path === "/respaldo") return screenRespaldo();
+  if (path === "/mystery") return screenMsLista();
+  if (path === "/mystery/nueva") return screenMsNueva(params.get("id"));
   location.hash = "#/estudios";
 }
 
@@ -1537,6 +1687,8 @@ function goBack() {
     "/guia": "#/estudios",
     "/observacion": "#/guia",
     "/respaldo": "#/observacion",
+    "/mystery": "#/guia",
+    "/mystery/nueva": "#/mystery",
     "/observacion/nueva": "#/observacion",
   };
   location.hash = map[path] || "#/estudios";
