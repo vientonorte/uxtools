@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta name="robots" content="noindex">
+    <meta name="campo-build" content="9" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0d1b3d" />
+    <title>Teoría fundamentada · Campo</title>
+    <link rel="stylesheet" href="./gt.css?v=9" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Saltar al contenido</a>
+    <header class="top">
+      <a class="back" href="../#/estudios">‹ Volver a Campo</a>
+      <p class="eyebrow">Campo · análisis</p>
+      <h1>Teoría fundamentada</h1>
+      <p class="lead">Todo queda en este equipo. Nada se sube.</p>
+    </header>
+    <nav aria-label="Pasos del análisis" class="steps">
+      <a href="#datos">1. Datos</a>
+      <a href="#codigos">2. Códigos</a>
+      <a href="#axial">3. Categorías</a>
+      <a href="#nucleo">4. Núcleo y memos</a>
+      <a href="#calculos">5. Cálculos</a>
+      <a href="#graficos">6. Gráficos</a>
+    </nav>
+    <main id="main" tabindex="-1">
+      <section id="datos" aria-labelledby="h-datos">
+        <h2 id="h-datos">1. Datos</h2>
+        <p class="help">Carga la encuesta en CSV. Las columnas con datos personales se quitan antes de guardar.</p>
+        <label class="field"><span>Encuesta (CSV)</span><input type="file" id="f-csv" accept=".csv,text/csv" /></label>
+        <label class="field"><span>Fichas de campo (texto o Markdown)</span><input type="file" id="f-notes" accept=".txt,.md,text/plain,text/markdown" multiple /></label>
+        <div id="data-status" role="status"></div>
+        <div class="row">
+          <button type="button" id="b-export">Exportar análisis (JSON)</button>
+          <label class="btn-file">Importar análisis (JSON)<input type="file" id="f-import" accept=".json,application/json" class="sr-only" /></label>
+          <button type="button" id="b-preset" class="secondary">Cargar códigos FRUTA 29-oct</button>
+          <button type="button" id="b-clear" class="danger">Borrar datos de encuesta</button>
+        </div>
+      </section>
+      <section id="codigos" aria-labelledby="h-codigos">
+        <h2 id="h-codigos">2. Códigos abiertos</h2>
+        <form id="form-code" class="card">
+          <label class="field"><span>Código</span><input id="c-name" required /></label>
+          <label class="field"><span>Qué significa</span><input id="c-desc" /></label>
+          <label class="field"><span>Fuente: ID (R-001 o N-001)</span><input id="c-row" list="ids" /></label>
+          <datalist id="ids"></datalist>
+          <label class="field"><span>Fuente: campo</span><select id="c-field"></select></label>
+          <label class="field"><span>Fragmento</span><textarea id="c-excerpt" rows="2"></textarea></label>
+          <button type="submit">Agregar código</button>
+        </form>
+        <ul id="code-list" class="list"></ul>
+      </section>
+      <section id="axial" aria-labelledby="h-axial">
+        <h2 id="h-axial">3. Categorías axiales</h2>
+        <p class="help">Agrupa códigos. Anota condiciones, acciones y consecuencias.</p>
+        <form id="form-cat" class="card">
+          <label class="field"><span>Categoría</span><input id="k-name" required /></label>
+          <button type="submit">Agregar categoría</button>
+        </form>
+        <div id="cat-list"></div>
+      </section>
+      <section id="nucleo" aria-labelledby="h-nucleo">
+        <h2 id="h-nucleo">4. Categoría núcleo y memos</h2>
+        <label class="field"><span>Categoría núcleo</span><input id="core-name" /></label>
+        <label class="field"><span>Estado</span><input id="core-status" placeholder="candidata, saturada…" /></label>
+        <form id="form-memo" class="card">
+          <label class="field"><span>Título del memo</span><input id="m-title" required /></label>
+          <label class="field"><span>Memo</span><textarea id="m-text" rows="3"></textarea></label>
+          <button type="submit">Agregar memo</button>
+        </form>
+        <ul id="memo-list" class="list"></ul>
+      </section>
+      <section id="calculos" aria-labelledby="h-calc">
+        <h2 id="h-calc">5. Cálculos</h2>
+        <h3>Referencias FRUTA</h3>
+        <p class="help">Se recalculan con los datos cargados.</p>
+        <div id="refs" role="status"></div>
+        <h3>Segmento</h3>
+        <form id="form-seg" class="card">
+          <label class="field"><span>Campo</span><select id="s-field"></select></label>
+          <label class="field"><span>Condición</span>
+            <select id="s-op"><option value="contains">contiene</option><option value="eq">es igual a</option><option value="answered">respondió</option></select></label>
+          <label class="field"><span>Valor</span><input id="s-val" /></label>
+          <button type="submit">Agregar condición</button>
+        </form>
+        <ul id="seg-conds" class="list"></ul>
+        <p id="seg-out" role="status" class="result"></p>
+        <h3>Cruce</h3>
+        <form id="form-ct" class="card">
+          <label class="field"><span>Filas</span><select id="x-row"></select></label>
+          <label class="field"><span>Columnas</span><select id="x-col"></select></label>
+          <label class="check"><input type="checkbox" id="x-seg" /> Solo el segmento</label>
+          <button type="submit">Calcular cruce</button>
+        </form>
+        <div id="ct-out" class="scroll" tabindex="0" role="region" aria-label="Tabla de cruce"></div>
+        <button type="button" id="b-ct-csv" class="secondary" hidden>Exportar cruce (CSV)</button>
+      </section>
+      <section id="graficos" aria-labelledby="h-graf">
+        <h2 id="h-graf">6. Gráficos</h2>
+        <form id="form-chart" class="card">
+          <label class="field"><span>Campo</span><select id="g-field"></select></label>
+          <label class="check"><input type="checkbox" id="g-multi" /> Respuesta múltiple (separa por «;» u opciones)</label>
+          <label class="check"><input type="checkbox" id="g-seg" /> Solo el segmento</label>
+          <label class="field"><span>Título</span><input id="g-title" /></label>
+          <button type="submit">Dibujar</button>
+        </form>
+        <figure id="chart" hidden>
+          <div id="chart-svg"></div>
+          <figcaption>
+            <details><summary>Ver datos en tabla</summary><div id="chart-table" class="scroll"></div></details>
+          </figcaption>
+          <div class="row">
+            <button type="button" id="b-svg">Descargar SVG</button>
+            <button type="button" id="b-png">Descargar PNG</button>
+            <button type="button" id="b-csv">Descargar CSV</button>
+          </div>
+        </figure>
+      </section>
+    </main>
+    <p id="live" class="sr-only" aria-live="polite"></p>
+    <script src="./gt-core.js?v=9"></script>
+    <script src="./gt.js?v=9" type="module"></script>
+  </body>
+</html>
