@@ -69,14 +69,17 @@
   }
   function pad(n) { return ("00" + n).slice(-3); }
   /** Quita columnas con datos personales y asigna IDs R-001… Devuelve solo lo seguro. */
-  function sanitize(parsed) {
+  function sanitize(parsed, opts) {
+    var includeFree = !!(opts && opts.includeFreeText);
     var dropped = detectPII(parsed.headers, parsed.rows);
     var gone = {}; dropped.forEach(function (d) { gone[d.field] = 1; });
+    var freeText = parsed.headers.filter(function (h) { return !gone[h] && h !== "id" && isFreeText(parsed.rows, h); });
+    if (!includeFree) freeText.forEach(function (h) { gone[h] = 1; });
     var fields = parsed.headers.filter(function (h) { return !gone[h] && h !== "id"; });
     var records = parsed.rows.map(function (r, i) {
       var o = { id: "R-" + pad(i + 1) }; fields.forEach(function (f) { o[f] = r[f]; }); return o;
     });
-    return { fields: fields, dropped: dropped, records: records };
+    return { fields: fields, dropped: dropped, freeText: freeText, freeTextIncluded: includeFree, records: records };
   }
 
   // ── Segmentos y cruces ──
@@ -96,7 +99,10 @@
       case "eq": return v === String(c.value);
       case "in": return vals.indexOf(v) >= 0;
       case "notIn": return answered(v) && vals.indexOf(v) < 0;
-      case "contains": return vals.some(function (x) { return v.toLowerCase().indexOf(String(x).toLowerCase()) >= 0; });
+      // «incluye la opción»: compara opciones completas (multiselección «, » o «;»), nunca fragmentos.
+      case "contains": { var opts = parseMulti(v); return vals.some(function (x) { return opts.indexOf(String(x).trim()) >= 0; }); }
+      // Búsqueda de texto explícita (solo si se pide así en la UI).
+      case "textIncludes": return vals.some(function (x) { return v.toLowerCase().indexOf(String(x).toLowerCase()) >= 0; });
       default: return false;
     }
   }
@@ -110,13 +116,44 @@
     var n = filter(base, conditions).length;
     return { n: n, total: base.length, pct: pct(n, base.length) };
   }
+  /** Separa una respuesta de multiselección en opciones completas.
+      Separadores: «;» y «, » (Google Forms). No corta dentro de paréntesis:
+      «QR de la app de un banco (BancoEstado, Santander u otro)» queda entera. */
+  function parseMulti(v) {
+    var s = String(v == null ? "" : v), out = [], cur = "", depth = 0;
+    for (var i = 0; i < s.length; i++) {
+      var c = s[i];
+      if (c === "(") depth++;
+      else if (c === ")" && depth > 0) depth--;
+      if (depth === 0 && (c === ";" || (c === "," && s[i + 1] === " "))) { out.push(cur); cur = ""; continue; }
+      cur += c;
+    }
+    out.push(cur);
+    var seen = {};
+    return out.map(function (x) { return x.trim(); }).filter(function (x) { if (!x || seen[x]) return false; seen[x] = 1; return true; });
+  }
   function splitOptions(v, multi) {
     if (!answered(v)) return [];
     if (!multi) return [String(v)];
-    if (Array.isArray(multi)) return multi.filter(function (o) { return String(v).indexOf(o) >= 0; });
-    return String(v).split(/;\s*/).map(function (x) { return x.trim(); }).filter(Boolean);
+    var opts = parseMulti(v);
+    if (Array.isArray(multi)) return multi.filter(function (o) { return opts.indexOf(o) >= 0; });
+    return opts;
   }
-  /** Frecuencias de un campo. multi: false | true (separa por «;») | lista de opciones (busca cada una). */
+  /** Opciones distintas de un campo (para elegir valores exactos en la UI). */
+  function optionsOf(records, field, multi) {
+    var seen = {}, out = [];
+    records.forEach(function (r) { splitOptions(r[field], multi === undefined ? true : multi).forEach(function (o) { if (!seen[o]) { seen[o] = 1; out.push(o); } }); });
+    return out.sort();
+  }
+  /** Texto libre: muchas respuestas distintas y largas. Puede traer nombres. */
+  function isFreeText(records, field) {
+    var vals = records.map(function (r) { return r[field]; }).filter(answered);
+    if (vals.length < 3) return false;
+    var distinct = {}; var len = 0;
+    vals.forEach(function (v) { distinct[v] = 1; len += String(v).length; });
+    return Object.keys(distinct).length / vals.length >= 0.8 && len / vals.length >= 15;
+  }
+  /** Frecuencias. multi: false | true (opciones completas, «, » o «;») | lista de opciones exactas. % sobre quienes respondieron. */
   function frequencies(records, field, multi) {
     var base = records.filter(function (r) { return answered(r[field]); });
     var counts = {};
@@ -153,9 +190,9 @@
   var UNDER_55 = ["18 a 24", "25 a 30", "31 a 40", "41 a 55", "Menos de 18"];
   var REFERENCES = [
     { id: "A", label: "Paga con QR y tiene menos de 55", expected: { n: 17 },
-      conditions: [{ field: "con qué pagas", op: "contains", value: "QR" }, { field: "qué edad", op: "in", value: UNDER_55 }] },
+      conditions: [{ field: "con qué pagas", op: "contains", value: ["QR de la app Red", "QR de la app de un banco (BancoEstado, Santander u otro)"] }, { field: "qué edad", op: "in", value: UNDER_55 }] },
     { id: "B", label: "Bip! como medio principal", expected: { n: 9 },
-      conditions: [{ field: "con qué pagas", op: "contains", value: "bip" }] },
+      conditions: [{ field: "con qué pagas", op: "contains", value: "Tarjeta bip!" }] },
     { id: "S", label: "Le faltó saldo al validar (último mes)", expected: { n: 23, total: 37 }, baseField: "no te alcanzó el saldo",
       conditions: [{ field: "no te alcanzó el saldo", op: "in", value: ["1 o 2 veces", "3 o más veces"] }] }
   ];
@@ -191,7 +228,7 @@
   }
 
   var api = { parseCSV: parseCSV, toCSV: toCSV, detectPII: detectPII, redactText: redactText, valueHasPII: valueHasPII, sanitize: sanitize,
-    findField: findField, filter: filter, segment: segment, pct: pct, frequencies: frequencies, crosstab: crosstab, crosstabCSV: crosstabCSV,
+    findField: findField, filter: filter, segment: segment, pct: pct, frequencies: frequencies, parseMulti: parseMulti, optionsOf: optionsOf, isFreeText: isFreeText, crosstab: crosstab, crosstabCSV: crosstabCSV,
     REFERENCES: REFERENCES, runReference: runReference, barChartSVG: barChartSVG, esc: esc };
   root.GTCore = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

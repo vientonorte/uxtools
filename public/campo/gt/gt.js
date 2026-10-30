@@ -5,6 +5,7 @@ const $ = (id) => document.getElementById(id);
 const blank = () => ({ kind: "campo-gt", version: 1, fields: [], dropped: [], records: [], notes: [], codes: [], categories: [], core: { name: "", status: "" }, memos: [], segment: [] });
 let st = load();
 let lastCT = null, lastChart = null;
+let lastParsed = null; // CSV crudo solo en memoria (nunca en localStorage), para incluir texto libre si se pide
 
 function load() {
   try { return Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch { return blank(); }
@@ -33,11 +34,16 @@ const readText = (file) => new Promise((ok, ko) => { const r = new FileReader();
 // ── 1. Datos ──
 $("f-csv").addEventListener("change", async (e) => {
   const file = e.target.files[0]; if (!file) return;
-  const clean = G.sanitize(G.parseCSV(await readText(file)));
-  st.fields = clean.fields; st.dropped = clean.dropped; st.records = clean.records; st.segment = [];
+  lastParsed = G.parseCSV(await readText(file));
   e.target.value = "";
-  save(`Encuesta cargada: ${clean.records.length} respuestas. Quité ${clean.dropped.length} columnas.`); render();
+  applyClean(false);
 });
+function applyClean(includeFreeText) {
+  if (!lastParsed) return;
+  const clean = G.sanitize(lastParsed, { includeFreeText });
+  st.fields = clean.fields; st.dropped = clean.dropped; st.freeText = clean.freeText; st.freeTextIncluded = includeFreeText; st.records = clean.records; st.segment = [];
+  save(`Encuesta cargada: ${clean.records.length} respuestas. Quité ${clean.dropped.length} columnas con datos personales${includeFreeText ? "" : ` y ${clean.freeText.length} de texto libre`}.`); render();
+}
 $("f-notes").addEventListener("change", async (e) => {
   for (const file of e.target.files) {
     const id = "N-" + String(st.notes.length + 1).padStart(3, "0");
@@ -75,6 +81,14 @@ $("b-clear").addEventListener("click", () => {
 function renderData() {
   const box = $("data-status"); box.replaceChildren();
   box.append(h("p", { text: `${st.records.length} respuestas · ${st.fields.length} columnas · ${st.notes.length} fichas` }));
+  if ((st.freeText || []).length) {
+    box.append(h("div", { class: "warn", role: "note" }, [
+      h("p", { text: st.freeTextIncluded ? "Incluiste columnas de texto libre. Revisa que no tengan nombres:" : "Dejé fuera columnas de texto libre. Pueden traer nombres:" }),
+      h("ul", {}, st.freeText.map((f) => h("li", { text: f }))),
+      lastParsed ? h("label", { class: "check" }, [h("input", { type: "checkbox", id: "free-opt", checked: st.freeTextIncluded ? "" : false, onchange: (e) => applyClean(e.target.checked) }), "Incluir texto libre (revisé que no hay nombres)"])
+        : h("p", { class: "meta", text: "Para incluirlas, vuelve a cargar el CSV." })
+    ]));
+  }
   if (st.dropped.length) box.append(h("p", { text: "Columnas quitadas por datos personales:" }), h("ul", {}, st.dropped.map((d) => h("li", { text: `${d.field} (${d.why})` }))));
   $("ids").replaceChildren(...st.records.map((r) => h("option", { value: r.id })), ...st.notes.map((n) => h("option", { value: n.id })));
   for (const id of ["c-field", "s-field", "x-row", "x-col", "g-field"]) {
@@ -158,8 +172,14 @@ $("form-seg").addEventListener("submit", (e) => {
   st.segment.push({ field: $("s-field").value, op: $("s-op").value, value: $("s-val").value.trim() });
   $("s-val").value = ""; save(); renderSeg();
 });
+$("s-field").addEventListener("change", fillOptions);
+function fillOptions() {
+  const f = $("s-field").value;
+  $("s-opts").replaceChildren(...(f ? G.optionsOf(st.records, f, true) : []).map((o) => h("option", { value: o })));
+}
 function renderSeg() {
-  const ops = { contains: "contiene", eq: "es igual a", answered: "respondió", in: "es uno de", notIn: "no es" };
+  fillOptions();
+  const ops = { contains: "incluye la opción", textIncludes: "texto contiene", eq: "es igual a", answered: "respondió", in: "es uno de", notIn: "no es" };
   $("seg-conds").replaceChildren(...st.segment.map((c, i) => h("li", {}, [`${c.field} ${ops[c.op]} ${c.op === "answered" ? "" : `«${c.value}»`} `,
     h("button", { type: "button", class: "secondary", text: "Quitar", "aria-label": `Quitar condición ${i + 1}`, onclick: () => { st.segment.splice(i, 1); save(); renderSeg(); } })])));
   const r = G.segment(st.records, st.segment);

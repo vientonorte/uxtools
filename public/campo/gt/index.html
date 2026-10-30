@@ -81,8 +81,9 @@
         <form id="form-seg" class="card">
           <label class="field"><span>Campo</span><select id="s-field"></select></label>
           <label class="field"><span>Condición</span>
-            <select id="s-op"><option value="contains">contiene</option><option value="eq">es igual a</option><option value="answered">respondió</option></select></label>
-          <label class="field"><span>Valor</span><input id="s-val" /></label>
+            <select id="s-op"><option value="contains">incluye la opción</option><option value="eq">es igual a</option><option value="textIncludes">texto contiene</option><option value="answered">respondió</option></select></label>
+          <label class="field"><span>Valor</span><input id="s-val" list="s-opts" /></label>
+          <datalist id="s-opts"></datalist>
           <button type="submit">Agregar condición</button>
         </form>
         <ul id="seg-conds" class="list"></ul>
@@ -101,7 +102,7 @@
         <h2 id="h-graf">6. Gráficos</h2>
         <form id="form-chart" class="card">
           <label class="field"><span>Campo</span><select id="g-field"></select></label>
-          <label class="check"><input type="checkbox" id="g-multi" /> Respuesta múltiple (separa por «;» u opciones)</label>
+          <label class="check"><input type="checkbox" id="g-multi" /> Respuesta múltiple (cuenta cada opción)</label>
           <label class="check"><input type="checkbox" id="g-seg" /> Solo el segmento</label>
           <label class="field"><span>Título</span><input id="g-title" /></label>
           <button type="submit">Dibujar</button>

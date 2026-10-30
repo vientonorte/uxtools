@@ -1093,6 +1093,53 @@ test('GT: el preset no trae datos personales', function () {
   assert.strictEqual(d.kind, 'campo-gt-preset'); assert.ok(d.codes.length >= 20);
   assert.strictEqual(GT.valueHasPII(p), '');
 });
+test('GT multiselección: separa «, » y «;» sin romper opciones con coma interna', function () {
+  assert.strictEqual(JSON.stringify(GT.parseMulti('QR de la app Red, QR de la app de un banco (BancoEstado, Santander u otro); Tarjeta bip!')), JSON.stringify(['QR de la app Red', 'QR de la app de un banco (BancoEstado, Santander u otro)', 'Tarjeta bip!']));
+  assert.strictEqual(JSON.stringify(GT.parseMulti('Solo una')), JSON.stringify(['Solo una']));
+});
+test('GT multiselección: una opción que es subcadena de otra no cuenta de más', function () {
+  var recs = [{ p: 'Tarjeta' }, { p: 'Tarjeta bip!' }, { p: 'Tarjeta bip!, Tarjeta' }, { p: 'Otra' }];
+  assert.strictEqual(GT.segment(recs, [{ field: 'p', op: 'contains', value: 'Tarjeta' }]).n, 2);
+  assert.strictEqual(GT.segment(recs, [{ field: 'p', op: 'contains', value: 'Tarjeta bip!' }]).n, 2);
+  assert.strictEqual(GT.segment(recs, [{ field: 'p', op: 'contains', value: 'bip' }]).n, 0);
+  assert.strictEqual(GT.segment(recs, [{ field: 'p', op: 'textIncludes', value: 'bip' }]).n, 2);
+  var f = GT.frequencies(recs, 'p', ['Tarjeta']);
+  assert.strictEqual(JSON.stringify(f.map(function (x) { return x.n; })), JSON.stringify([2]));
+});
+test('GT multiselección: conteos por opción consistentes con la base n', function () {
+  var recs = [{ p: 'A, B' }, { p: 'B' }, { p: 'C; A' }, { p: '' }, { p: 'B, B' }];
+  var f = GT.frequencies(recs, 'p', true), byL = {};
+  f.forEach(function (x) { byL[x.label] = x; });
+  assert.strictEqual(byL.A.n, 2); assert.strictEqual(byL.B.n, 3); assert.strictEqual(byL.C.n, 1);
+  assert.strictEqual(byL.B.pct, 75); // base = 4 que respondieron; «B, B» cuenta una vez
+  f.forEach(function (x) { assert.ok(x.n <= 4); });
+  assert.strictEqual(JSON.stringify(GT.optionsOf(recs, 'p')), JSON.stringify(['A', 'B', 'C']));
+});
+test('GT texto libre: se excluye por defecto, se avisa y se incluye solo si se pide', function () {
+  var H = ['Edad', 'Cuéntanos tu experiencia'], rows = [];
+  for (var i = 0; i < 6; i++) rows.push([i % 2 ? '18 a 24' : '25 a 30', 'Relato ficticio número ' + i + ' sobre el viaje']);
+  var parsed = GT.parseCSV(GT.toCSV(H, rows));
+  var def = GT.sanitize(parsed);
+  assert.strictEqual(JSON.stringify(def.freeText), JSON.stringify(['Cuéntanos tu experiencia']));
+  assert.ok(def.fields.indexOf('Cuéntanos tu experiencia') < 0 && def.fields.indexOf('Edad') >= 0);
+  assert.strictEqual(def.freeTextIncluded, false);
+  var inc = GT.sanitize(parsed, { includeFreeText: true });
+  assert.ok(inc.fields.indexOf('Cuéntanos tu experiencia') >= 0);
+  assert.ok(!GT.isFreeText(def.records, 'Edad'));
+  var ui = fs.readFileSync(path.join(ROOT, 'public/campo/gt/gt.js'), 'utf8');
+  assert.ok(ui.includes('Pueden traer nombres') && ui.includes('id: "free-opt"'));
+});
+test('GT export: SVG válido y serializable para PNG (data URL)', function () {
+  var svg = GT.barChartSVG({ id: 'e', title: 'Pago', data: [{ label: 'Tarjeta bip!', n: 9, pct: 23.1 }, { label: 'QR & otro', n: 3, pct: 7.7 }] });
+  assert.ok(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(svg));
+  assert.ok(/viewBox="0 0 \d+ \d+"/.test(svg) && /width="\d+"/.test(svg) && /height="\d+"/.test(svg));
+  assert.ok(!/&(?!amp;|lt;|gt;|quot;|#\d+;|apos;)/.test(svg), 'entidades sin escapar');
+  assert.strictEqual((svg.match(/<rect/g) || []).length >= 2, true);
+  var uri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  assert.strictEqual(decodeURIComponent(uri.split(',')[1]), svg);
+  var csv = GT.toCSV(['opción', 'n'], [['QR de la app de un banco (BancoEstado, Santander u otro)', 8]]);
+  assert.strictEqual(GT.parseCSV(csv).rows[0]['opción'], 'QR de la app de un banco (BancoEstado, Santander u otro)');
+});
 test('Campo: link a Teoría fundamentada en la portada y BUILD en gt/', function () {
   var html = fs.readFileSync(path.join(ROOT, 'public/campo/index.html'), 'utf8');
   var gtHtml = fs.readFileSync(path.join(ROOT, 'public/campo/gt/index.html'), 'utf8');
