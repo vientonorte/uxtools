@@ -1,7 +1,7 @@
-import { GUIA } from "./guia-data.js?v=7";
+import { GUIA } from "./guia-data.js?v=8";
 // BUILD debe coincidir con <meta name="campo-build"> y con los ?v= de index.html.
 // Si no coinciden, Safari está mezclando archivos de dos versiones (caché de GitHub Pages, max-age=600).
-const BUILD = "7";
+const BUILD = "8";
 const STORE = "campo.etnografia.v1"; // la clave no cambia entre versiones: así una actualización nunca "pierde" el estudio
 const BACKUP = STORE + ".antes-de-migrar"; // copia cifrada previa a cada migración
 const SCHEMA = 4; // v4: agrega state.mystery (fichas de mystery shopper)
@@ -410,6 +410,7 @@ function showChrome(path) {
   const solo = ["/nuevo", "/consentimiento", "/entrevista"].includes(path);
   back.classList.toggle("hidden", path === "/estudios" || path === "/privacidad");
   privacy.classList.toggle("hidden", path !== "/estudios");
+  $("qr-counter")?.classList.toggle("hidden", path !== "/estudios");
   tabbar.classList.toggle("hidden", solo);
   for (const link of tabbar.querySelectorAll("a")) {
     const on = link.dataset.tab === TABS[path];
