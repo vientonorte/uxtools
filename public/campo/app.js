@@ -1,4 +1,4 @@
-import { GUIA } from "./guia-data.js?v=7";
+import { GUIA } from "./guia-data.js?v=8";
 // BUILD debe coincidir con <meta name="campo-build"> y con los ?v= de index.html.
 // Si no coinciden, Safari está mezclando archivos de dos versiones (caché de GitHub Pages, max-age=600).
 const BUILD = "8";
