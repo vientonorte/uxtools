@@ -289,3 +289,10 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
 .saved::before { content: "✓ "; color: var(--vn-primitive-success); }
 
 .update-bar { position: sticky; top: 0; z-index: 50; margin: 0; }
+
+/* Enlace al contador QR (cero datos: sin clave en la URL; el worker la pide) */
+.qr-counter { grid-column: 2; justify-self: end; display: inline-flex; align-items: center; min-height: var(--vn-touch-min); padding: 0 8px; color: var(--accent-text); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; border-radius: var(--vn-radius-sm); }
+.qr-counter:hover { background: rgba(13, 27, 61, 0.06); }
+.qr-counter:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+@media (max-width: 300px), (max-height: 420px) { .qr-counter { grid-column: 1; justify-self: start; } }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
