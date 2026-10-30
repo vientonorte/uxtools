@@ -11,7 +11,7 @@ function load() {
   try { return Object.assign(blank(), JSON.parse(localStorage.getItem(KEY) || "{}")); } catch { return blank(); }
 }
 function save(msg) {
-  try { localStorage.setItem(KEY, JSON.stringify(st)); } catch { say("No se pudo guardar: el almacenamiento está lleno."); return; }
+  try { localStorage.setItem(KEY, JSON.stringify(G.persistable(st))); } catch { say("No se pudo guardar: el almacenamiento está lleno."); return; }
   if (msg) say(msg);
 }
 function say(t) { $("live").textContent = ""; setTimeout(() => { $("live").textContent = t; }, 30); }
@@ -52,7 +52,7 @@ $("f-notes").addEventListener("change", async (e) => {
   e.target.value = "";
   save("Fichas cargadas. Quité correos, teléfonos y RUT del texto."); render();
 });
-$("b-export").addEventListener("click", () => download(`campo-gt-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(st, null, 1), "application/json"));
+$("b-export").addEventListener("click", () => download(`campo-gt-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(G.persistable(st), null, 1), "application/json"));
 $("f-import").addEventListener("change", async (e) => {
   const file = e.target.files[0]; if (!file) return;
   try {
@@ -83,7 +83,7 @@ function renderData() {
   box.append(h("p", { text: `${st.records.length} respuestas · ${st.fields.length} columnas · ${st.notes.length} fichas` }));
   if ((st.freeText || []).length) {
     box.append(h("div", { class: "warn", role: "note" }, [
-      h("p", { text: st.freeTextIncluded ? "Incluiste columnas de texto libre. Revisa que no tengan nombres:" : "Dejé fuera columnas de texto libre. Pueden traer nombres:" }),
+      h("p", { text: st.freeTextIncluded ? "Incluiste columnas de texto libre solo para esta sesión: no se guardan en el navegador ni salen en el JSON exportado. Revisa que no tengan nombres:" : "Dejé fuera columnas de texto libre. Pueden traer nombres:" }),
       h("ul", {}, st.freeText.map((f) => h("li", { text: f }))),
       lastParsed ? h("label", { class: "check" }, [h("input", { type: "checkbox", id: "free-opt", checked: st.freeTextIncluded ? "" : false, onchange: (e) => applyClean(e.target.checked) }), "Incluir texto libre (revisé que no hay nombres)"])
         : h("p", { class: "meta", text: "Para incluirlas, vuelve a cargar el CSV." })

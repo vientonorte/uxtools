@@ -1129,6 +1129,19 @@ test('GT texto libre: se excluye por defecto, se avisa y se incluye solo si se p
   var ui = fs.readFileSync(path.join(ROOT, 'public/campo/gt/gt.js'), 'utf8');
   assert.ok(ui.includes('Pueden traer nombres') && ui.includes('id: "free-opt"'));
 });
+test('GT texto libre: nunca se guarda ni se exporta (solo memoria)', function () {
+  var H = ['Edad', 'Cuéntanos tu experiencia'], rows = [];
+  for (var i = 0; i < 6; i++) rows.push(['18 a 24', 'Relato ficticio número ' + i + ' sobre el viaje']);
+  var inc = GT.sanitize(GT.parseCSV(GT.toCSV(H, rows)), { includeFreeText: true });
+  var st = { kind: 'campo-gt', fields: inc.fields, freeText: inc.freeText, freeTextIncluded: true, records: inc.records };
+  var out = JSON.stringify(GT.persistable(st));
+  assert.ok(!out.includes('Relato ficticio') && !/"Cuéntanos tu experiencia":/.test(out));
+  assert.ok(out.includes('18 a 24'));
+  assert.ok(st.records[0]['Cuéntanos tu experiencia'], 'en memoria sigue disponible');
+  var ui = fs.readFileSync(path.join(ROOT, 'public/campo/gt/gt.js'), 'utf8');
+  assert.ok(!/JSON\.stringify\(st[,)]/.test(ui), 'gt.js serializa st sin persistable()');
+  assert.ok(ui.includes('no se guardan en el navegador ni salen en el JSON'));
+});
 test('GT export: SVG válido y serializable para PNG (data URL)', function () {
   var svg = GT.barChartSVG({ id: 'e', title: 'Pago', data: [{ label: 'Tarjeta bip!', n: 9, pct: 23.1 }, { label: 'QR & otro', n: 3, pct: 7.7 }] });
   assert.ok(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(svg));

@@ -146,6 +146,15 @@
     return out.sort();
   }
   /** Texto libre: muchas respuestas distintas y largas. Puede traer nombres. */
+  /** Copia del estado apta para guardar/exportar: sin columnas de texto libre (solo viven en memoria). */
+  function persistable(state) {
+    var drop = {}; (state.freeTextIncluded ? state.freeText || [] : []).forEach(function (f) { drop[f] = 1; });
+    var out = {}; Object.keys(state).forEach(function (k) { out[k] = state[k]; });
+    out.fields = (state.fields || []).filter(function (f) { return !drop[f]; });
+    out.records = (state.records || []).map(function (r) { var o = {}; Object.keys(r).forEach(function (k) { if (!drop[k]) o[k] = r[k]; }); return o; });
+    out.freeTextIncluded = false;
+    return out;
+  }
   function isFreeText(records, field) {
     var vals = records.map(function (r) { return r[field]; }).filter(answered);
     if (vals.length < 3) return false;
@@ -228,7 +237,7 @@
   }
 
   var api = { parseCSV: parseCSV, toCSV: toCSV, detectPII: detectPII, redactText: redactText, valueHasPII: valueHasPII, sanitize: sanitize,
-    findField: findField, filter: filter, segment: segment, pct: pct, frequencies: frequencies, parseMulti: parseMulti, optionsOf: optionsOf, isFreeText: isFreeText, crosstab: crosstab, crosstabCSV: crosstabCSV,
+    findField: findField, filter: filter, segment: segment, pct: pct, frequencies: frequencies, parseMulti: parseMulti, optionsOf: optionsOf, isFreeText: isFreeText, persistable: persistable, crosstab: crosstab, crosstabCSV: crosstabCSV,
     REFERENCES: REFERENCES, runReference: runReference, barChartSVG: barChartSVG, esc: esc };
   root.GTCore = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
