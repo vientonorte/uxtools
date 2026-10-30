@@ -1019,6 +1019,150 @@ test('Campo: el respaldo incluye fichas y lotes', function () {
   assert.ok(campoSrc.includes('"Exportar fichas"'));
 });
 
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  CAMPO · TEORÍA FUNDAMENTADA (gt-core.js) · fixture FICTICIO   */
+/* ══════════════════════════════════════════════════════════════ */
+
+section('Campo · Teoría fundamentada (fixture ficticio, sin datos reales)');
+
+var gtCtx = {}; vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'public/campo/gt/gt-core.js'), 'utf8'), gtCtx);
+var GT = gtCtx.GTCore;
+
+/* Fixture inventado: 39 filas con la misma lógica de la encuesta (preguntas iguales, personas falsas).
+   Construido para que A = 17, B = 9 y saldo = 23/37. No viene de ninguna respuesta real. */
+function gtFixtureCSV() {
+  var H = ['Marca temporal', 'Nombre', 'Correo', '¿Qué edad tienes?', '¿Con qué pagas la mayoría de tus viajes en micro o Metro?',
+    'En el último mes, ¿te pasó que al validar no te alcanzó el saldo?', 'Comentario'];
+  var ages = ['18 a 24', '25 a 30', '31 a 40', '41 a 55'];
+  var rows = [];
+  for (var i = 0; i < 39; i++) {
+    var pay = i < 9 ? 'QR de la app Red' : i < 17 ? 'QR de la app de un banco (BancoEstado, Santander u otro)'
+      : i < 26 ? 'Tarjeta bip!' : i < 36 ? 'TNE o tarjeta de adulto mayor' : i === 36 ? 'Tarjeta del banco sin contacto' : '';
+    var age = i === 30 ? '56 a 65' : ages[i % 4];
+    var sal = i >= 37 ? '' : i < 19 ? '1 o 2 veces' : i < 23 ? '3 o más veces' : i < 35 ? 'No' : 'No recuerdo';
+    var com = i === 5 ? 'escríbeme a persona.falsa@ejemplo.cl' : 'texto ficticio ' + i;
+    rows.push(['2026-10-01 10:' + (10 + i), 'Persona Ficticia ' + i, 'falsa' + i + '@ejemplo.cl', age, pay, sal, com]);
+  }
+  rows.push(['2026-10-01 11:00', '', '', '56 a 65', 'QR de la app Red', '', 'texto ficticio fuera']); // QR pero 56+: no entra en A
+  return GT.toCSV(H, rows);
+}
+var gtClean = GT.sanitize(GT.parseCSV(gtFixtureCSV()));
+
+test('GT: parseCSV respeta comillas con comas', function () {
+  var p = GT.parseCSV('a,b\n"x, y",2\n');
+  assert.strictEqual(p.rows[0].a, 'x, y'); assert.strictEqual(p.rows[0].b, '2');
+});
+test('GT: quita columnas con datos personales y lo informa', function () {
+  var gone = gtClean.dropped.map(function (d) { return d.field; });
+  ['Marca temporal', 'Nombre', 'Correo', 'Comentario'].forEach(function (f) { assert.ok(gone.indexOf(f) >= 0, f + ' no se quitó'); });
+  assert.ok(gtClean.fields.indexOf('Nombre') < 0);
+  assert.ok(!JSON.stringify(gtClean.records).includes('@'));
+  assert.ok(!JSON.stringify(gtClean.records).includes('Ficticia'));
+});
+test('GT: IDs con código R-001…', function () {
+  assert.strictEqual(gtClean.records[0].id, 'R-001'); assert.strictEqual(gtClean.records[39].id, 'R-040');
+});
+test('GT: redactText quita correo, teléfono y RUT', function () {
+  var t = GT.redactText('a@b.cl +56 9 1234 5678 12.345.678-9 ok');
+  assert.ok(!/@|5678|345/.test(t)); assert.ok(t.includes('ok'));
+});
+test('GT: referencias A=17, B=9, saldo 23/37 en el fixture', function () {
+  var r = GT.REFERENCES.map(function (ref) { return GT.runReference(gtClean.records, gtClean.fields, ref); });
+  assert.strictEqual(r[0].n, 17); assert.ok(r[0].matches);
+  assert.strictEqual(r[1].n, 9); assert.ok(r[1].matches);
+  assert.strictEqual(r[2].n, 23); assert.strictEqual(r[2].total, 37); assert.strictEqual(r[2].pct, 62.2); assert.ok(r[2].matches);
+});
+test('GT: segmento y cruce son reproducibles y suman la base', function () {
+  var pay = GT.findField(gtClean.fields, 'con qué pagas'), age = GT.findField(gtClean.fields, 'edad');
+  var a = GT.crosstab(gtClean.records, pay, age), b = GT.crosstab(gtClean.records, pay, age);
+  assert.strictEqual(JSON.stringify(a), JSON.stringify(b));
+  var sum = a.rows.reduce(function (s, r) { return s + r.total; }, 0);
+  assert.strictEqual(sum, a.total); assert.strictEqual(a.total, 38);
+  assert.ok(GT.crosstabCSV(a).split('\n').length === a.rows.length + 1);
+  var f = GT.frequencies(gtClean.records, pay, false);
+  assert.strictEqual(f.reduce(function (s, x) { return s + x.n; }, 0), 38);
+});
+test('GT: gráfico SVG con title, desc y role=img', function () {
+  var svg = GT.barChartSVG({ id: 'x', title: 'Medio <de> pago', data: [{ label: 'A', n: 2, pct: 50 }] });
+  assert.ok(/role="img"/.test(svg) && /<title id="x-t">Medio &lt;de&gt; pago<\/title>/.test(svg) && /<desc id="x-d">A: 2 \(50%\)<\/desc>/.test(svg));
+});
+test('GT: el preset no trae datos personales', function () {
+  var p = fs.readFileSync(path.join(ROOT, 'public/campo/gt/preset-fruta-29oct.json'), 'utf8');
+  var d = JSON.parse(p);
+  assert.strictEqual(d.kind, 'campo-gt-preset'); assert.ok(d.codes.length >= 20);
+  assert.strictEqual(GT.valueHasPII(p), '');
+});
+test('GT multiselección: separa «, » y «;» sin romper opciones con coma interna', function () {
+  assert.strictEqual(JSON.stringify(GT.parseMulti('QR de la app Red, QR de la app de un banco (BancoEstado, Santander u otro); Tarjeta bip!')), JSON.stringify(['QR de la app Red', 'QR de la app de un banco (BancoEstado, Santander u otro)', 'Tarjeta bip!']));
+  assert.strictEqual(JSON.stringify(GT.parseMulti('Solo una')), JSON.stringify(['Solo una']));
+});
+test('GT multiselección: una opción que es subcadena de otra no cuenta de más', function () {
+  var recs = [{ p: 'Tarjeta' }, { p: 'Tarjeta bip!' }, { p: 'Tarjeta bip!, Tarjeta' }, { p: 'Otra' }];
+  assert.strictEqual(GT.segment(recs, [{ field: 'p', op: 'contains', value: 'Tarjeta' }]).n, 2);
+  assert.strictEqual(GT.segment(recs, [{ field: 'p', op: 'contains', value: 'Tarjeta bip!' }]).n, 2);
+  assert.strictEqual(GT.segment(recs, [{ field: 'p', op: 'contains', value: 'bip' }]).n, 0);
+  assert.strictEqual(GT.segment(recs, [{ field: 'p', op: 'textIncludes', value: 'bip' }]).n, 2);
+  var f = GT.frequencies(recs, 'p', ['Tarjeta']);
+  assert.strictEqual(JSON.stringify(f.map(function (x) { return x.n; })), JSON.stringify([2]));
+});
+test('GT multiselección: conteos por opción consistentes con la base n', function () {
+  var recs = [{ p: 'A, B' }, { p: 'B' }, { p: 'C; A' }, { p: '' }, { p: 'B, B' }];
+  var f = GT.frequencies(recs, 'p', true), byL = {};
+  f.forEach(function (x) { byL[x.label] = x; });
+  assert.strictEqual(byL.A.n, 2); assert.strictEqual(byL.B.n, 3); assert.strictEqual(byL.C.n, 1);
+  assert.strictEqual(byL.B.pct, 75); // base = 4 que respondieron; «B, B» cuenta una vez
+  f.forEach(function (x) { assert.ok(x.n <= 4); });
+  assert.strictEqual(JSON.stringify(GT.optionsOf(recs, 'p')), JSON.stringify(['A', 'B', 'C']));
+});
+test('GT texto libre: se excluye por defecto, se avisa y se incluye solo si se pide', function () {
+  var H = ['Edad', 'Cuéntanos tu experiencia'], rows = [];
+  for (var i = 0; i < 6; i++) rows.push([i % 2 ? '18 a 24' : '25 a 30', 'Relato ficticio número ' + i + ' sobre el viaje']);
+  var parsed = GT.parseCSV(GT.toCSV(H, rows));
+  var def = GT.sanitize(parsed);
+  assert.strictEqual(JSON.stringify(def.freeText), JSON.stringify(['Cuéntanos tu experiencia']));
+  assert.ok(def.fields.indexOf('Cuéntanos tu experiencia') < 0 && def.fields.indexOf('Edad') >= 0);
+  assert.strictEqual(def.freeTextIncluded, false);
+  var inc = GT.sanitize(parsed, { includeFreeText: true });
+  assert.ok(inc.fields.indexOf('Cuéntanos tu experiencia') >= 0);
+  assert.ok(!GT.isFreeText(def.records, 'Edad'));
+  var ui = fs.readFileSync(path.join(ROOT, 'public/campo/gt/gt.js'), 'utf8');
+  assert.ok(ui.includes('Pueden traer nombres') && ui.includes('id: "free-opt"'));
+});
+test('GT texto libre: nunca se guarda ni se exporta (solo memoria)', function () {
+  var H = ['Edad', 'Cuéntanos tu experiencia'], rows = [];
+  for (var i = 0; i < 6; i++) rows.push(['18 a 24', 'Relato ficticio número ' + i + ' sobre el viaje']);
+  var inc = GT.sanitize(GT.parseCSV(GT.toCSV(H, rows)), { includeFreeText: true });
+  var st = { kind: 'campo-gt', fields: inc.fields, freeText: inc.freeText, freeTextIncluded: true, records: inc.records };
+  var out = JSON.stringify(GT.persistable(st));
+  assert.ok(!out.includes('Relato ficticio') && !/"Cuéntanos tu experiencia":/.test(out));
+  assert.ok(out.includes('18 a 24'));
+  assert.ok(st.records[0]['Cuéntanos tu experiencia'], 'en memoria sigue disponible');
+  var ui = fs.readFileSync(path.join(ROOT, 'public/campo/gt/gt.js'), 'utf8');
+  assert.ok(!/JSON\.stringify\(st[,)]/.test(ui), 'gt.js serializa st sin persistable()');
+  assert.ok(ui.includes('no se guardan en el navegador ni salen en el JSON'));
+});
+test('GT export: SVG válido y serializable para PNG (data URL)', function () {
+  var svg = GT.barChartSVG({ id: 'e', title: 'Pago', data: [{ label: 'Tarjeta bip!', n: 9, pct: 23.1 }, { label: 'QR & otro', n: 3, pct: 7.7 }] });
+  assert.ok(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/.test(svg));
+  assert.ok(/viewBox="0 0 \d+ \d+"/.test(svg) && /width="\d+"/.test(svg) && /height="\d+"/.test(svg));
+  assert.ok(!/&(?!amp;|lt;|gt;|quot;|#\d+;|apos;)/.test(svg), 'entidades sin escapar');
+  assert.strictEqual((svg.match(/<rect/g) || []).length >= 2, true);
+  var uri = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  assert.strictEqual(decodeURIComponent(uri.split(',')[1]), svg);
+  var csv = GT.toCSV(['opción', 'n'], [['QR de la app de un banco (BancoEstado, Santander u otro)', 8]]);
+  assert.strictEqual(GT.parseCSV(csv).rows[0]['opción'], 'QR de la app de un banco (BancoEstado, Santander u otro)');
+});
+test('Campo: link a Teoría fundamentada en la portada y BUILD en gt/', function () {
+  var html = fs.readFileSync(path.join(ROOT, 'public/campo/index.html'), 'utf8');
+  var gtHtml = fs.readFileSync(path.join(ROOT, 'public/campo/gt/index.html'), 'utf8');
+  var build = (campoSrc.match(/const BUILD = "([^"]+)"/) || [])[1];
+  assert.ok(html.includes('href="./gt/"'));
+  assert.ok(gtHtml.includes('<meta name="campo-build" content="' + build + '"'));
+  (gtHtml.match(/\?v=([^"']+)/g) || []).forEach(function (v) { assert.strictEqual(v, '?v=' + build); });
+  assert.ok(/<main\b/.test(gtHtml) && /class="skip"/.test(gtHtml) && /lang="es"/.test(gtHtml));
+});
+
 /* ══════════════════════════════════════════════════════════════ */
 /*  RESULT SUMMARY                                               */
 /* ══════════════════════════════════════════════════════════════ */

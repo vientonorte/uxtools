@@ -34,7 +34,7 @@ jobs:
         run: node scripts/validate-static.cjs
 
       - name: Run unit tests
-        run: node tests/unit.js || true
+        run: node tests/unit.cjs
 
   deploy:
     needs: validate

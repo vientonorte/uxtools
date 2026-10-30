@@ -296,3 +296,5 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
 .qr-counter:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 @media (max-width: 300px), (max-height: 420px) { .qr-counter { grid-column: 1; justify-self: start; } }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* Enlace a Teoría fundamentada (módulo local ./gt/, sin red) */
+#gt-link { grid-column: 1 / -1; justify-self: start; }
