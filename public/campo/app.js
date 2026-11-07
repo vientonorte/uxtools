@@ -1,10 +1,11 @@
-import { GUIA } from "./guia-data.js?v=9";
+import { GUIA } from "./guia-data.js?v=10";
+import { MS, TEMPLATES, flattenPreguntas, templateById } from "./templates.js?v=10";
 // BUILD debe coincidir con <meta name="campo-build"> y con los ?v= de index.html.
 // Si no coinciden, Safari está mezclando archivos de dos versiones (caché de GitHub Pages, max-age=600).
-const BUILD = "9";
+const BUILD = "10";
 const STORE = "campo.etnografia.v1"; // la clave no cambia entre versiones: así una actualización nunca "pierde" el estudio
 const BACKUP = STORE + ".antes-de-migrar"; // copia cifrada previa a cada migración
-const SCHEMA = 4; // v4: agrega state.mystery (fichas de mystery shopper)
+const SCHEMA = 5; // v5: plantillas por instrumento. Solo agrega campos. No toca el cifrado.
 const TABS = {
   "/estudios": "estudios",
   "/nuevo": "estudios",
@@ -23,22 +24,6 @@ const TABS = {
   "/mystery/nueva": "guia",
 };
 
-const SEGMENTS = [
-  ["jovenes", "Jóvenes · Estudio", 3],
-  ["familias", "Familias · Alguien a cargo", 3],
-  ["rutinarios", "Rutinarios · Horario fijo", 2],
-  ["distribuida", "Distribuida · Varios destinos", 2],
-];
-
-const TEMPLATE = [
-  { block: "Apertura", text: "¿Cómo llegaste hoy hasta aquí?" },
-  { block: "Apertura", text: "¿Recargas tu tarjeta? ¿Dónde?" },
-  { block: "Apertura", text: "¿Por qué ahí?" },
-  { block: "Clasificador", text: "¿Con qué frecuencia viajas?" },
-  { block: "Segmento", text: "¿Qué cambia cuando viajas con alguien a cargo?" },
-  { block: "Cierre", text: "Agradecer y explicar el límite de uso de datos." },
-];
-
 // Texto visible del bloque. El id interno (block) se guarda igual.
 const BLOCK_LABEL = {
   Clasificador: "Para ubicar el perfil",
@@ -46,8 +31,6 @@ const BLOCK_LABEL = {
 function blockLabel(block) {
   return BLOCK_LABEL[block] || block;
 }
-
-const TAGS = ["#recarga", "#espera", "#cuidado", "#transbordo"];
 
 let state = null;
 let key = null; // { aes: CryptoKey, salt: Uint8Array } solo en memoria
@@ -66,12 +49,22 @@ function uid(prefix) {
 }
 
 function segments(quotas = [3, 3, 2, 2], done = [0, 0, 0, 0]) {
-  return SEGMENTS.map(([id, label, fallback], i) => ({
-    id,
-    label,
-    quota: quotas[i] ?? fallback,
+  return templateById("guion-v3").segmentos.map((s, i) => ({
+    id: s.id,
+    label: s.label,
+    quota: quotas[i] ?? s.cupo,
     done: done[i] ?? 0,
   }));
+}
+
+function tagsFor(study) {
+  if (Array.isArray(study?.tags) && study.tags.length) return study.tags;
+  return templateById("guion-v3")?.tags || [];
+}
+
+function esGuion(study) {
+  const id = study?.instrumento;
+  return id == null || id === "" || id === "guion";
 }
 
 function seed() {
@@ -114,6 +107,24 @@ function migrate(st) {
     row.consent = { participate: false, audio: false, photos: false, cloud: false, ...(row.consent || {}) };
   }
   if (st.draft === undefined) st.draft = null;
+  // v5: los estudios ya guardados siguen siendo el guion v3. Solo se completan campos nuevos.
+  // No reescribe preguntas, segmentos, textos ni el sobre cifrado.
+  if (from < 5) {
+    const legacyTags = ["#recarga", "#espera", "#cuidado", "#transbordo"];
+    for (const study of st.studies) {
+      if (!study || typeof study !== "object") continue;
+      if (study.instrumento == null) study.instrumento = "guion";
+      if (study.templateId == null) study.templateId = "guion-v3";
+      if (study.templateVersion == null) study.templateVersion = 3;
+      if (study.estilo == null) study.estilo = "vn";
+      if (!Array.isArray(study.tags)) study.tags = legacyTags.slice();
+      if (!Array.isArray(study.ficha)) study.ficha = [];
+    }
+    if (st.studyDraft && typeof st.studyDraft === "object") {
+      if (st.studyDraft.instrumento == null) st.studyDraft.instrumento = "guion";
+      if (st.studyDraft.templateId == null) st.studyDraft.templateId = "guion-v3";
+    }
+  }
   if (from < 3) dropDemo(st);
   st.schema = SCHEMA;
   return { state: st, from, changed: true };
@@ -510,8 +521,10 @@ function screenEstudios() {
   }
   for (const study of state.studies) {
     const t = tally(study);
+    const instrumentoNombre = esGuion(study) ? "" : (templateById(study.templateId)?.nombre || study.instrumento || "");
     const card = h("article", { class: "card" }, [
       h("h2", { text: study.name }),
+      instrumentoNombre && instrumentoNombre !== study.name ? h("p", { class: "meta", text: instrumentoNombre }) : null,
       h("p", { text: `${t.done} de ${t.quota} entrevistas` }),
     ]);
     card.append(button("Abrir estudio", { "data-go": `#/preparar?study=${study.id}` }));
@@ -525,17 +538,33 @@ function screenEstudios() {
   paint(box);
 }
 
+function hintFor(id) {
+  if (id === "guion-v3") return "Versión v3. Carga preguntas para abrir la entrevista, ubicar el perfil, seguir el tipo de viaje y cerrar. Sin datos personales.";
+  const tpl = templateById(id);
+  return tpl ? `${tpl.objetivo} Duración: ${tpl.duracion}.` : "";
+}
+
 function screenNuevo() {
   head("", "Nuevo estudio", "Define guion, segmentos y cupos");
-  if (!state.studyDraft) state.studyDraft = { name: "", questions: [], segments: segments([3, 3, 2, 2]) };
+  if (!state.studyDraft) {
+    state.studyDraft = { name: "", templateId: "guion-v3", instrumento: "guion", questions: [], segments: segments([3, 3, 2, 2]) };
+  }
   const draft = state.studyDraft;
+  if (!draft.templateId) draft.templateId = "guion-v3";
   const box = h("div");
   const name = input({ type: "text", value: draft.name, "aria-label": "Nombre del estudio", placeholder: "Ej.: Paraderos Línea 5" });
   box.append(field("Nombre del estudio", name));
-  const plant = h("section", { class: "card" }, [
+  const instrumento = h("select", { id: "instrumento", "aria-describedby": "template-hint" }, TEMPLATES.map((tpl) => h("option", {
+    value: tpl.id,
+    text: tpl.nombre,
+    selected: tpl.id === draft.templateId ? true : null,
+  })));
+  const hint = h("p", { id: "template-hint", class: "meta", text: hintFor(draft.templateId) });
+  const plant = h("section", { class: "card tpl" }, [
     h("h2", { text: "Partir desde plantilla" }),
+    field("Instrumento", instrumento),
     button("Usar preguntas sugeridas", { id: "use-template", "aria-describedby": "template-hint" }),
-    h("p", { id: "template-hint", class: "meta", text: "Versión v3. Carga preguntas para abrir la entrevista, ubicar el perfil, seguir el tipo de viaje y cerrar. Sin datos personales." }),
+    hint,
   ]);
   box.append(plant);
   const list = h("div", { id: "q-list" });
@@ -558,16 +587,15 @@ function screenNuevo() {
     draft.questions.forEach((q, index) => {
       const label = blockLabel(q.block);
       const text = input({ type: "text", value: q.text, "data-q": String(index), "aria-label": label });
-      const row = h("div", { class: "card q" }, [
-        h("p", { class: "meta", text: label }),
-        text,
-        h("div", { class: "row" }, [
-          button("Subir", { class: "secondary", "data-up": String(index) }),
-          button("Bajar", { class: "secondary", "data-down": String(index) }),
-          button("Eliminar", { class: "secondary", "data-del": String(index) }),
-        ]),
-      ]);
-      list.append(row);
+      const kids = [h("p", { class: "meta", text: label }), text];
+      if (q.tipo && q.tipo !== "abierta") kids.push(h("p", { class: "meta q-opciones", text: `Tipo: ${q.tipo}` }));
+      if (Array.isArray(q.opciones) && q.opciones.length) kids.push(h("p", { class: "meta q-opciones", text: q.opciones.join(" · ") }));
+      kids.push(h("div", { class: "row" }, [
+        button("Subir", { class: "secondary", "data-up": String(index) }),
+        button("Bajar", { class: "secondary", "data-down": String(index) }),
+        button("Eliminar", { class: "secondary", "data-del": String(index) }),
+      ]));
+      list.append(h("div", { class: "card q" }, kids));
     });
   }
   function drawSegs() {
@@ -583,12 +611,38 @@ function screenNuevo() {
       ]));
     }
   }
+  function paintHint(id) {
+    hint.textContent = hintFor(id);
+  }
+  function applyTemplate(id) {
+    const tpl = templateById(id) || templateById("guion-v3");
+    draft.templateId = tpl.id;
+    draft.instrumento = tpl.instrumento;
+    draft.templateVersion = tpl.version;
+    draft.objetivo = tpl.objetivo;
+    draft.duracion = tpl.duracion;
+    draft.estilo = tpl.estilo;
+    draft.tags = tpl.tags.slice();
+    draft.ficha = tpl.ficha.map((f) => ({ campo: f.campo, tipo: f.tipo }));
+    draft.questions = flattenPreguntas(tpl).map((q) => ({ id: uid("q"), ...q }));
+    draft.segments = tpl.segmentos.map((s) => ({ id: s.id, label: s.label, quota: s.cupo, done: 0 }));
+    instrumento.value = tpl.id;
+    paintHint(tpl.id);
+    drawQuestions();
+    drawSegs();
+    persistSoon();
+  }
+  paintHint(draft.templateId);
+  instrumento.addEventListener("change", () => {
+    applyTemplate(instrumento.value);
+    const templateToast = "Plantilla cargada. Guarda para crear el estudio.";
+    say(templateToast, templateToast);
+  });
   box.addEventListener("click", (event) => {
     const t = event.target;
     if (!(t instanceof HTMLElement)) return;
     if (t.id === "use-template") {
-      draft.questions = TEMPLATE.map((q, i) => ({ id: uid("q"), ...q }));
-      drawQuestions();
+      applyTemplate(instrumento.value);
       const templateToast = "Plantilla cargada. Guarda para crear el estudio.";
       say(templateToast, templateToast);
     }
@@ -604,12 +658,21 @@ function screenNuevo() {
       drawSegs();
     }
     if (t.id === "save-study") {
+      const tpl = templateById(draft.templateId || "guion-v3");
       const created = {
         id: uid("s"),
         name: name.value.trim() || "Estudio sin nombre",
         scriptReady: draft.questions.length > 0,
+        instrumento: draft.instrumento || tpl?.instrumento || "guion",
+        templateId: draft.templateId || tpl?.id || "guion-v3",
+        templateVersion: draft.templateVersion || tpl?.version || 3,
+        objetivo: draft.objetivo || tpl?.objetivo || "",
+        duracion: draft.duracion || tpl?.duracion || "",
+        estilo: draft.estilo || tpl?.estilo || "vn",
+        tags: Array.isArray(draft.tags) ? draft.tags.slice() : (tpl?.tags || []).slice(),
+        ficha: Array.isArray(draft.ficha) ? draft.ficha.map((f) => ({ ...f })) : (tpl?.ficha || []).map((f) => ({ ...f })),
         segments: draft.segments.map((s) => ({ ...s, done: 0 })),
-        questions: draft.questions.map((q) => ({ ...q, text: q.text })),
+        questions: draft.questions.map((q) => ({ ...q, text: q.text, opciones: Array.isArray(q.opciones) ? q.opciones.slice() : undefined })),
       };
       state.studies.unshift(created);
       state.studyDraft = null;
@@ -638,21 +701,34 @@ function screenNuevo() {
   paint(box);
 }
 
+function subtituloGuion(study) {
+  if (esGuion(study)) return study.scriptReady ? "Guion v3 · Apertura → Segmento → Cierre" : "Este estudio todavía no tiene guion";
+  const tpl = templateById(study.templateId);
+  const nombre = tpl?.nombre || "Instrumento";
+  const dur = study.duracion || tpl?.duracion || "";
+  return dur ? `${nombre} · ${dur}` : nombre;
+}
+
 function screenPreparar(study) {
   state.activeStudyId = study.id;
-  head(study.name, "Preparar guion", study.scriptReady ? "Guion v3 · Apertura → Segmento → Cierre" : "Este estudio todavía no tiene guion");
+  head(study.name, "Preparar guion", subtituloGuion(study));
   const box = h("div");
   const blocks = new Map();
   for (const q of study.questions) {
     if (!blocks.has(q.block)) blocks.set(q.block, []);
     blocks.get(q.block).push(q);
   }
-  if (!blocks.size) box.append(h("p", { class: "notice", text: "Este estudio no tiene preguntas.\nCrea un estudio nuevo con la plantilla guion v3." }));
+  if (!blocks.size) {
+    box.append(h("p", { class: "notice", text: esGuion(study)
+      ? "Este estudio no tiene preguntas.\nCrea un estudio nuevo con la plantilla guion v3."
+      : "Este estudio no tiene preguntas.\nElige un instrumento en Nuevo estudio." }));
+  }
   for (const [block, items] of blocks) {
-    const card = h("section", { class: "card" }, [h("h2", { text: block })]);
+    const card = h("section", { class: "card tpl" }, [h("h2", { text: block })]);
     items.forEach((q, i) => {
       const label = block === "Apertura" ? `P${i + 1} · ${q.text}` : q.text;
       card.append(h("p", { text: label }));
+      if (Array.isArray(q.opciones) && q.opciones.length) card.append(h("p", { class: "meta q-opciones", text: q.opciones.join(" · ") }));
     });
     box.append(card);
   }
@@ -662,7 +738,7 @@ function screenPreparar(study) {
   box.append(chips);
   const cupos = study.segments.map((s) => `${s.label.split(" · ")[0]} ${s.done}/${s.quota}`).join(" · ");
   box.append(h("section", { class: "card" }, [h("h2", { text: "Cupos del lote" }), h("p", { text: cupos })]));
-  box.append(h("p", { text: "Cierre: agradecer y explicar el límite de uso de datos." }));
+  if (esGuion(study)) box.append(h("p", { text: "Cierre: agradecer y explicar el límite de uso de datos." }));
   box.append(button("Guion listo", { "data-go": `#/lotes?study=${study.id}`, id: "script-ready" }));
   box.addEventListener("click", (event) => {
     const t = event.target;
@@ -848,7 +924,7 @@ function screenEntrevista(draft, study) {
       ...draft.photos.map((p) => h("p", { text: `Foto: ${p.name}${kb(p.bytes)}` })),
     );
     notes.replaceChildren(...draft.notes.map((n) => h("p", { text: `${n.t} · ${n.text}` })));
-    tags.replaceChildren(...TAGS.map((tag) => button(tag, {
+    tags.replaceChildren(...tagsFor(study).map((tag) => button(tag, {
       class: "chip",
       "data-tag": tag,
       "aria-pressed": draft.tags.includes(tag) ? "true" : "false",
@@ -1526,32 +1602,16 @@ function screenObsNueva(editId) {
 
 // ---- Mystery shopper (Guía 05 · FRUTA · Maas Chile, Figma 290:27) ----
 // Una ficha por escenario. Se guarda en state.mystery, aparte de las fichas de observación.
-const MS_ESCENARIOS = [
-  ["1", "Recargar en tótem", "Tiempo de espera y de uso · intentos · mensajes de error · si el tótem funcionaba"],
-  ["2", "Recargar en boletería", "Largo de la fila (personas) · tiempo total · medios de pago aceptados"],
-  ["3", "Recargar en almacén del barrio", "¿Había cartel? · ¿había sistema? · monto mínimo · comisión (si la hay) · tiempo"],
-  ["4", "Pagar con bip!, QR o tarjeta bancaria", "Tiempo en el validador · intentos · qué muestra la pantalla · si el conductor interviene"],
-  ["5", "Transbordo", "Tiempo de caminata · ¿cobró de nuevo? · señalética"],
-  ["6", "Saldo bajo o negativo", "Mensaje en el validador · qué pasa después · cómo recargas desde ahí"],
-  ["7", "Pedir información al personal", "Tiempo hasta la respuesta · si la respuesta fue clara · si te derivaron a otro lugar"],
-  ["8", "Corte de servicio", "Cómo te enteraste · señalética · tiempo extra · costo extra"],
-];
-const MS_MEDIOS = [["bip", "bip!"], ["qr", "QR"], ["tarjeta", "Tarjeta bancaria"], ["efectivo", "Efectivo"]];
-const MS_TEXT = ["punto", "puntoOtro", "obs", "when", "escenario", "medio", "afluencia", "clima", "intentos", "mensaje", "ayuda", "medir", "sentir", "pista", "studyId", "salida", "foto"];
-const MS_NUM = { espera: "min", uso: "min", saldoIni: "clp", saldoFin: "clp" };
-const MS_FIELDS = [...MS_TEXT, ...Object.keys(MS_NUM)];
+// Listas de mystery: una sola fuente en templates.js (MS).
 // P0 QA 29-oct: «Punto» usa códigos de lugar. Fuentes: deck Proceso «Dónde se reparten los QR» (12 puntos),
 // points.json del afiche (MAT y códigos nuevos por lugar real CMO…IRZ) y PLAN-OBS-CONTEXTUAL 28-oct (PEN, NOS).
-const MS_PUNTOS = [
-  ["GEN", "General (sin punto)"], ["LLE", "Los Leones (L1/L6)"], ["UCA", "Universidad Católica (L1)"],
-  ["UCH", "Universidad de Chile (L1/L3)"], ["LHE", "Los Héroes (L1/L2)"], ["ECE", "Estación Central (L1 + Tren Nos)"],
-  ["BAQ", "Baquedano (L1/L5)"], ["ULA", "Unión Latinoamericana (L1)"], ["LRE", "Las Rejas (L1)"],
-  ["PAJ", "Pajaritos (L1 + paradero)"], ["SPA", "San Pablo (L1/L5)"], ["PMA", "Plaza de Maipú (L5)"],
-  ["MAT", "Av. Matta, control de pago (L3)"], ["PEN", "Peñalolén Alto, paraderos"], ["NOS", "Estación Tren Nos, San Bernardo"],
-  ["CMO", "Compañía de Jesús con Morandé"], ["PZA", "Plaza de Armas"], ["PBU", "Parque Bustamante"],
-  ["BEA", "Bellas Artes"], ["SIS", "Santa Isabel"], ["IRZ", "Irarrázaval"],
-];
-const MS_SALIDAS = [["MS-1", "MS-1 · Jue 30-oct · escenarios 1, 2, 7"], ["MS-2", "MS-2 · Mar 4-nov · escenarios 4, 5, 6"], ["MS-3", "MS-3 · Jue 6-nov · escenarios 3, 6"], ["MS-4", "MS-4 · Si hay corte anunciado · escenario 8"]];
+const MS_ESCENARIOS = MS.escenarios;
+const MS_MEDIOS = MS.medios;
+const MS_TEXT = MS.texto;
+const MS_NUM = MS.numeros;
+const MS_FIELDS = MS.campos;
+const MS_PUNTOS = MS.puntos;
+const MS_SALIDAS = MS.salidas;
 
 // Minutos como número: «2:30» → 2.5, «3» → 3, «1,5» → 1.5. null si no se puede.
 function parseMin(v) {
@@ -1628,15 +1688,10 @@ function clp(n) {
 function screenMsLista() {
   head("Guía", "Mystery shopper", "Una ficha por escenario · solo en este teléfono");
   const box = h("div");
-  box.append(h("p", { class: "notice", text: "Regla de oro: viajas como usuario real, pagas siempre el pasaje y no engañas ni perjudicas a nadie." }));
+  box.append(h("p", { class: "notice", text: MS.regla }));
   box.append(button("Crear ficha de mystery", { "data-go": "#/mystery/nueva", id: "ms-create" }));
   box.append(fold("Escenarios", MS_ESCENARIOS.map(([n, name, medir]) => h("p", {}, [h("strong", { text: `${n} · ${name}: ` }), document.createTextNode(medir)]))));
-  box.append(fold("Ética", [ul([
-    "No grabes ni fotografíes a personas. No registres nombres de trabajadores ni de pasajeros.",
-    "No evadas nunca. Pagas siempre el pasaje.",
-    "No hagas reclamos ni evalúes al personal: evaluamos el sistema.",
-    "Si algo se vuelve incómodo o inseguro, lo abandonas y lo anotas.",
-  ])]));
+  box.append(fold("Ética", [ul(MS.etica)]));
   const rows = msList();
   if (!rows.length) box.append(h("p", { class: "notice", text: "Todavía no hay fichas de mystery." }));
   for (const m of [...rows].reverse()) {
@@ -2035,7 +2090,7 @@ function checkBuild() {
   ]);
   document.body.prepend(bar);
   $("update-now").addEventListener("click", async () => {
-    try { await Promise.all(["./", "./index.html", `./app.js?v=${BUILD}`, `./app.css?v=${BUILD}`, `./guia-data.js?v=${BUILD}`].map((u) => fetch(u, { cache: "reload" }))); } catch {}
+    try { await Promise.all(["./", "./index.html", `./app.js?v=${BUILD}`, `./app.css?v=${BUILD}`, `./guia-data.js?v=${BUILD}`, `./templates.js?v=${BUILD}`].map((u) => fetch(u, { cache: "reload" }))); } catch {}
     location.reload();
   });
   return false;

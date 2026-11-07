@@ -986,12 +986,15 @@ test('Campo migra sin borrar: datos de esquema 1 quedan completos', function () 
 
 test('Campo: BUILD de app.js = meta campo-build = ?v= de todos los archivos (sin versiones mezcladas en caché)', function () {
   var html = fs.readFileSync(path.join(ROOT, 'public/campo/index.html'), 'utf8');
+  var guia = fs.readFileSync(path.join(ROOT, 'public/campo/guia-data.js'), 'utf8');
   var build = (campoSrc.match(/const BUILD = "([^"]+)"/) || [])[1];
   assert.ok(build, 'falta BUILD');
   assert.ok(html.includes('<meta name="campo-build" content="' + build + '"'), 'meta campo-build distinto');
   assert.ok(html.includes('./app.js?v=' + build), 'app.js sin ?v=');
   assert.ok(html.includes('./app.css?v=' + build), 'app.css sin ?v=');
   assert.ok(campoSrc.includes('./guia-data.js?v=' + build), 'guia-data.js sin ?v=');
+  assert.ok(campoSrc.includes('./templates.js?v=' + build), 'templates.js sin ?v=');
+  assert.ok(guia.includes('./templates.js?v=' + build), 'reexport de guía sin ?v=');
 });
 
 test('Campo: el aviso de versión nueva no toca localStorage', function () {
@@ -1017,6 +1020,179 @@ test('Campo: el respaldo incluye fichas y lotes', function () {
   assert.ok(/BACKUP_KINDS = \["studies", "interviews", "batches", "observations", "mystery"\]/.test(campoSrc));
   assert.ok(/batches: state\.batches\.filter/.test(campoSrc), 'Evidencias sin lotes');
   assert.ok(campoSrc.includes('"Exportar fichas"'));
+});
+
+test('Campo: esquema 5 y el cifrado no cambia de mecánica', function () {
+  assert.strictEqual((campoSrc.match(/const SCHEMA = (\d+)/) || [])[1], '5');
+  assert.ok(/const STORE = "campo\.etnografia\.v1"/.test(campoSrc));
+  assert.ok(/const ITER = 600000/.test(campoSrc));
+  assert.ok(/encryptWithKey\(state, key\)/.test(campoSrc));
+  assert.ok(!/localStorage\.(removeItem|clear)\s*\(/.test(campoSrc));
+  var mig = campoSrc.slice(campoSrc.indexOf('if (from < 5)'), campoSrc.indexOf('if (from < 3) dropDemo'));
+  assert.ok(mig.length > 40, 'falta el bloque v5');
+  assert.ok(!/localStorage|encrypt|crypto|questions\s*=|segments\s*=/.test(mig));
+});
+
+test('Campo migra de esquema 4 a 5 sin borrar datos ni reescribir el guion', function () {
+  var start = campoSrc.indexOf('const SETTINGS_DEFAULT');
+  var end = campoSrc.indexOf('// v3: quita');
+  var ctx = {};
+  vm.runInNewContext(
+    'const SCHEMA=5;function dropDemo(st){ st.__demo = true; }function segments(){return [];}' +
+    campoSrc.slice(start, end) + ';this.migrate=migrate;',
+    ctx
+  );
+  var viejo = {
+    schema: 4,
+    settings: { retentionDays: 15, encrypt: true, autoDelete: false, lockOnLeave: true, cloudEnabled: false },
+    activeStudyId: 's1',
+    studies: [
+      {
+        id: 's1', name: 'Mi estudio', scriptReady: true, notaLibre: 'no borrar',
+        segments: [{ id: 'jovenes', label: 'Jóvenes · Estudio', quota: 3, done: 1 }],
+        questions: [{ id: 'q1', block: 'Apertura', text: '¿Cómo llegaste hoy hasta aquí?' }]
+      },
+      {
+        id: 's2', name: 'Ya con instrumento', instrumento: 'entrevista-guerrilla', templateId: 'entrevista-guerrilla',
+        templateVersion: 1, estilo: 'vn', tags: ['#lugar'], ficha: [{ campo: 'lugar', tipo: 'texto' }],
+        segments: [{ id: 'de-paso', label: 'De paso', quota: 4, done: 0 }],
+        questions: [{ id: 'q9', block: 'Preguntas', text: '¿Qué viniste a hacer hoy aquí?' }]
+      }
+    ],
+    interviews: [{
+      id: 'e1', code: 'P1', studyId: 's1', pregunta: '¿Cómo llegaste hoy hasta aquí?',
+      notes: [{ t: '00:10', text: 'nota-secreta' }], tags: ['#recarga'], audio: [], photos: [], videos: [],
+      consent: { participate: true, audio: true, photos: false, cloud: false }
+    }],
+    batches: [{ id: 'l1', studyId: 's1', name: 'Hoy' }],
+    observations: [{ id: 'o1', code: 'OBS-01-01-ABC-1', vi: 'vi-local' }],
+    mystery: [{ id: 'm1', code: 'MS-20261101-01', espera: '2:30', punto: 'PAJ', sentir: 'apurado' }],
+    studyDraft: { name: 'Borrador', questions: [{ text: 'hola' }] },
+    extra: 'futuro'
+  };
+  var res = ctx.migrate(viejo);
+  assert.strictEqual(res.changed, true);
+  assert.strictEqual(res.from, 4);
+  assert.strictEqual(res.state.schema, 5);
+  assert.strictEqual(res.state.__demo, undefined);
+  assert.strictEqual(res.state.settings.retentionDays, 15);
+  assert.strictEqual(res.state.settings.encrypt, true);
+  assert.strictEqual(res.state.extra, 'futuro');
+  assert.strictEqual(res.state.activeStudyId, 's1');
+  assert.strictEqual(res.state.studies[0].name, 'Mi estudio');
+  assert.strictEqual(res.state.studies[0].notaLibre, 'no borrar');
+  assert.strictEqual(res.state.studies[0].questions[0].text, '¿Cómo llegaste hoy hasta aquí?');
+  assert.strictEqual(res.state.studies[0].questions[0].block, 'Apertura');
+  assert.strictEqual(res.state.studies[0].segments[0].done, 1);
+  assert.strictEqual(res.state.studies[0].segments[0].quota, 3);
+  assert.strictEqual(res.state.studies[0].instrumento, 'guion');
+  assert.strictEqual(res.state.studies[0].templateId, 'guion-v3');
+  assert.strictEqual(res.state.studies[0].templateVersion, 3);
+  assert.strictEqual(res.state.studies[0].estilo, 'vn');
+  assert.strictEqual(JSON.stringify(res.state.studies[0].tags), JSON.stringify(['#recarga', '#espera', '#cuidado', '#transbordo']));
+  assert.ok(Array.isArray(res.state.studies[0].ficha));
+  assert.strictEqual(res.state.studies[1].instrumento, 'entrevista-guerrilla');
+  assert.strictEqual(JSON.stringify(res.state.studies[1].tags), JSON.stringify(['#lugar']));
+  assert.strictEqual(res.state.studies[1].questions[0].text, '¿Qué viniste a hacer hoy aquí?');
+  assert.strictEqual(res.state.interviews[0].notes[0].text, 'nota-secreta');
+  assert.strictEqual(res.state.interviews[0].consent.audio, true);
+  assert.strictEqual(res.state.interviews[0].pregunta, '¿Cómo llegaste hoy hasta aquí?');
+  assert.strictEqual(res.state.observations[0].vi, 'vi-local');
+  assert.strictEqual(res.state.mystery[0].espera, '2:30');
+  assert.strictEqual(res.state.mystery[0].punto, 'PAJ');
+  assert.strictEqual(res.state.batches[0].name, 'Hoy');
+  assert.strictEqual(res.state.studyDraft.name, 'Borrador');
+  assert.strictEqual(res.state.studyDraft.questions[0].text, 'hola');
+  assert.strictEqual(res.state.studyDraft.templateId, 'guion-v3');
+  var otra = ctx.migrate(res.state);
+  assert.strictEqual(otra.changed, false);
+  assert.strictEqual(otra.state.schema, 5);
+  assert.strictEqual(otra.state.studies[0].questions[0].text, '¿Cómo llegaste hoy hasta aquí?');
+});
+
+function loadCampoTemplates() {
+  var src = fs.readFileSync(path.join(ROOT, 'public/campo/templates.js'), 'utf8').replace(/^export /gm, '');
+  var ctx = {};
+  vm.runInNewContext(src + '\nthis.api={TEMPLATES:TEMPLATES,GUIA:GUIA,MS:MS,validateTemplate:validateTemplate,templateById:templateById,flattenPreguntas:flattenPreguntas,TIPOS:TIPOS};', ctx);
+  return ctx.api;
+}
+
+test('Campo: cada plantilla carga con el esquema común', function () {
+  var api = loadCampoTemplates();
+  var ids = JSON.parse(JSON.stringify(api.TEMPLATES.map(function (t) { return t.id; })));
+  assert.deepStrictEqual(ids, [
+    'guion-v3', 'observacion-v3', 'mystery-shopper',
+    'entrevista-guerrilla', 'entrevista-experto', 'encuesta-perfil', 'diario-uso', 'triada-pares'
+  ]);
+  api.TEMPLATES.forEach(function (tpl) {
+    var errors = api.validateTemplate(tpl);
+    assert.strictEqual(JSON.stringify(errors), '[]', tpl.id + ': ' + errors.join(', '));
+    assert.strictEqual(tpl.estilo, 'vn');
+    assert.strictEqual(api.templateById(tpl.id), tpl);
+    assert.ok(api.flattenPreguntas(tpl).length >= 1, tpl.id + ' sin preguntas');
+    assert.ok(api.TIPOS.indexOf('abierta') >= 0);
+  });
+  assert.ok(api.validateTemplate({ id: 'rota' }).length > 0);
+});
+
+test('Campo: el guion v3, la observación y mystery salen de las plantillas', function () {
+  var api = loadCampoTemplates();
+  var guion = api.flattenPreguntas(api.templateById('guion-v3'));
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(guion.map(function (q) { return [q.block, q.text]; }))), [
+    ['Apertura', '¿Cómo llegaste hoy hasta aquí?'],
+    ['Apertura', '¿Recargas tu tarjeta? ¿Dónde?'],
+    ['Apertura', '¿Por qué ahí?'],
+    ['Clasificador', '¿Con qué frecuencia viajas?'],
+    ['Segmento', '¿Qué cambia cuando viajas con alguien a cargo?'],
+    ['Cierre', 'Agradecer y explicar el límite de uso de datos.']
+  ]);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(api.templateById('guion-v3').segmentos.map(function (s) { return [s.id, s.label, s.cupo]; }))), [
+    ['jovenes', 'Jóvenes · Estudio', 3],
+    ['familias', 'Familias · Alguien a cargo', 3],
+    ['rutinarios', 'Rutinarios · Horario fijo', 2],
+    ['distribuida', 'Distribuida · Varios destinos', 2]
+  ]);
+  assert.strictEqual(api.GUIA.title, 'Guía de observación v3 · FRUTA · Maas Chile');
+  assert.strictEqual(api.templateById('observacion-v3').objetivo, api.GUIA.objetivo);
+  assert.strictEqual(api.MS.escenarios.length, 8);
+  assert.strictEqual(api.MS.puntos[9][0], 'PAJ');
+  assert.ok(api.MS.campos.indexOf('espera') >= 0 && api.MS.campos.indexOf('sentir') >= 0);
+  assert.ok(!/const TEMPLATE = \[/.test(campoSrc));
+  assert.ok(!/const SEGMENTS = \[/.test(campoSrc));
+  assert.ok(!campoSrc.includes('Recargar en tótem'));
+  assert.ok(fs.readFileSync(path.join(ROOT, 'public/campo/templates.js'), 'utf8').includes('Recargar en tótem'));
+  var guiaFile = fs.readFileSync(path.join(ROOT, 'public/campo/guia-data.js'), 'utf8');
+  assert.ok(!guiaFile.includes('Maas Chile'));
+  assert.ok(guiaFile.includes('templates.js?v='));
+});
+
+test('Campo: las cinco plantillas genéricas cargan y no nombran el estudio anterior', function () {
+  var api = loadCampoTemplates();
+  var banned = /FRUTA|Maas|Rö|Rodrigo|Pajaritos|bip!|Peñalolén|Baquedano/;
+  var guerrilla = api.templateById('entrevista-guerrilla');
+  var abiertas = api.flattenPreguntas(guerrilla).filter(function (q) { return q.tipo === 'abierta'; });
+  assert.ok(abiertas.length >= 3 && abiertas.length <= 5);
+  assert.ok(guerrilla.ficha.some(function (f) { return f.campo === 'lugar'; }));
+  assert.ok(/5/.test(guerrilla.duracion) && /10/.test(guerrilla.duracion));
+  var experto = api.templateById('entrevista-experto');
+  assert.ok(experto.bloques.some(function (b) { return b.titulo === 'Perfil'; }));
+  assert.ok(experto.bloques.length >= 2);
+  var perfil = api.templateById('encuesta-perfil');
+  var primera = perfil.bloques[0].preguntas.find(function (p) { return p.tipo === 'opcion'; });
+  assert.strictEqual(JSON.stringify(primera.opciones), JSON.stringify(perfil.segmentos.map(function (s) { return s.label; })));
+  var diario = api.templateById('diario-uso');
+  var tiposDiario = api.flattenPreguntas(diario).map(function (q) { return q.tipo; });
+  assert.ok(tiposDiario.indexOf('foto') >= 0 && tiposDiario.indexOf('tag') >= 0);
+  assert.strictEqual(diario.n_meta, 7);
+  assert.ok(/7/.test(diario.duracion));
+  var triada = api.templateById('triada-pares');
+  assert.strictEqual(triada.segmentos.length, 3);
+  assert.ok(triada.bloques.some(function (b) { return b.titulo === 'Dinámica'; }));
+  [guerrilla, experto, perfil, diario, triada].forEach(function (tpl) {
+    var blob = JSON.stringify(tpl);
+    assert.ok(!banned.test(blob), tpl.id + ' trae un nombre del estudio anterior');
+    assert.strictEqual(JSON.stringify(api.validateTemplate(tpl)), '[]');
+  });
 });
 
 /* ══════════════════════════════════════════════════════════════ */
