@@ -1,7 +1,7 @@
-import { GUIA } from "./guia-data.js?v=8";
+import { GUIA } from "./guia-data.js?v=9";
 // BUILD debe coincidir con <meta name="campo-build"> y con los ?v= de index.html.
 // Si no coinciden, Safari está mezclando archivos de dos versiones (caché de GitHub Pages, max-age=600).
-const BUILD = "8";
+const BUILD = "9";
 const STORE = "campo.etnografia.v1"; // la clave no cambia entre versiones: así una actualización nunca "pierde" el estudio
 const BACKUP = STORE + ".antes-de-migrar"; // copia cifrada previa a cada migración
 const SCHEMA = 4; // v4: agrega state.mystery (fichas de mystery shopper)
@@ -38,6 +38,14 @@ const TEMPLATE = [
   { block: "Segmento", text: "¿Qué cambia cuando viajas con alguien a cargo?" },
   { block: "Cierre", text: "Agradecer y explicar el límite de uso de datos." },
 ];
+
+// Texto visible del bloque. El id interno (block) se guarda igual.
+const BLOCK_LABEL = {
+  Clasificador: "Para ubicar el perfil",
+};
+function blockLabel(block) {
+  return BLOCK_LABEL[block] || block;
+}
 
 const TAGS = ["#recarga", "#espera", "#cuidado", "#transbordo"];
 
@@ -487,7 +495,19 @@ function screenEstudios() {
   const box = h("div");
   const warning = retentionWarning();
   if (warning) box.append(warning);
-  if (!state.studies.length) box.append(h("p", { class: "notice", id: "no-studies", text: "Todav\u00eda no tienes estudios.\nCrea uno para empezar." }));
+  if (!state.studies.length) {
+    box.append(h("section", { class: "notice", id: "no-studies", "aria-labelledby": "no-studies-title" }, [
+      h("h2", { id: "no-studies-title", text: "Todavía no tienes estudios." }),
+      h("p", { text: "Aquí preparas el guion y haces entrevistas en terreno." }),
+      h("p", { text: "Los registros quedan cifrados en este dispositivo." }),
+      h("ol", { "aria-label": "Recorrido" }, [
+        h("li", { text: "Crea el estudio" }),
+        h("li", { text: "Prepara el guion" }),
+        h("li", { text: "Entrevista y guarda" }),
+      ]),
+    ]));
+    box.append(button("Crear mi primer estudio", { "data-go": "#/nuevo", id: "create-first-study" }));
+  }
   for (const study of state.studies) {
     const t = tally(study);
     const card = h("article", { class: "card" }, [
@@ -497,7 +517,7 @@ function screenEstudios() {
     card.append(button("Abrir estudio", { "data-go": `#/preparar?study=${study.id}` }));
     box.append(card);
   }
-  box.append(button("Crear estudio", { "data-go": "#/nuevo" }));
+  if (state.studies.length) box.append(button("Crear estudio", { "data-go": "#/nuevo" }));
   box.append(h("p", { class: "notice", text: "Sin sincronización en la nube. Respaldo: exportación manual." }));
   if (state.settings.autoDelete) {
     box.append(h("p", { class: "notice", text: "Borrado autom\u00e1tico activo.\nTe avisamos aqu\u00ed 72 h antes de borrar." }));
@@ -514,13 +534,19 @@ function screenNuevo() {
   box.append(field("Nombre del estudio", name));
   const plant = h("section", { class: "card" }, [
     h("h2", { text: "Partir desde plantilla" }),
-    button("Usar plantilla guion v3", { id: "use-template" }),
-    h("p", { text: "Carga Apertura (P1–P3, 2b), Clasificador, 4 segmentos y Cierre. Sin datos personales." }),
+    button("Usar preguntas sugeridas", { id: "use-template", "aria-describedby": "template-hint" }),
+    h("p", { id: "template-hint", class: "meta", text: "Versión v3. Carga preguntas para abrir la entrevista, ubicar el perfil, seguir el tipo de viaje y cerrar. Sin datos personales." }),
   ]);
   box.append(plant);
   const list = h("div", { id: "q-list" });
   const segs = h("div", { id: "seg-list" });
-  box.append(h("h2", { text: "Segmentos y cupos" }), segs, h("h2", { text: "Preguntas" }), list);
+  box.append(
+    h("h2", { id: "seg-heading", text: "Segmentos y cupos" }),
+    h("p", { id: "seg-hint", class: "meta", text: "Un segmento es un tipo de persona. El cupo es cuántas entrevistas quieres de ese tipo." }),
+    segs,
+    h("h2", { text: "Preguntas" }),
+    list,
+  );
   box.append(button("Guardar estudio", { id: "save-study" }));
 
   function drawQuestions() {
@@ -530,9 +556,10 @@ function screenNuevo() {
       return;
     }
     draft.questions.forEach((q, index) => {
-      const text = input({ type: "text", value: q.text, "data-q": String(index) });
+      const label = blockLabel(q.block);
+      const text = input({ type: "text", value: q.text, "data-q": String(index), "aria-label": label });
       const row = h("div", { class: "card q" }, [
-        h("p", { class: "meta", text: q.block }),
+        h("p", { class: "meta", text: label }),
         text,
         h("div", { class: "row" }, [
           button("Subir", { class: "secondary", "data-up": String(index) }),
@@ -562,7 +589,8 @@ function screenNuevo() {
     if (t.id === "use-template") {
       draft.questions = TEMPLATE.map((q, i) => ({ id: uid("q"), ...q }));
       drawQuestions();
-      say("Plantilla guion v3 cargada");
+      const templateToast = "Plantilla cargada. Guarda para crear el estudio.";
+      say(templateToast, templateToast);
     }
     if (t.dataset.up) move(Number(t.dataset.up), -1);
     if (t.dataset.down) move(Number(t.dataset.down), 1);
