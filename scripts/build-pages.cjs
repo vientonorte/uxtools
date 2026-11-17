@@ -36,6 +36,9 @@ function copyDir(srcDir, destDir) {
   });
 }
 
+console.log('Building Pulso asset...');
+execSync('node scripts/build-pulso.mjs', { cwd: ROOT, stdio: 'inherit' });
+
 console.log('Building React app (app.html)...');
 execSync('npm run build', { cwd: ROOT, stdio: 'inherit' });
 

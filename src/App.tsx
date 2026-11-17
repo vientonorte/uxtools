@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { Component, lazy, Suspense, type ReactNode } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Nav } from './components/Nav';
 import { Footer } from './components/Footer';
@@ -24,6 +24,28 @@ function PageFallback() {
       <p role="status">Cargando…</p>
     </main>
   );
+}
+
+class MedicinalBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <main id="main" tabIndex={-1}>
+          <p role="alert">No se pudo abrir esta herramienta.</p>
+          <button type="button" className="route-fallback__reload" onClick={() => window.location.reload()}>
+            Recargar
+          </button>
+        </main>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 export default function App() {
@@ -64,9 +86,11 @@ export default function App() {
         <Route
           path="/medicinal"
           element={
-            <Suspense fallback={<PageFallback />}>
-              <Medicinal />
-            </Suspense>
+            <MedicinalBoundary>
+              <Suspense fallback={<PageFallback />}>
+                <Medicinal />
+              </Suspense>
+            </MedicinalBoundary>
           }
         />
         <Route

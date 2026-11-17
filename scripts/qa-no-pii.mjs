@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Gate de privacidad. Tokeniza dist (minúsculas, sin marcas, palabras
-// [a-z0-9]+, bigramas y trigramas de palabras vecinas) y falla si el hash
-// está en la lista. La lista no guarda el texto en claro.
-// También hashea secuencias de dígitos con aspecto de teléfono.
+// [a-z0-9]+, bigramas y trigramas) y falla si el hash está en la lista.
+// La lista no guarda el texto en claro. También cubre dígitos de teléfono
+// (con y sin prefijo de país) y literales fromCharCode / arrays numéricos.
 // Uso: node scripts/qa-no-pii.mjs [dist]
 //      node scripts/qa-no-pii.mjs --self-test
 import { createHash } from 'node:crypto';
@@ -22,9 +22,19 @@ export const DENY_HASHES = [
   '7718a2da303893a7e9e7c4207b141a8c93e6feb2c2a185a93ed5ef2950976ecf',
   '433c5861e58c488bde3a98fa6808f4b332f8621d8bd454cc0296b444a2db914e',
   'd40485ec618660a7f92327e5dbe2068de53198072a67fb9f162158f974a48898',
+  '6c4501886549e00e0402a952b878d8c7154b3e9033abe7d9989949e9cc06ced1',
+  '3edbfd4d9535c943e9e6fbda39edc2d89e9254e027190fe7f0ac60b806cffa6b',
+  'd27401c995de2d81e8a16e7352d95a04a8be8ed2c95a84be1682ed3ec5979d9b',
+  'd68cc2c226778f145f7204b8acca524e498b56bfa69ce9ffad48933ec6d7aff1',
+  'f4027eaf2f218156bba9de620f9be0ca2d25472e600666b7e739072a4e4e4f84',
+  '034a2a475c9a28ce53874bcb3d2d38efbc643c168aa5487182b71244d27e7a93',
+  '7381e3ddaa47ef9e526cea785d485180d0f006fcb175cc2913171735936e3df2',
 ];
 
-const TEXT = new Set(['.html', '.htm', '.js', '.mjs', '.cjs', '.json', '.css']);
+const TEXT = new Set([
+  '.html', '.htm', '.js', '.mjs', '.cjs', '.json', '.css',
+  '.map', '.svg', '.txt', '.webmanifest', '.xml', '.md',
+]);
 
 export function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
@@ -43,27 +53,58 @@ export function tokensOf(text) {
   return out;
 }
 
-function digitRuns(text) {
-  const runs = [];
-  const re = /\+?\d[\d\s().-]{6,}\d/g;
-  let match;
-  while ((match = re.exec(text))) {
-    const digits = match[0].replace(/\D/g, '');
-    if (digits.length >= 8 && digits.length <= 15) runs.push(digits);
+function addPhoneDigits(found, digits) {
+  if (!/^\d{8,15}$/.test(digits)) return;
+  found.add(digits);
+  const country = digits.match(/^56(9\d{8})$/);
+  if (country) {
+    found.add(country[1]);
+    found.add(digits.slice(-8));
   }
-  return runs;
+}
+
+/** Dígitos de teléfono, incluido el núcleo de 9 cuando el run es 56 + ese núcleo. */
+export function digitCandidates(text) {
+  const found = new Set();
+  const runs = text.match(/(?:\+|00)?\(?\d[\d\s().-]{5,}\d\)?/g) ?? [];
+  for (const run of runs) addPhoneDigits(found, run.replace(/\D/g, ''));
+  for (const match of text.matchAll(/wa\.me\/(\d{8,15})/gi)) addPhoneDigits(found, match[1]);
+  for (const match of text.matchAll(/tel:\+?(\d{8,15})/gi)) addPhoneDigits(found, match[1]);
+  return [...found];
+}
+
+function decodedLiterals(text) {
+  const out = [];
+  const fromRe = /String\.fromCharCode(?:\.apply\(\s*(?:null|void 0)\s*,\s*)?\(?\s*(\d+(?:\s*,\s*\d+)*)/g;
+  let match;
+  while ((match = fromRe.exec(text))) {
+    const nums = match[1].split(',').map((part) => Number(part.trim()));
+    if (nums.length >= 3 && nums.every((n) => n >= 32 && n <= 126)) {
+      out.push(String.fromCharCode(...nums));
+    }
+  }
+  const arrayRe = /\[(\d{2,3}(?:\s*,\s*\d{2,3}){3,60})\]/g;
+  while ((match = arrayRe.exec(text))) {
+    const nums = match[1].split(',').map((part) => Number(part.trim()));
+    if (nums.every((n) => n >= 32 && n <= 126)) out.push(String.fromCharCode(...nums));
+  }
+  return out;
 }
 
 export function findDeniedTokens(text, deny = new Set(DENY_HASHES)) {
   const hits = new Set();
-  for (const token of tokensOf(text)) {
-    const hash = sha256(token);
-    if (deny.has(hash)) hits.add(hash);
-  }
-  for (const digits of digitRuns(text)) {
+  const consider = (value) => {
+    for (const token of tokensOf(value)) {
+      const hash = sha256(token);
+      if (deny.has(hash)) hits.add(hash);
+    }
+  };
+  consider(text);
+  for (const digits of digitCandidates(text)) {
     const hash = sha256(digits);
     if (deny.has(hash)) hits.add(hash);
   }
+  for (const decoded of decodedLiterals(text)) consider(decoded);
   return [...hits];
 }
 
@@ -96,6 +137,11 @@ export function scanDist(root, deny = new Set(DENY_HASHES)) {
   return { hits, files };
 }
 
+function assertHits(label, text, deny) {
+  const hits = findDeniedTokens(text, deny);
+  if (!hits.length) throw new Error(`fixture debía fallar: ${label}`);
+}
+
 export function selfTest() {
   const dir = mkdtempSync(join(tmpdir(), 'qa-no-pii-'));
   const token = 'plantedfixture';
@@ -112,10 +158,36 @@ export function selfTest() {
     if (clean.hits.length !== 0) {
       throw new Error(`la fixture limpia debía pasar, hits=${clean.hits.length}`);
     }
+
+    const codes = [...token].map((ch) => ch.charCodeAt(0));
+    assertHits('fromCharCode', `String.fromCharCode(${codes.join(',')})`, deny);
+    assertHits('array', `const legacy = [${codes.join(',')}];`, deny);
+
+    const realCodes = [99, 97, 109, 105, 108, 97];
+    assertHits('real-char-array', `[${realCodes.join(',')}]`, new Set(DENY_HASHES));
+
+    const full = '56911111111';
+    const core = '911111111';
+    const last8 = '11111111';
+    const phoneDeny = new Set([sha256(full), sha256(core), sha256(last8)]);
+    const formats = [
+      ['plus-cc', '+56911111111'],
+      ['digits-cc', '56911111111'],
+      ['spaced-cc', '+56 9 1111 1111'],
+      ['bare-cc', '56 9 1111 1111'],
+      ['paren-cc', '(+56) 9 1111 1111'],
+      ['dashed-cc', '56-9-1111-1111'],
+      ['wa', 'https://wa.me/56911111111'],
+      ['tel', 'tel:+56911111111'],
+      ['bare-9', '911111111'],
+      ['spaced-9', '9 1111 1111'],
+      ['dashed-9', '91111-1111'],
+    ];
+    for (const [label, sample] of formats) assertHits(label, sample, phoneDeny);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
-  console.log('qa:no-pii self-test: fixture plantada falla (1 hit); archivo limpio pasa (0 hits)');
+  console.log('qa:no-pii self-test: fixtures (texto, fromCharCode, array, formatos de teléfono) fallan; archivo limpio pasa');
 }
 
 const invoked = process.argv[1] && /qa-no-pii\.mjs$/.test(process.argv[1]);

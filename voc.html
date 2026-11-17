@@ -2216,18 +2216,19 @@ function debounce(fn, ms) {
 function $(sel) { return document.querySelector(sel); }
 function $$(sel) { return document.querySelectorAll(sel); }
 
-function legacyStorageKey(codes) {
-  return String.fromCharCode.apply(null, codes);
-}
-function readLocal(key, legacyCodes) {
+function readLocal(key, legacyPattern) {
   try {
     const current = localStorage.getItem(key);
     if (current != null) return current;
-    if (!legacyCodes) return null;
-    const previous = localStorage.getItem(legacyStorageKey(legacyCodes));
-    if (previous != null) {
-      localStorage.setItem(key, previous);
-      return previous;
+    if (!legacyPattern) return null;
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const name = localStorage.key(i);
+      if (!name || name === key || !legacyPattern.test(name)) continue;
+      const previous = localStorage.getItem(name);
+      if (previous != null) {
+        localStorage.setItem(key, previous);
+        return previous;
+      }
     }
   } catch (e) { /* cuota o modo privado */ }
   return null;
@@ -2238,7 +2239,7 @@ function readLocal(key, legacyCodes) {
 // =========================================================================
 function cargarEstado() {
   try {
-    const raw = readLocal(STORAGE_KEY, [109,97,112,97,45,109,97,114,116,105,110,97,45,102,117,116,117,114,111,45,118,50]);
+    const raw = readLocal(STORAGE_KEY, /^mapa-[a-z]+-futuro-v2$/);
     if (raw) estado = { ...estado, ...JSON.parse(raw) };
   } catch(e) { /* Sin estado previo */ }
   aplicarEstadoUI();
@@ -2320,7 +2321,7 @@ let bitacora = [];
 
 function cargarBitacora() {
   try {
-    const data = JSON.parse(readLocal(BITACORA_KEY, [109,97,112,97,45,109,97,114,116,105,110,97,45,98,105,116,97,99,111,114,97,45,118,49]) || '[]');
+    const data = JSON.parse(readLocal(BITACORA_KEY, /^mapa-[a-z]+-bitacora-v1$/) || '[]');
     bitacora = Array.isArray(data)
       ? data.filter(e => e && typeof e.fecha === 'string' && typeof e.detalle === 'string')
             .slice(0, BITACORA_MAX)
@@ -2392,7 +2393,7 @@ function espacioAdjuntos() {
 
 function cargarAdjuntos() {
   try {
-    const data = JSON.parse(readLocal(ADJUNTOS_KEY, [109,97,112,97,45,109,97,114,116,105,110,97,45,97,100,106,117,110,116,111,115,45,118,49]) || '[]');
+    const data = JSON.parse(readLocal(ADJUNTOS_KEY, /^mapa-[a-z]+-adjuntos-v1$/) || '[]');
     adjuntos = Array.isArray(data)
       ? data.filter(a => a && typeof a.fecha === 'string'
           && typeof a.nombre === 'string'
@@ -3116,7 +3117,7 @@ $('#onb-cerrar').addEventListener('click', () => {
 });
 
 function mostrarOnboardingSiPrimeraVez() {
-  if (!readLocal(ONBOARDING_KEY, [109,97,112,97,45,109,97,114,116,105,110,97,45,111,110,98,111,97,114,100,105,110,103,45,118,50])) {
+  if (!readLocal(ONBOARDING_KEY, /^mapa-[a-z]+-onboarding-v2$/)) {
     $('#onboarding').classList.add('activo');
     setTimeout(() => $('#onb-cerrar').focus(), 100);
   }

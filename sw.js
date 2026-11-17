@@ -1,6 +1,6 @@
 // Regla Campo: este service worker solo maneja caché HTTP. Nunca toca
 // localStorage, IndexedDB ni Clear-Site-Data: una actualización no borra datos locales.
-const CACHE = 'uxtools-suite-v5';
+const CACHE = 'uxtools-suite-v6';
 const SHELL = [
   '/uxtools/',
   '/uxtools/assets/',
@@ -17,11 +17,10 @@ self.addEventListener('install', (e) => {
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (e) => {

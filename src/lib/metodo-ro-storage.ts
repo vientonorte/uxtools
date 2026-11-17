@@ -17,7 +17,6 @@ import {
   type SelfradarAxisScore,
   type SelfradarSession,
 } from '../types/metodo-ro';
-import { legacyText } from './legacy-text';
 
 /** Field length caps — DoS / quota / accidental paste */
 export const MR_LIMITS = {
@@ -62,15 +61,27 @@ function clampAxisScore(raw: unknown): SelfradarAxisScore {
 /** Copia campos de sesiones ya guardadas a los nombres actuales, sin perder texto. */
 function withLegacyFields(raw: Record<string, unknown>): Record<string, unknown> {
   const next: Record<string, unknown> = { ...raw };
-  const pairs: Array<[number[], string]> = [
-    [[115, 111, 110, 114, 105, 115, 97, 67, 97, 109, 105, 108, 97], 'sonrisaPersona'],
-    [[114, 101, 118, 105, 101, 119, 67, 97, 109, 105, 108, 97], 'reviewPersona'],
-    [[97, 99, 99, 105, 111, 110, 101, 115, 67, 97, 109, 105, 108, 97], 'accionesPersona'],
-  ];
-  for (const [codes, key] of pairs) {
-    const prev = legacyText(codes);
-    if ((next[key] == null || next[key] === '') && typeof next[prev] === 'string') {
-      next[key] = next[prev];
+  const namedField = /^(sonrisa|review|acciones)[A-Z]\w+$/;
+  const keep = new Set([
+    'sonrisaPersonal',
+    'sonrisaLaboral',
+    'sonrisaPersona',
+    'reviewPersonal',
+    'reviewLaboral',
+    'reviewPersona',
+    'accionesPersonal',
+    'accionesLaboral',
+    'accionesPersona',
+  ]);
+  for (const key of Object.keys(next)) {
+    if (!namedField.test(key) || keep.has(key)) continue;
+    const target = key.startsWith('sonrisa')
+      ? 'sonrisaPersona'
+      : key.startsWith('review')
+        ? 'reviewPersona'
+        : 'accionesPersona';
+    if ((next[target] == null || next[target] === '') && typeof next[key] === 'string') {
+      next[target] = next[key];
     }
   }
   if (isObj(next.scores)) {
@@ -83,9 +94,13 @@ function withLegacyFields(raw: Record<string, unknown>): Record<string, unknown>
       dinero: 'e6',
       estudio: 'e7',
     };
-    idMap[legacyText([99, 97, 109, 105, 108, 97])] = 'e4';
+    const known = new Set(['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', ...Object.keys(idMap)]);
     for (const [oldId, id] of Object.entries(idMap)) {
       if (scores[id] == null && scores[oldId] != null) scores[id] = scores[oldId];
+    }
+    for (const oldId of Object.keys(scores)) {
+      if (known.has(oldId)) continue;
+      if (scores.e4 == null && scores[oldId] != null) scores.e4 = scores[oldId];
     }
     next.scores = scores;
   }
