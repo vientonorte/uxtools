@@ -176,10 +176,10 @@ export default function Polijuego() {
       </section>
 
       <section className="mr-card">
-        <h2 className="mr-card__title">Complemento Método Ro</h2>
+        <h2 className="mr-card__title">Complemento</h2>
         <p style={{ margin: '0 0 0.75rem', lineHeight: 1.55 }}>
-          <strong>Self Radar</strong> es el modo individual (review semanal de 7 ejes).
-          PoliRadar es el modo relacional. Ambos viven bajo Método Ro / Bullet Ro.
+          <strong>Self Radar</strong> es el modo individual (review semanal de 7 ejes en blanco).
+          PoliRadar es el modo relacional.
         </p>
         <Link className="mr-btn" to="/selfradar">
           Ir a Self Radar →
@@ -187,7 +187,7 @@ export default function Polijuego() {
       </section>
 
       <p className="mr-privacy">
-        © 2026 RoMila™ · Camila Palma Soto & Rodrigo Gaete · Viento Norte ·{' '}
+        © 2026 Viento Norte ·{' '}
         CC BY-NC-SA 4.0 · Código abierto · No comercial
       </p>
     </main>

@@ -13,11 +13,11 @@
     { id: 'uxflow', label: 'UXFLOW', shortLabel: 'UXFlow', logo: 'UXF', badge: 'v1.0', staticPath: 'uxflow.html' },
     { id: 'eisenhower', label: 'Operating Model DX', shortLabel: 'DX', logo: 'DX', badge: 'v1.0', staticPath: 'eisenhower.html' },
     { id: 'voc', label: 'Mapa Vocacional', shortLabel: 'VOC', logo: 'VOC', badge: 'v2', staticPath: 'voc.html' },
-    { id: 'selfradar', label: 'Self Radar', shortLabel: 'Radar', logo: 'SR', badge: 'Ro', staticPath: 'app.html#/selfradar' },
-    { id: 'kit-tlp', label: 'Kit TLP', shortLabel: 'TLP', logo: 'TLP', badge: 'Ro', staticPath: 'app.html#/kit-tlp' },
-    { id: 'polijuego', label: 'PoliRadar', shortLabel: 'PoliRadar', logo: 'RAD', badge: 'Ro', staticPath: 'app.html#/poliradar' },
+    { id: 'selfradar', label: 'Self Radar', shortLabel: 'Radar', logo: 'SR', badge: 'v1', staticPath: 'app.html#/selfradar' },
+    { id: 'kit-tlp', label: 'Kit TLP', shortLabel: 'TLP', logo: 'TLP', badge: 'v1', staticPath: 'app.html#/kit-tlp' },
+    { id: 'polijuego', label: 'PoliRadar', shortLabel: 'PoliRadar', logo: 'RAD', badge: 'v1', staticPath: 'app.html#/poliradar' },
     { id: 'onboarding', label: 'Onboarding · Mapa', shortLabel: 'Mapa', logo: 'MAP', badge: 'Map', staticPath: 'app.html#/onboarding' },
-    { id: 'pulso', label: 'Pulso', shortLabel: 'Pulso', logo: 'PUL', badge: 'Cami', staticPath: 'pulso/' },
+    { id: 'pulso', label: 'Pulso', shortLabel: 'Pulso', logo: 'PUL', badge: 'Local', staticPath: 'pulso/' },
     { id: 'admin', label: 'Content Manager', shortLabel: 'Admin', logo: 'UXT', badge: 'Admin', staticPath: 'admin.html', variant: 'admin' },
   ];
 
@@ -218,7 +218,7 @@
       icon: '🛠️',
       voc: 'Qué tocan mis manos',
       name: 'Mapa Vocacional',
-      job: 'El VOC original: 8 preguntas, inferencia local, caminos para Martina.',
+      job: 'El VOC original: 8 preguntas, inferencia local, caminos a partir de tus respuestas.',
     },
   };
 

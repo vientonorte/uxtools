@@ -68,3 +68,16 @@ body::before {
 .vn-skip-link:focus {
   top: var(--space-4);
 }
+
+.route-fallback__reload {
+  min-height: 44px;
+  min-width: 44px;
+  margin-top: 12px;
+  padding: 8px 16px;
+  font: inherit;
+  cursor: pointer;
+}
+.route-fallback__reload:focus-visible {
+  outline: 3px solid var(--cyan, #00b5e2);
+  outline-offset: 2px;
+}

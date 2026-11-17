@@ -435,7 +435,7 @@ export default function Dashboard() {
               </div>
               <h2 className="module-title">Self Radar</h2>
               <p className="module-desc">
-                Review semanal Método Ro: 7 ejes fijos (1–10), preguntas de buen vivir, sonrisas, review y máx. 3 acciones a Calendar. Clave A · localStorage.
+                Review semanal: 7 ejes en blanco (1–10), preguntas y máx. 3 acciones. Plantilla neutra · localStorage.
               </p>
               <div className="module-meta">
                 <span className="module-meta-item">
@@ -444,7 +444,7 @@ export default function Dashboard() {
               </div>
               <div className="module-tags" aria-label="Funciones">
                 <span className="mod-tag">Radar</span>
-                <span className="mod-tag">Clave A</span>
+                <span className="mod-tag">Plantilla</span>
                 <span className="mod-tag">localStorage</span>
                 <span className="mod-tag">Print</span>
               </div>
@@ -575,11 +575,11 @@ export default function Dashboard() {
             <div className="module-card-inner">
               <div className="module-top">
                 <div className="module-icon-wrap" aria-hidden="true">◎</div>
-                <span className="badge badge-live module-badge">CAMI</span>
+                <span className="badge badge-live module-badge">LOCAL</span>
               </div>
               <h2 className="module-title">Pulso</h2>
               <p className="module-desc">
-                Compañera de bolsillo para el turno. 60s, Decir algo, frases, tareas, trayecto y SOS a Ro. Solo localStorage. Sin nube.
+                Compañera de bolsillo para el turno. 60s, Decir algo, frases, tareas, trayecto y SOS a la persona de apoyo que configures en este dispositivo. Solo localStorage. Sin nube.
               </p>
               <div className="module-meta">
                 <span className="module-meta-item">
@@ -588,7 +588,7 @@ export default function Dashboard() {
               </div>
               <div className="module-tags" aria-label="Funciones">
                 <span className="mod-tag">60s</span>
-                <span className="mod-tag">WhatsApp Ro</span>
+                <span className="mod-tag">Contacto local</span>
                 <span className="mod-tag">localStorage</span>
                 <span className="mod-tag">SOS</span>
               </div>
@@ -641,7 +641,7 @@ export default function Dashboard() {
               </div>
               <h2 className="module-title">Mapa Vocacional</h2>
               <p className="module-desc">
-                Exploración vocacional interactiva con inferencia semántica local. Diseñado para Martina: 8 preguntas que mapean caminos profesionales según afinidades personales.
+                Exploración vocacional interactiva con inferencia semántica local. 8 preguntas que mapean caminos profesionales según afinidades. El nombre lo escribes tú.
               </p>
               <div className="module-meta">
                 <span className="module-meta-item">

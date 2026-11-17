@@ -30,3 +30,15 @@ jobs:
 
       - name: Run unit tests
         run: node tests/unit.cjs
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build static suite + React app
+        run: npm run build:pages
+
+      - name: PII fixture must fail
+        run: npm run qa:no-pii:fixture
+
+      - name: Shipped bundle has no denied tokens
+        run: npm run qa:no-pii

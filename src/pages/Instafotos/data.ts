@@ -57,7 +57,7 @@ export const LEVELS = [
   { min: 300, max: 599, name: "Estrellita", icon: "⭐" },
   { min: 600, max: 999, name: "Arcoíris Brillante", icon: "🌈⭐" },
   { min: 1000, max: 1999, name: "Caracol Mágico", icon: "🐌✨" },
-  { min: 2000, max: Infinity, name: "Universo Camila", icon: "🌈⭐🐌" },
+  { min: 2000, max: Infinity, name: "Universo", icon: "🌈⭐🐌" },
 ]
 
 export function getLevel(points: number) {
@@ -93,7 +93,7 @@ export const TR = {
     roiTitle: "Registro de ventas", roiToday: "Sesión actual", roiAdd1: "+ 1 foto", roiAdd2: "+ 2 fotos",
     roiUndo: "Deshacer", roiTotal: "Total ganado", roiPhotos: "Fotos", roiSessions: "Sesiones",
     roiAvg: "Promedio/sesión", roiNotes: "Notas", roiSave: "Guardar sesión", roiHistory: "Sesiones guardadas", roiEmpty: "Sin sesiones",
-    apoyoTitle: "Mi espacio Camila",
+    apoyoTitle: "Mi espacio",
     checkinTitle: "¿Cómo estás hoy?",
     energyLabel: "Energía",
     mutismLabel: "Nivel de voz hoy",
@@ -139,7 +139,7 @@ export const TR = {
     roiTitle: "Sales tracker", roiToday: "Current session", roiAdd1: "+ 1 photo", roiAdd2: "+ 2 photos",
     roiUndo: "Undo", roiTotal: "Total earned", roiPhotos: "Photos", roiSessions: "Sessions",
     roiAvg: "Avg/session", roiNotes: "Notes", roiSave: "Save session", roiHistory: "Saved sessions", roiEmpty: "No sessions",
-    apoyoTitle: "My space — Camila",
+    apoyoTitle: "My space",
     checkinTitle: "How are you today?",
     energyLabel: "Energy",
     mutismLabel: "Voice level today",
@@ -185,7 +185,7 @@ export const TR = {
     roiTitle: "Registro de vendas", roiToday: "Sessão atual", roiAdd1: "+ 1 foto", roiAdd2: "+ 2 fotos",
     roiUndo: "Desfazer", roiTotal: "Total ganho", roiPhotos: "Fotos", roiSessions: "Sessões",
     roiAvg: "Média/sessão", roiNotes: "Notas", roiSave: "Salvar sessão", roiHistory: "Sessões salvas", roiEmpty: "Sem sessões",
-    apoyoTitle: "Meu espaço — Camila",
+    apoyoTitle: "Meu espaço",
     checkinTitle: "Como você está hoje?",
     energyLabel: "Energia",
     mutismLabel: "Nível de voz hoje",

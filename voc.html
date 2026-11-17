@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mapa de Martina del futuro — V2</title>
+<title>Mapa vocacional — V2</title>
 <meta name="description" content="Mapa interactivo de exploración vocacional con inferencia semántica local.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1398,8 +1398,8 @@ h1 {
 <main id="main" tabindex="-1">
 
 <header>
-  <div class="title-eyebrow">Para Martina</div>
-  <h1>Mapa de la Martina del futuro</h1>
+  <div class="title-eyebrow">Mapa vocacional</div>
+  <h1>Mapa vocacional</h1>
   <p class="subtitle">Imagínate un día normal cuando tengas la edad que elijas. Llena el mapa con lo que aparezca. Sin pensarlo mucho.</p>
 
   <div class="progreso-wrap" aria-label="Progreso del mapa">
@@ -1412,7 +1412,7 @@ h1 {
   <div class="identidad">
     <div class="identidad-campo">
       <label for="nombre">Mi nombre</label>
-      <input type="text" id="nombre" value="Martina" autocomplete="off" />
+      <input type="text" id="nombre" value="" autocomplete="off" placeholder="Tu nombre" />
     </div>
     <div class="identidad-campo">
       <label for="edad-actual">Hoy tengo</label>
@@ -1493,7 +1493,7 @@ h1 {
 
     <div class="centro" aria-hidden="true">
       <div class="yo">yo</div>
-      <div class="nombre-display" id="centro-nombre">Martina</div>
+      <div class="nombre-display" id="centro-nombre"></div>
       <div class="edad-display" id="centro-edad">a los 30</div>
     </div>
   </div>
@@ -1502,7 +1502,7 @@ h1 {
   <div class="mapa-mobile" id="mapa-mobile" role="group" aria-label="Mapa de preguntas vertical">
     <div class="centro-mobile">
       <div class="yo">yo</div>
-      <div class="nombre-display" id="centro-nombre-mobile">Martina</div>
+      <div class="nombre-display" id="centro-nombre-mobile"></div>
       <div class="edad-display" id="centro-edad-mobile">a los 30</div>
     </div>
     <!-- nodos mobile generados por JS -->
@@ -2185,11 +2185,11 @@ function getCombo(idA, idB) {
 // =========================================================================
 // ESTADO
 // =========================================================================
-const STORAGE_KEY = 'mapa-martina-futuro-v2';
-const ONBOARDING_KEY = 'mapa-martina-onboarding-v2';
+const STORAGE_KEY = 'mapa-vocacional-v2';
+const ONBOARDING_KEY = 'mapa-vocacional-onboarding-v2';
 
 let estado = {
-  nombre: 'Martina',
+  nombre: '',
   edadActual: '',
   edadFutura: '',
   respuestas: {},
@@ -2216,12 +2216,30 @@ function debounce(fn, ms) {
 function $(sel) { return document.querySelector(sel); }
 function $$(sel) { return document.querySelectorAll(sel); }
 
+function readLocal(key, legacyPattern) {
+  try {
+    const current = localStorage.getItem(key);
+    if (current != null) return current;
+    if (!legacyPattern) return null;
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const name = localStorage.key(i);
+      if (!name || name === key || !legacyPattern.test(name)) continue;
+      const previous = localStorage.getItem(name);
+      if (previous != null) {
+        localStorage.setItem(key, previous);
+        return previous;
+      }
+    }
+  } catch (e) { /* cuota o modo privado */ }
+  return null;
+}
+
 // =========================================================================
 // PERSISTENCIA
 // =========================================================================
 function cargarEstado() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = readLocal(STORAGE_KEY, /^mapa-[a-z]+-futuro-v2$/);
     if (raw) estado = { ...estado, ...JSON.parse(raw) };
   } catch(e) { /* Sin estado previo */ }
   aplicarEstadoUI();
@@ -2242,7 +2260,7 @@ function guardarEstado(silencioso = false) {
 const guardarDebounced = debounce(() => guardarEstado(true), 800);
 
 function aplicarEstadoUI() {
-  $('#nombre').value = estado.nombre || 'Martina';
+  $('#nombre').value = estado.nombre || '';
   $('#edad-actual').value = estado.edadActual || '';
   $('#edad-futura').value = estado.edadFutura || '';
   actualizarCentro();
@@ -2270,7 +2288,7 @@ function aplicarEstadoUI() {
 }
 
 function actualizarCentro() {
-  const nombre = estado.nombre || 'Martina';
+  const nombre = estado.nombre || '';
   const edad = estado.edadFutura ? `a los ${estado.edadFutura}` : 'a los 30';
   $('#centro-nombre').textContent = nombre;
   $('#centro-edad').textContent = edad;
@@ -2295,7 +2313,7 @@ function actualizarProgreso() {
 // renderizan con textContent (jamás innerHTML con datos guardados) y se
 // validan al cargar por si el almacenamiento llega corrupto o manipulado.
 // =========================================================================
-const BITACORA_KEY = 'mapa-martina-bitacora-v1';
+const BITACORA_KEY = 'mapa-vocacional-bitacora-v1';
 const BITACORA_MAX = 100;
 const BITACORA_DETALLE_MAX = 140;
 
@@ -2303,7 +2321,7 @@ let bitacora = [];
 
 function cargarBitacora() {
   try {
-    const data = JSON.parse(localStorage.getItem(BITACORA_KEY) || '[]');
+    const data = JSON.parse(readLocal(BITACORA_KEY, /^mapa-[a-z]+-bitacora-v1$/) || '[]');
     bitacora = Array.isArray(data)
       ? data.filter(e => e && typeof e.fecha === 'string' && typeof e.detalle === 'string')
             .slice(0, BITACORA_MAX)
@@ -2359,7 +2377,7 @@ $('#bitacora-borrar').addEventListener('click', () => {
 // con textContent. El presupuesto de espacio evita reventar la cuota
 // (~5 MB) que comparte con el mapa y la bitácora.
 // =========================================================================
-const ADJUNTOS_KEY = 'mapa-martina-adjuntos-v1';
+const ADJUNTOS_KEY = 'mapa-vocacional-adjuntos-v1';
 const ADJUNTOS_MAX = 20;
 const ADJUNTOS_PRESUPUESTO = 3500000;   // chars de base64 para todos los adjuntos
 const ADJUNTO_TOPE_INDIVIDUAL = 900000; // chars máx. por imagen ya comprimida
@@ -2375,7 +2393,7 @@ function espacioAdjuntos() {
 
 function cargarAdjuntos() {
   try {
-    const data = JSON.parse(localStorage.getItem(ADJUNTOS_KEY) || '[]');
+    const data = JSON.parse(readLocal(ADJUNTOS_KEY, /^mapa-[a-z]+-adjuntos-v1$/) || '[]');
     adjuntos = Array.isArray(data)
       ? data.filter(a => a && typeof a.fecha === 'string'
           && typeof a.nombre === 'string'
@@ -3042,7 +3060,7 @@ $('#btn-exportar').addEventListener('click', () => {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `mapa_${(estado.nombre || 'martina').toLowerCase()}_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = `mapa_${(estado.nombre || 'mapa').toLowerCase()}_${new Date().toISOString().slice(0,10)}.json`;
   a.click();
   URL.revokeObjectURL(url);
   mostrarToast('JSON descargado ✓');
@@ -3082,7 +3100,7 @@ $('#btn-onboarding').addEventListener('click', () => {
 
 $('#btn-limpiar').addEventListener('click', () => {
   if (!confirm('¿Borrar todo y empezar de nuevo? Esta acción no se puede deshacer.')) return;
-  estado = { nombre: 'Martina', edadActual: '', edadFutura: '', respuestas: {}, cronograma: {}, ultimaModificacion: null };
+  estado = { nombre: '', edadActual: '', edadFutura: '', respuestas: {}, cronograma: {}, ultimaModificacion: null };
   $$('textarea').forEach(t => t.value = '');
   $('#resultado').classList.remove('visible');
   guardarEstado(false);
@@ -3099,7 +3117,7 @@ $('#onb-cerrar').addEventListener('click', () => {
 });
 
 function mostrarOnboardingSiPrimeraVez() {
-  if (!localStorage.getItem(ONBOARDING_KEY)) {
+  if (!readLocal(ONBOARDING_KEY, /^mapa-[a-z]+-onboarding-v2$/)) {
     $('#onboarding').classList.add('activo');
     setTimeout(() => $('#onb-cerrar').focus(), 100);
   }
