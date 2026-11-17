@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import '../../styles/medicinal.css';
 import html2canvas from 'html2canvas';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import type { MedicinalIdData } from '../../types/medicinal';
@@ -231,7 +232,7 @@ export default function Medicinal() {
               >
                 CC BY-NC 4.0
               </a>{' '}
-              · © Rodrigo Gaete Gaona
+              · © 2026 Viento Norte
             </p>
             <p className="med-license__disclaimer">
               Ningún dato se envía a servidores externos. Todo se almacena localmente en tu navegador.

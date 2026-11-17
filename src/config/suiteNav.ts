@@ -89,7 +89,7 @@ export const SUITE_MODULES: SuiteModule[] = [
     label: 'Self Radar',
     shortLabel: 'Radar',
     logo: 'SR',
-    badge: 'Ro',
+    badge: 'v1',
     spaPath: '/selfradar',
   },
   {
@@ -97,7 +97,7 @@ export const SUITE_MODULES: SuiteModule[] = [
     label: 'Kit TLP',
     shortLabel: 'TLP',
     logo: 'TLP',
-    badge: 'Ro',
+    badge: 'v1',
     spaPath: '/kit-tlp',
   },
   {
@@ -105,7 +105,7 @@ export const SUITE_MODULES: SuiteModule[] = [
     label: 'PoliRadar',
     shortLabel: 'PoliRadar',
     logo: 'RAD',
-    badge: 'Ro',
+    badge: 'v1',
     spaPath: '/poliradar',
   },
   {
@@ -121,7 +121,7 @@ export const SUITE_MODULES: SuiteModule[] = [
     label: 'Pulso',
     shortLabel: 'Pulso',
     logo: 'PUL',
-    badge: 'Cami',
+    badge: 'Local',
     staticPath: 'pulso/',
   },
   {

@@ -1,19 +1,30 @@
+import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Nav } from './components/Nav';
 import { Footer } from './components/Footer';
+import { RoutePrivacy } from './components/RoutePrivacy';
 import { BenchmarkProvider } from './contexts/BenchmarkContext';
 import Dashboard from './pages/Dashboard';
 import Benchmark from './pages/Benchmark';
 import UxFlow from './pages/UxFlow';
 import Admin from './pages/Admin';
 import Brief from './pages/Brief';
-import Medicinal from './pages/Medicinal';
 import Selfradar from './pages/Selfradar';
 import KitTlp from './pages/KitTlp';
 import Onboarding from './pages/Onboarding';
 import Polijuego from './pages/Polijuego';
-import Camila from './pages/Camila';
+import Instafotos from './pages/Instafotos';
 import { ToolGate } from './components/ToolGate';
+
+const Medicinal = lazy(() => import('./pages/Medicinal'));
+
+function PageFallback() {
+  return (
+    <main id="main" tabIndex={-1}>
+      <p role="status">Cargando…</p>
+    </main>
+  );
+}
 
 export default function App() {
   return (
@@ -22,6 +33,7 @@ export default function App() {
         Saltar al contenido principal
       </a>
       <Nav />
+      <RoutePrivacy />
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route
@@ -49,7 +61,14 @@ export default function App() {
             </ToolGate>
           }
         />
-        <Route path="/medicinal" element={<Medicinal />} />
+        <Route
+          path="/medicinal"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <Medicinal />
+            </Suspense>
+          }
+        />
         <Route
           path="/selfradar"
           element={
@@ -83,10 +102,8 @@ export default function App() {
             </ToolGate>
           }
         />
-        <Route path="/camila" element={<Camila />} />
-        <Route path="/camila/*" element={<Camila />} />
-        <Route path="/instafotos-app" element={<Camila />} />
-        <Route path="/instafotos-app/*" element={<Camila />} />
+        <Route path="/instafotos-app" element={<Instafotos />} />
+        <Route path="/instafotos-app/*" element={<Instafotos />} />
       </Routes>
       <Footer />
     </BenchmarkProvider>

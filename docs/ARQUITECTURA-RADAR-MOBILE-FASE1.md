@@ -1,6 +1,6 @@
 # R.A.D.A.R. El Polijuego® · Fase 1 — Arquitectura
 
-**Estado:** propuesta técnica (no ship App Store / Play). Decider: Rö.  
+**Estado:** propuesta técnica (no ship App Store / Play). Decider: equipo del repo.  
 **Fecha:** 2026-08-22  
 **Decider 2026-08-22:** **1 app = R.A.D.A.R. El Polijuego®.** No mega-binario UX Tools.  
 **Repos:** `vientonorte/uxtools` (suite web) · nativo = `apps/polijuego`, no `mi-portafolio`.  
@@ -15,7 +15,7 @@ Este documento reemplaza el iframe como producto. El Figma Site queda prototipo 
 | Superficie | Qué es hoy |
 |------------|------------|
 | `src/pages/Polijuego.tsx` | Shell: fullscreen, QR, `PoliradarLogin`, iframe `https://trill-scheme-71219616.figma.site/` |
-| `src/types/metodo-ro.ts` | Self Radar **Método Ro**: 7 ejes personales (incluye `camila`) + Kit TLP |
+| `src/types/metodo-ro.ts` | Self Radar: 7 ejes neutros en blanco + Kit TLP |
 | `src/lib/metodo-ro-storage.ts` | Validación + `localStorage`. Sin cifrado, sin red |
 | `supabase/migrations/20260822120000_poli_players.sql` | `poli_players` 1:1 con `auth.users`. RLS. **Cero tablero, cero cartas** |
 | i18n | ES / EN / PT en `onboarding-i18n.ts` |
@@ -30,9 +30,9 @@ Nombre que no se mezcla:
 | `radar.passplay` | 2 personas, un dispositivo | A construir |
 | `radar.room` | Sala remota E2EE | A construir |
 
-Copy in-app puede decir “SelfRadar” para el modo solo. El **schema** usa `radar_solo_*` para no chocar con sesiones Método Ro.
+Copy in-app puede decir “SelfRadar” para el modo solo. El **schema** usa `radar_solo_*`.
 
-Ejes `camila` / nombres reales **no** van a App Store. Self Radar público usa labels genéricos (`vinculo_primario`, no un nombre propio).
+La plantilla pública de Self Radar usa etiquetas neutras (Eje 1…7, Persona A). No lleva nombres propios.
 
 ---
 

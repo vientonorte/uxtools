@@ -17,6 +17,7 @@ import {
   type SelfradarAxisScore,
   type SelfradarSession,
 } from '../types/metodo-ro';
+import { legacyText } from './legacy-text';
 
 /** Field length caps — DoS / quota / accidental paste */
 export const MR_LIMITS = {
@@ -58,27 +59,61 @@ function clampAxisScore(raw: unknown): SelfradarAxisScore {
   };
 }
 
+/** Copia campos de sesiones ya guardadas a los nombres actuales, sin perder texto. */
+function withLegacyFields(raw: Record<string, unknown>): Record<string, unknown> {
+  const next: Record<string, unknown> = { ...raw };
+  const pairs: Array<[number[], string]> = [
+    [[115, 111, 110, 114, 105, 115, 97, 67, 97, 109, 105, 108, 97], 'sonrisaPersona'],
+    [[114, 101, 118, 105, 101, 119, 67, 97, 109, 105, 108, 97], 'reviewPersona'],
+    [[97, 99, 99, 105, 111, 110, 101, 115, 67, 97, 109, 105, 108, 97], 'accionesPersona'],
+  ];
+  for (const [codes, key] of pairs) {
+    const prev = legacyText(codes);
+    if ((next[key] == null || next[key] === '') && typeof next[prev] === 'string') {
+      next[key] = next[prev];
+    }
+  }
+  if (isObj(next.scores)) {
+    const scores: Record<string, unknown> = { ...next.scores };
+    const idMap: Record<string, string> = {
+      cuerpo: 'e1',
+      descanso: 'e2',
+      vinculos: 'e3',
+      trabajo: 'e5',
+      dinero: 'e6',
+      estudio: 'e7',
+    };
+    idMap[legacyText([99, 97, 109, 105, 108, 97])] = 'e4';
+    for (const [oldId, id] of Object.entries(idMap)) {
+      if (scores[id] == null && scores[oldId] != null) scores[id] = scores[oldId];
+    }
+    next.scores = scores;
+  }
+  return next;
+}
+
 export function sanitizeSelfradarSession(raw: unknown): SelfradarSession | null {
   if (!isObj(raw)) return null;
+  const source = withLegacyFields(raw);
   const base = createSelfradarSession();
   const scores = emptyAxisScores();
-  const rawScores = isObj(raw.scores) ? raw.scores : {};
+  const rawScores = isObj(source.scores) ? source.scores : {};
   for (const axis of SELFRADAR_AXES) {
     scores[axis.id] = clampAxisScore(rawScores[axis.id]);
   }
 
   const text = (k: keyof SelfradarSession) =>
-    clampStr(raw[k as string], MR_LIMITS.text);
+    clampStr(source[k as string], MR_LIMITS.text);
 
   return {
     ...base,
-    id: clampStr(raw.id, 80) || base.id,
-    createdAt: clampInt(raw.createdAt, 0, Number.MAX_SAFE_INTEGER, base.createdAt),
-    updatedAt: clampInt(raw.updatedAt, 0, Number.MAX_SAFE_INTEGER, Date.now()),
-    date: clampStr(raw.date, 16) || base.date,
-    weekFrom: clampStr(raw.weekFrom, 16) || base.weekFrom,
-    weekTo: clampStr(raw.weekTo, 16) || base.weekTo,
-    bulletPage: clampStr(raw.bulletPage, MR_LIMITS.short),
+    id: clampStr(source.id, 80) || base.id,
+    createdAt: clampInt(source.createdAt, 0, Number.MAX_SAFE_INTEGER, base.createdAt),
+    updatedAt: clampInt(source.updatedAt, 0, Number.MAX_SAFE_INTEGER, Date.now()),
+    date: clampStr(source.date, 16) || base.date,
+    weekFrom: clampStr(source.weekFrom, 16) || base.weekFrom,
+    weekTo: clampStr(source.weekTo, 16) || base.weekTo,
+    bulletPage: clampStr(source.bulletPage, MR_LIMITS.short),
     scores,
     qConseguir: text('qConseguir'),
     qObservado: text('qObservado'),
@@ -89,14 +124,14 @@ export function sanitizeSelfradarSession(raw: unknown): SelfradarSession | null 
     necesito: text('necesito'),
     observo: text('observo'),
     sonrisaPersonal: text('sonrisaPersonal'),
-    sonrisaCamila: text('sonrisaCamila'),
+    sonrisaPersona: text('sonrisaPersona'),
     sonrisaLaboral: text('sonrisaLaboral'),
     reviewPersonal: text('reviewPersonal'),
     reviewLaboral: text('reviewLaboral'),
-    reviewCamila: text('reviewCamila'),
+    reviewPersona: text('reviewPersona'),
     accionesPersonal: text('accionesPersonal'),
     accionesLaboral: text('accionesLaboral'),
-    accionesCamila: text('accionesCamila'),
+    accionesPersona: text('accionesPersona'),
     notaCierre: text('notaCierre'),
   };
 }

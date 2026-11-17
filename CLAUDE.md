@@ -3,7 +3,7 @@
 ## Project
 UXFLOW / uxtools — UX Auto-Doc Engine para SURA Investments.
 Live: https://vientonorte.github.io/uxtools/
-Owner: Rö (Rodrigo Gaete Gaona)
+Owner: Colectivo Viento Norte
 
 ## Tech stack
 - Vanilla JS (sin framework)

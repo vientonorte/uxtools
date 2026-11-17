@@ -1,4 +1,4 @@
-// Guía de observación contextual v3 · FRUTA · Maas Chile (entregable 08, aprobada por Rö).
+// Guía de observación contextual v3 · FRUTA · Maas Chile (entregable 08, aprobada por el equipo).
 // Participantes anonimizados con códigos P1…P11.
 // Texto tomado del entregable 2026-10-26_guia-observacion-v3.docx. No agregar contenido.
 export const GUIA = {

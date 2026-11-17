@@ -26,7 +26,7 @@ export interface ToolLayout {
   featured?: boolean;
 }
 
-/** Same 8-node radial as voc.html (Martina). Each node = a suite tool. */
+/** Same 8-node radial as voc.html. Each node = a suite tool. */
 export const TOOL_LAYOUT: ToolLayout[] = [
   { id: 'benchmark', icon: '🌅', top: '12%', left: '50%', href: '/benchmark', spa: true },
   { id: 'uxflow', icon: '🎯', top: '23%', left: '77%', href: '/uxflow', spa: true },
@@ -120,7 +120,7 @@ const COPY: Record<OnboardLang, Copy> = {
       voc: {
         voc: 'Qué tocan mis manos',
         name: 'Mapa Vocacional',
-        job: 'El VOC original: 8 preguntas, inferencia local, caminos para Martina.',
+        job: 'El VOC original: 8 preguntas, inferencia local, caminos a partir de tus respuestas.',
       },
       tlp: {
         voc: 'Qué problema resuelvo',
@@ -187,7 +187,7 @@ const COPY: Record<OnboardLang, Copy> = {
       voc: {
         voc: 'What my hands touch',
         name: 'Vocational map',
-        job: 'The original VOC: 8 questions, local inference, paths for Martina.',
+        job: 'The original VOC: 8 questions, local inference, paths from your answers.',
       },
       tlp: {
         voc: 'What problem I solve',
@@ -254,7 +254,7 @@ const COPY: Record<OnboardLang, Copy> = {
       voc: {
         voc: 'O que minhas mãos tocam',
         name: 'Mapa Vocacional',
-        job: 'O VOC original: 8 perguntas, inferência local, caminhos para Martina.',
+        job: 'O VOC original: 8 perguntas, inferência local, caminhos a partir das suas respostas.',
       },
       tlp: {
         voc: 'Qual problema resolvo',
