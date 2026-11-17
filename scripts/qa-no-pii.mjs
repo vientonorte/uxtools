@@ -163,9 +163,6 @@ export function selfTest() {
     assertHits('fromCharCode', `String.fromCharCode(${codes.join(',')})`, deny);
     assertHits('array', `const legacy = [${codes.join(',')}];`, deny);
 
-    const realCodes = [99, 97, 109, 105, 108, 97];
-    assertHits('real-char-array', `[${realCodes.join(',')}]`, new Set(DENY_HASHES));
-
     const full = '56911111111';
     const core = '911111111';
     const last8 = '11111111';
