@@ -419,6 +419,7 @@ function showChrome(path) {
   back.classList.toggle("hidden", path === "/estudios" || path === "/privacidad");
   privacy.classList.toggle("hidden", path !== "/estudios");
   $("qr-counter")?.classList.toggle("hidden", path !== "/estudios");
+  $("gt-link")?.classList.toggle("hidden", path !== "/estudios");
   tabbar.classList.toggle("hidden", solo);
   for (const link of tabbar.querySelectorAll("a")) {
     const on = link.dataset.tab === TABS[path];

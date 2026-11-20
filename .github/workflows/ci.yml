@@ -30,3 +30,23 @@ jobs:
 
       - name: Run unit tests
         run: node tests/unit.cjs
+
+  a11y-gt:
+    name: Smoke + axe AA /campo/gt/
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Instalar Playwright y axe (sin tocar package.json)
+        run: |
+          npm install --no-save --no-package-lock playwright@1 @axe-core/playwright@4
+          npx playwright install --with-deps chromium
+      - name: Servir public/ y correr smoke
+        run: |
+          python3 -m http.server 8080 --directory public >/dev/null 2>&1 &
+          sleep 2
+          BASE=http://localhost:8080 node scripts/smoke-gt.mjs

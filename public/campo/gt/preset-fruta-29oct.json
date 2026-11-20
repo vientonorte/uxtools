@@ -1,0 +1,391 @@
+{
+ "kind": "campo-gt-preset",
+ "version": 1,
+ "name": "FRUTA · PoC 29-oct (preliminar)",
+ "note": "Paráfrasis de gt-poc-29oct.md y gt-cruce-29oct.md. Sin nombres, sin citas de personas, sin datos de encuesta.",
+ "codes": [
+  {
+   "id": "plan-b",
+   "name": "Plan B permanente",
+   "description": "Lleva un medio de respaldo porque el lector QR falla",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Lleva un medio de respaldo porque el lector QR falla",
+     "ref": "G1 H3 · deck"
+    }
+   ]
+  },
+  {
+   "id": "pago-riesgo",
+   "name": "Pago según riesgo",
+   "description": "Prefiere la bip! por miedo a que le roben el celular al pagar",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Prefiere la bip! por miedo a que le roben el celular al pagar",
+     "ref": "G1 M6 · deck"
+    }
+   ]
+  },
+  {
+   "id": "cuenta-conectada",
+   "name": "Miedo a la cuenta conectada",
+   "description": "Teme perder control si el pasaje sale directo del banco",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Teme perder control si el pasaje sale directo del banco",
+     "ref": "G1 H11"
+    }
+   ]
+  },
+  {
+   "id": "recarga-cercana",
+   "name": "Recarga con lo cercano",
+   "description": "Recarga en almacén, con la cajera o con un familiar",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Recarga en almacén, con la cajera o con un familiar",
+     "ref": "G1 H5, H9"
+    }
+   ]
+  },
+  {
+   "id": "totem-falla",
+   "name": "Tótem que falla",
+   "description": "Rechaza billetes; filas largas",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Rechaza billetes; filas largas",
+     "ref": "G1 H6 · perfil B"
+    }
+   ]
+  },
+  {
+   "id": "saldo-bloquea",
+   "name": "Saldo negativo bloquea",
+   "description": "No lo dejan subir; ansiedad al validar",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "No lo dejan subir; ansiedad al validar",
+     "ref": "G1 H8"
+    }
+   ]
+  },
+  {
+   "id": "credito-diferido",
+   "name": "Crédito diferido informal",
+   "description": "Usa QR con poco saldo: el cobro llega después",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Usa QR con poco saldo: el cobro llega después",
+     "ref": "deck «Hackeando el sistema»"
+    }
+   ]
+  },
+  {
+   "id": "trasbordo",
+   "name": "Trasbordo como cuello",
+   "description": "Trasbordos lentos y buses llenos",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Trasbordos lentos y buses llenos",
+     "ref": "G1 M4 · 10 de 10 fichas"
+    }
+   ]
+  },
+  {
+   "id": "manos-ocupadas",
+   "name": "Manos ocupadas",
+   "description": "Una mano, celular y bolsas al pagar",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Una mano, celular y bolsas al pagar",
+     "ref": "G2 BAQ-1, BAQ-2"
+    }
+   ]
+  },
+  {
+   "id": "mayores-totem",
+   "name": "Mayores en el tótem",
+   "description": "Tardan más; terminan en boletería",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Tardan más; terminan en boletería",
+     "ref": "OBS-28-10-BAQ-2"
+    }
+   ]
+  },
+  {
+   "id": "banco-metro",
+   "name": "Banco dentro del metro",
+   "description": "Cajero y recarga en 2 minutos",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Cajero y recarga en 2 minutos",
+     "ref": "OBS-28-10-BAQ-2"
+    }
+   ]
+  },
+  {
+   "id": "app-falla",
+   "name": "App falla en uso",
+   "description": "QR a negro, cierres, «no se encontraron rutas»",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "QR a negro, cierres, «no se encontraron rutas»",
+     "ref": "MET-1, MET-4 · benchmark"
+    }
+   ]
+  },
+  {
+   "id": "cobro-opaco",
+   "name": "Cobro opaco",
+   "description": "Cobro por QR no usado; reclamo sin resolver",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Cobro por QR no usado; reclamo sin resolver",
+     "ref": "OBS-28-10-MET-3"
+    }
+   ]
+  },
+  {
+   "id": "sin-alertas",
+   "name": "Sin alertas, más nervio",
+   "description": "Sin avisos de la app, nervio en calles conocidas",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Sin avisos de la app, nervio en calles conocidas",
+     "ref": "OBS-28-10-MET-2"
+    }
+   ]
+  },
+  {
+   "id": "mediador",
+   "name": "Mediador humano",
+   "description": "Guardias y transeúntes orientan",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Guardias y transeúntes orientan",
+     "ref": "BAQ-1 28-oct, BAQ-2"
+    }
+   ]
+  },
+  {
+   "id": "sin-ayuda-oficial",
+   "name": "Falta ayuda oficial",
+   "description": "Sin ayuda de Metro en el lugar",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Sin ayuda de Metro en el lugar",
+     "ref": "OBS-28-10-OBS-1"
+    }
+   ]
+  },
+  {
+   "id": "rodear-pago",
+   "name": "Rodear el pago",
+   "description": "Ascensor usado para no pagar",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Ascensor usado para no pagar",
+     "ref": "OBS-28-10-MET-3"
+    }
+   ]
+  },
+  {
+   "id": "no-hermetico",
+   "name": "Entradas no herméticas",
+   "description": "Validan aunque podrían no hacerlo",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Validan aunque podrían no hacerlo",
+     "ref": "OBS-28-10-PD-1"
+    }
+   ]
+  },
+  {
+   "id": "app-vs-calle",
+   "name": "App contra calle",
+   "description": "La app dice poco concurrido; el paradero tiene fila",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "La app dice poco concurrido; el paradero tiene fila",
+     "ref": "hallazgo Baquedano"
+    }
+   ]
+  },
+  {
+   "id": "efimero",
+   "name": "Presencia efímera",
+   "description": "Afiches retirados; avisos de micro compiten",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Afiches retirados; avisos de micro compiten",
+     "ref": "CER-1, OBS-1"
+    }
+   ]
+  },
+  {
+   "id": "una-app",
+   "name": "Una sola app deseada",
+   "description": "Ninguna app une recarga, combinación y rutas",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Ninguna app une recarga, combinación y rutas",
+     "ref": "OBS-28-10-BAQ-1 · G1 M9"
+    }
+   ]
+  },
+  {
+   "id": "info-persona",
+   "name": "Información persona a persona",
+   "description": "Supo del corte por un mensaje, no por la app",
+   "sources": [
+    {
+     "rowId": "",
+     "field": "",
+     "excerpt": "Supo del corte por un mensaje, no por la app",
+     "ref": "G1 M8"
+    }
+   ]
+  }
+ ],
+ "categories": [
+  {
+   "id": "C1",
+   "name": "Fragmentación del pago",
+   "codeIds": [
+    "plan-b",
+    "totem-falla",
+    "cuenta-conectada",
+    "cobro-opaco",
+    "una-app"
+   ],
+   "conditions": "Puntos de recarga lejos o rotos; sistema en piezas",
+   "actions": "Plan B, recargar cerca",
+   "consequences": "Desconfianza digital"
+  },
+  {
+   "id": "C2",
+   "name": "El riesgo decide el medio",
+   "codeIds": [
+    "pago-riesgo",
+    "manos-ocupadas",
+    "sin-alertas"
+   ],
+   "conditions": "",
+   "actions": "",
+   "consequences": ""
+  },
+  {
+   "id": "C3",
+   "name": "Parchar con lo cercano",
+   "codeIds": [
+    "recarga-cercana",
+    "mediador",
+    "banco-metro",
+    "info-persona"
+   ],
+   "conditions": "",
+   "actions": "",
+   "consequences": ""
+  },
+  {
+   "id": "C4",
+   "name": "Rodear el sistema",
+   "codeIds": [
+    "credito-diferido",
+    "rodear-pago",
+    "no-hermetico"
+   ],
+   "conditions": "",
+   "actions": "",
+   "consequences": ""
+  },
+  {
+   "id": "C5",
+   "name": "Lo digital no calza con la calle",
+   "codeIds": [
+    "app-falla",
+    "app-vs-calle",
+    "cobro-opaco",
+    "efimero"
+   ],
+   "conditions": "",
+   "actions": "",
+   "consequences": ""
+  },
+  {
+   "id": "C6",
+   "name": "El trasbordo como fricción que queda",
+   "codeIds": [
+    "trasbordo"
+   ],
+   "conditions": "",
+   "actions": "",
+   "consequences": ""
+  }
+ ],
+ "core": {
+  "name": "Armar el viaje con lo que hay, parchando con personas un sistema en piezas",
+  "status": "candidata, sin saturar"
+ },
+ "memos": [
+  {
+   "id": "M-001",
+   "title": "Paradigma (Strauss–Corbin)",
+   "text": "Condiciones: recarga lejos o rota; sistema en piezas. Contexto: punta, trasbordo, salida densa, inseguridad. Estrategias: plan B, recargar cerca, preguntar a personas, rodear el pago. Consecuencias: desconfianza digital, ansiedad, el trasbordo como último freno."
+  },
+  {
+   "id": "M-002",
+   "title": "Hipótesis H1–H5",
+   "text": "H1 se elige el medio que reduce riesgo y gestión en ese tramo. H2 cuando la infraestructura falla, ayuda una persona. H3 resolver la recarga mueve la fricción al trasbordo. H4 la app falla donde el cuerpo está ocupado o expuesto. H5 rodear el pago es estrategia de bajo presupuesto (débil)."
+  },
+  {
+   "id": "M-003",
+   "title": "Sesgo de método",
+   "text": "Las últimas fichas son autoetnografía de una sola persona. El salto digital puede venir del método."
+  }
+ ]
+}

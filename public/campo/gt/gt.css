@@ -1,0 +1,61 @@
+/* Tokens VN copiados de mi-portafolio/src/styles/vn-tokens.css (naranja #FF931E). No usa vientonorte-core. */
+:root {
+  color-scheme: light;
+  --vn-primitive-azul-noche: #0d1b3d;
+  --vn-primitive-marfil: #f7f2e7;
+  --vn-primitive-pizarra: #4a5568;
+  --vn-primitive-naranja: #FF931E;
+  --vn-primitive-naranja-600: #E8861B;
+  --vn-primitive-naranja-700: #9E4F00;
+  --vn-primitive-rojo-700: #c2330f;
+  --vn-border-strong: rgba(13, 27, 61, 0.32);
+  --vn-font-display: 'DM Serif Display', Georgia, 'Times New Roman', serif;
+  --vn-font-ui: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --vn-radius-sm: 8px;
+  --vn-radius-md: 12px;
+  --vn-touch-min: 44px;
+  --ink: var(--vn-primitive-azul-noche);
+  --muted: var(--vn-primitive-pizarra);
+  --paper: var(--vn-primitive-marfil);
+  --accent: var(--vn-primitive-naranja);
+  --accent-text: var(--vn-primitive-naranja-700);
+  --focus: var(--vn-primitive-naranja-700);
+  font-family: var(--vn-font-ui);
+}
+* { box-sizing: border-box; }
+body { margin: 0 auto; max-width: 860px; padding: 16px; background: var(--paper); color: var(--ink); line-height: 1.55; }
+h1, h2 { font-family: var(--vn-font-display); font-weight: 400; }
+h1 { font-size: 2rem; margin: 4px 0; }
+.eyebrow { color: var(--accent-text); font-weight: 600; margin: 0; }
+.lead, .help { color: var(--muted); }
+a { color: var(--accent-text); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 8px; background: #fff; padding: 8px 12px; }
+.skip:focus { left: 8px; z-index: 10; }
+.back { display: inline-flex; min-height: var(--vn-touch-min); align-items: center; }
+.steps { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 8px 0 16px; }
+.steps a { min-height: var(--vn-touch-min); display: inline-flex; align-items: center; }
+section { border-top: 1px solid var(--vn-border-strong); padding: 8px 0 24px; }
+.card { background: #fff; border: 1px solid var(--vn-border-strong); border-radius: var(--vn-radius-md); padding: 12px; margin: 8px 0; display: grid; gap: 8px; }
+.field { display: grid; gap: 4px; font-weight: 600; }
+.check { display: flex; gap: 8px; align-items: center; min-height: var(--vn-touch-min); }
+input, select, textarea { font: inherit; color: var(--ink); background: #fff; border: 1px solid var(--vn-border-strong); border-radius: var(--vn-radius-sm); padding: 8px; min-height: var(--vn-touch-min); width: 100%; }
+input[type="checkbox"] { width: 22px; min-height: 22px; }
+button, .btn-file { font: inherit; font-weight: 600; min-height: var(--vn-touch-min); padding: 0 16px; border-radius: var(--vn-radius-sm); border: 2px solid var(--ink); background: var(--accent); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; }
+button.secondary, .btn-file { background: #fff; }
+button.danger { background: #fff; color: var(--vn-primitive-rojo-700); border-color: var(--vn-primitive-rojo-700); }
+.btn-file:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.list { list-style: none; padding: 0; display: grid; gap: 8px; }
+.list li { background: #fff; border: 1px solid var(--vn-border-strong); border-radius: var(--vn-radius-sm); padding: 8px 12px; }
+.meta { color: var(--muted); font-size: 0.9rem; }
+.result { font-size: 1.15rem; font-weight: 700; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; background: #fff; }
+th, td { border: 1px solid var(--vn-border-strong); padding: 6px 8px; text-align: left; vertical-align: top; }
+th { background: #fff4e5; }
+.ok { color: #1f6b3e; } .no { color: var(--vn-primitive-rojo-700); }
+fieldset { border: 1px solid var(--vn-border-strong); border-radius: var(--vn-radius-sm); }
+#chart-svg svg { max-width: 100%; height: auto; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.warn { background: #fff4e5; border: 2px solid var(--accent-text); border-radius: var(--vn-radius-sm); padding: 8px 12px; margin: 8px 0; }
