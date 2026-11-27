@@ -109,19 +109,23 @@ module.exports = function register(test, section) {
   });
 
   test('la identidad por defecto de Instafotos es la marca pública guardada', function () {
-    var execSync = require('child_process').execSync;
-    function fields(src) {
-      var block = src.slice(src.indexOf('INITIAL_CONFIG'), src.indexOf('DEFAULT_PARKS'));
-      return {
-        name: (block.match(/name:\s*"([^"]*)"/) || [])[1],
-        instagram: (block.match(/instagram:\s*"([^"]*)"/) || [])[1],
-      };
-    }
+    var crypto = require('crypto');
     var current = fs.readFileSync(path.join(ROOT, 'src/pages/Instafotos/data.ts'), 'utf8');
-    var saved = execSync('git show 0eac8db:src/pages/Instafotos/data.ts', { cwd: ROOT, encoding: 'utf8' });
-    assert.deepStrictEqual(fields(current), fields(saved));
-    assert.ok(fields(current).name.length > 0);
-    assert.ok(!/wa\.me\/|tel:\+?\d/.test(current));
+    var block = current.slice(current.indexOf('INITIAL_CONFIG'), current.indexOf('DEFAULT_PARKS'));
+    var name = (block.match(/name:\s*"([^"]*)"/) || [])[1] || '';
+    var instagram = (block.match(/instagram:\s*"([^"]*)"/) || [])[1] || '';
+    function sha(value) {
+      return crypto.createHash('sha256').update(value, 'utf8').digest('hex');
+    }
+    // Pinned from 0eac8db. CI checks out a shallow clone, so git show of that commit is unavailable.
+    assert.strictEqual(sha(name), '8d0ff3175984201a610fc4da58962176576aec98924d3e91d7263f3d328628d9');
+    assert.strictEqual(sha(instagram), 'c0de5ac94394de28a8bbc90cdaa6449387ee4e02610d6176adb3a8daef0fe5d2');
+    var dir = path.join(ROOT, 'src/pages/Instafotos');
+    var files = fs.readdirSync(dir);
+    for (var i = 0; i < files.length; i++) {
+      var text = fs.readFileSync(path.join(dir, files[i]), 'utf8');
+      assert.ok(!/wa\.me\/|tel:\+?\d/.test(text), files[i]);
+    }
   });
 
   test('un eje con nombre sintético se copia a Persona A y se conserva', function () {
