@@ -10,6 +10,10 @@ import { mkdtempSync, rmSync, writeFileSync, readdirSync, readFileSync, statSync
 import { tmpdir } from 'node:os';
 import { extname, join, relative } from 'node:path';
 
+// Name tokens are unsalted SHA-256. A dictionary can reverse common given
+// names; that limitation is accepted for now. Follow-up: HMAC with a GitHub
+// Actions secret so the list is not reversible offline. Do not add that secret
+// in this repo.
 export const DENY_HASHES = [
   '80f563ecc98a3145fc14237415b486396ec6be5e9826ccd0d6ff1686ef2ffc50',
   '3a48d3ed7d6c02fb57e559562865cc40e58aeaa1920bbf6017cda684703ba73f',
@@ -21,15 +25,19 @@ export const DENY_HASHES = [
   '59e13abf8b33b5198efd51c15e5f2b22a7bb99388b0f8bf5257840fd13820913',
   '7718a2da303893a7e9e7c4207b141a8c93e6feb2c2a185a93ed5ef2950976ecf',
   '433c5861e58c488bde3a98fa6808f4b332f8621d8bd454cc0296b444a2db914e',
-  'd40485ec618660a7f92327e5dbe2068de53198072a67fb9f162158f974a48898',
-  '6c4501886549e00e0402a952b878d8c7154b3e9033abe7d9989949e9cc06ced1',
-  '3edbfd4d9535c943e9e6fbda39edc2d89e9254e027190fe7f0ac60b806cffa6b',
   'd27401c995de2d81e8a16e7352d95a04a8be8ed2c95a84be1682ed3ec5979d9b',
   'd68cc2c226778f145f7204b8acca524e498b56bfa69ce9ffad48933ec6d7aff1',
   'f4027eaf2f218156bba9de620f9be0ca2d25472e600666b7e739072a4e4e4f84',
   '034a2a475c9a28ce53874bcb3d2d38efbc643c168aa5487182b71244d27e7a93',
   '7381e3ddaa47ef9e526cea785d485180d0f006fcb175cc2913171735936e3df2',
 ];
+
+/** Synthetic numbers used only by the self-test. Production scans ignore these exact digit strings. */
+export const SYNTHETIC_PHONE_ALLOWLIST = new Set([
+  '56911111111',
+  '911111111',
+  '11111111',
+]);
 
 const TEXT = new Set([
   '.html', '.htm', '.js', '.mjs', '.cjs', '.json', '.css',
@@ -53,24 +61,71 @@ export function tokensOf(text) {
   return out;
 }
 
-function addPhoneDigits(found, digits) {
-  if (!/^\d{8,15}$/.test(digits)) return;
-  found.add(digits);
-  const country = digits.match(/^56(9\d{8})$/);
-  if (country) {
-    found.add(country[1]);
-    found.add(digits.slice(-8));
-  }
+function decodeUnicodeEscapes(text) {
+  return text.replace(/\\u([0-9a-fA-F]{4})/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)));
 }
 
-/** Dígitos de teléfono, incluido el núcleo de 9 cuando el run es 56 + ese núcleo. */
-export function digitCandidates(text) {
-  const found = new Set();
-  const runs = text.match(/(?:\+|00)?\(?\d[\d\s().-]{5,}\d\)?/g) ?? [];
-  for (const run of runs) addPhoneDigits(found, run.replace(/\D/g, ''));
-  for (const match of text.matchAll(/wa\.me\/(\d{8,15})/gi)) addPhoneDigits(found, match[1]);
-  for (const match of text.matchAll(/tel:\+?(\d{8,15})/gi)) addPhoneDigits(found, match[1]);
-  return [...found];
+function digitsOnly(value) {
+  return value.replace(/\D/g, '');
+}
+
+function isAllowlisted(digits, allowlist) {
+  if (!allowlist || allowlist.size === 0) return false;
+  if (allowlist.has(digits)) return true;
+  const country = digits.match(/^56(9\d{8})$/);
+  if (country && (allowlist.has(country[1]) || allowlist.has(digits.slice(-8)))) return true;
+  return false;
+}
+
+/**
+ * Chilean mobile (+56 9 and 8 more digits, separators allowed), a national
+ * 9-digit mobile in a phone-like context or with separators, and any
+ * wa.me/<digits> or tel:<digits> link. No stored phone hashes.
+ */
+export function findPhoneLeaks(text, allowlist = new Set()) {
+  const hits = [];
+  const source = decodeUnicodeEscapes(text);
+  const consider = (label, raw) => {
+    const digits = digitsOnly(raw);
+    if (digits.length < 8) return;
+    if (isAllowlisted(digits, allowlist)) return;
+    hits.push(label);
+  };
+
+  for (const match of source.matchAll(/wa\.me\/(\d{6,15})/gi)) consider('wa.me', match[1]);
+  for (const match of source.matchAll(/tel:\+?(\d{6,15})/gi)) consider('tel', match[1]);
+
+  const chile = /(?:\+|00)?\s*\(?\s*56\s*\)?[\s.-]*9[\s.-]*\d{4}[\s.-]*\d{4}(?!\d)/g;
+  for (const match of source.matchAll(chile)) consider('cl-mobile', match[0]);
+  const compact = /(?<!\d)569\d{8}(?!\d)/g;
+  for (const match of source.matchAll(compact)) consider('cl-mobile', match[0]);
+
+  const grouped = /(?<!\d)9(?:\d{4}[\s.-]\d{4}|[\s.-]\d{4}[\s.-]\d{4})(?!\d)/g;
+  for (const match of source.matchAll(grouped)) consider('cl-national', match[0]);
+
+  const bare = /(?<!\d)9\d{8}(?!\d)/g;
+  for (const match of source.matchAll(bare)) {
+    const before = source.slice(Math.max(0, match.index - 48), match.index).toLowerCase();
+    if (!/tel:|wa\.me|whatsapp|phone|tel[eé]fono|m[oó]vil|llamar|contacto/.test(before)) continue;
+    consider('cl-national', match[0]);
+  }
+  return hits;
+}
+
+function identityHits() {
+  const file = join(process.cwd(), 'src/pages/Instafotos/data.ts');
+  if (!existsSync(file)) return [];
+  const source = readFileSync(file, 'utf8');
+  const start = source.indexOf('INITIAL_CONFIG');
+  const end = source.indexOf('DEFAULT_PARKS');
+  if (start < 0 || end < start) return ['default identity must be empty'];
+  const block = source.slice(start, end);
+  const name = block.match(/name:\s*"([^"]*)"/);
+  const instagram = block.match(/instagram:\s*"([^"]*)"/);
+  if (!name || name[1] !== '' || !instagram || instagram[1] !== '') {
+    return ['default identity must be empty'];
+  }
+  return [];
 }
 
 function decodedLiterals(text) {
@@ -91,20 +146,18 @@ function decodedLiterals(text) {
   return out;
 }
 
-export function findDeniedTokens(text, deny = new Set(DENY_HASHES)) {
+export function findDeniedTokens(text, deny = new Set(DENY_HASHES), allowlist = new Set()) {
   const hits = new Set();
+  const decoded = decodeUnicodeEscapes(text);
   const consider = (value) => {
     for (const token of tokensOf(value)) {
       const hash = sha256(token);
       if (deny.has(hash)) hits.add(hash);
     }
   };
-  consider(text);
-  for (const digits of digitCandidates(text)) {
-    const hash = sha256(digits);
-    if (deny.has(hash)) hits.add(hash);
-  }
-  for (const decoded of decodedLiterals(text)) consider(decoded);
+  consider(decoded);
+  for (const leak of findPhoneLeaks(decoded, allowlist)) hits.add(`phone:${leak}`);
+  for (const literal of decodedLiterals(decoded)) consider(literal);
   return [...hits];
 }
 
@@ -134,6 +187,7 @@ export function scanDist(root, deny = new Set(DENY_HASHES)) {
 
   if (!existsSync(root)) throw new Error(`falta ${root}`);
   walk(root);
+  for (const problem of identityHits()) hits.push(problem);
   return { hits, files };
 }
 
@@ -162,25 +216,30 @@ export function selfTest() {
     const codes = [...token].map((ch) => ch.charCodeAt(0));
     assertHits('fromCharCode', `String.fromCharCode(${codes.join(',')})`, deny);
     assertHits('array', `const legacy = [${codes.join(',')}];`, deny);
+    assertHits('unicode-escape', '\\u0070lantedfixture', deny);
 
-    const full = '56911111111';
-    const core = '911111111';
-    const last8 = '11111111';
-    const phoneDeny = new Set([sha256(full), sha256(core), sha256(last8)]);
+    const none = new Set();
     const formats = [
-      ['plus-cc', '+56911111111'],
+      ['plus-cc', '+56 9 1111 1111'],
       ['digits-cc', '56911111111'],
-      ['spaced-cc', '+56 9 1111 1111'],
-      ['bare-cc', '56 9 1111 1111'],
+      ['spaced-cc', '56 9 1111 1111'],
       ['paren-cc', '(+56) 9 1111 1111'],
       ['dashed-cc', '56-9-1111-1111'],
       ['wa', 'https://wa.me/56911111111'],
       ['tel', 'tel:+56911111111'],
-      ['bare-9', '911111111'],
+      ['bare-9', 'llamar 911111111'],
       ['spaced-9', '9 1111 1111'],
       ['dashed-9', '91111-1111'],
     ];
-    for (const [label, sample] of formats) assertHits(label, sample, phoneDeny);
+    for (const [label, sample] of formats) {
+      if (findPhoneLeaks(sample, none).length === 0) throw new Error(`fixture debía fallar: ${label}`);
+      if (findPhoneLeaks(sample, SYNTHETIC_PHONE_ALLOWLIST).length !== 0) {
+        throw new Error(`allowlist debía ignorar la fixture: ${label}`);
+      }
+    }
+    if (findPhoneLeaks('tel:+56922222222', SYNTHETIC_PHONE_ALLOWLIST).length === 0) {
+      throw new Error('un número fuera de la allowlist debía fallar');
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

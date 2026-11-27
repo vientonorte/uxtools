@@ -94,13 +94,9 @@ function withLegacyFields(raw: Record<string, unknown>): Record<string, unknown>
       dinero: 'e6',
       estudio: 'e7',
     };
-    const known = new Set(['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', ...Object.keys(idMap)]);
     for (const [oldId, id] of Object.entries(idMap)) {
       if (scores[id] == null && scores[oldId] != null) scores[id] = scores[oldId];
-    }
-    for (const oldId of Object.keys(scores)) {
-      if (known.has(oldId)) continue;
-      if (scores.e4 == null && scores[oldId] != null) scores.e4 = scores[oldId];
+      if (oldId !== id) delete scores[oldId];
     }
     next.scores = scores;
   }
@@ -113,8 +109,14 @@ export function sanitizeSelfradarSession(raw: unknown): SelfradarSession | null 
   const base = createSelfradarSession();
   const scores = emptyAxisScores();
   const rawScores = isObj(source.scores) ? source.scores : {};
+  const axisIds = new Set(SELFRADAR_AXES.map((axis) => axis.id));
   for (const axis of SELFRADAR_AXES) {
     scores[axis.id] = clampAxisScore(rawScores[axis.id]);
+  }
+  for (const id of Object.keys(rawScores)) {
+    if (axisIds.has(id)) continue;
+    if (!/^[A-Za-z0-9_-]{1,40}$/.test(id)) continue;
+    scores[id] = clampAxisScore(rawScores[id]);
   }
 
   const text = (k: keyof SelfradarSession) =>
