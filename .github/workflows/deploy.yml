@@ -57,9 +57,23 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Install dependencies
+        if: hashFiles('MAINTENANCE') == ''
         run: npm install
 
+      - name: Maintenance mode (MAINTENANCE file present)
+        id: maint
+        run: |
+          if [ -f MAINTENANCE ]; then
+            rm -rf dist && mkdir -p dist/pulso
+            cp maintenance/index.html maintenance/404.html maintenance/robots.txt dist/
+            cp maintenance/index.html dist/pulso/index.html
+            echo "on=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "on=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build static suite + React app
+        if: steps.maint.outputs.on != 'true'
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
