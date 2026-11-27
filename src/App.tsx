@@ -13,10 +13,10 @@ import Selfradar from './pages/Selfradar';
 import KitTlp from './pages/KitTlp';
 import Onboarding from './pages/Onboarding';
 import Polijuego from './pages/Polijuego';
-import Instafotos from './pages/Instafotos';
 import { ToolGate } from './components/ToolGate';
 
 const Medicinal = lazy(() => import('./pages/Medicinal'));
+const Instafotos = lazy(() => import('./pages/Instafotos'));
 
 function PageFallback() {
   return (
@@ -126,8 +126,22 @@ export default function App() {
             </ToolGate>
           }
         />
-        <Route path="/instafotos-app" element={<Instafotos />} />
-        <Route path="/instafotos-app/*" element={<Instafotos />} />
+        <Route
+          path="/instafotos-app"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <Instafotos />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/instafotos-app/*"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <Instafotos />
+            </Suspense>
+          }
+        />
       </Routes>
       <Footer />
     </BenchmarkProvider>

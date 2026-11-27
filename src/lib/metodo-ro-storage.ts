@@ -98,6 +98,19 @@ function withLegacyFields(raw: Record<string, unknown>): Record<string, unknown>
       if (scores[id] == null && scores[oldId] != null) scores[id] = scores[oldId];
       if (oldId !== id) delete scores[oldId];
     }
+    const axisIds = new Set(['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7']);
+    const unknown = Object.keys(scores).filter((id) => !axisIds.has(id) && !idMap[id]);
+    const e4 = scores.e4 as { score?: number; action?: string } | undefined;
+    const e4Empty = e4 == null || ((e4.score ?? 0) === 0 && !e4.action);
+    if (e4Empty) {
+      const donor = unknown.find((id) => {
+        const entry = scores[id];
+        return isObj(entry) && ((entry.score as number) > 0 || Boolean(entry.action));
+      });
+      if (donor && isObj(scores[donor])) {
+        scores.e4 = { ...(scores[donor] as Record<string, unknown>) };
+      }
+    }
     next.scores = scores;
   }
   return next;

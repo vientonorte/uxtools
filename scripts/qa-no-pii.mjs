@@ -112,20 +112,30 @@ export function findPhoneLeaks(text, allowlist = new Set()) {
   return hits;
 }
 
-function identityHits() {
+function loadBrandScope() {
   const file = join(process.cwd(), 'src/pages/Instafotos/data.ts');
-  if (!existsSync(file)) return [];
+  if (!existsSync(file)) return { strings: [], allowedHashes: new Set() };
   const source = readFileSync(file, 'utf8');
   const start = source.indexOf('INITIAL_CONFIG');
   const end = source.indexOf('DEFAULT_PARKS');
-  if (start < 0 || end < start) return ['default identity must be empty'];
-  const block = source.slice(start, end);
-  const name = block.match(/name:\s*"([^"]*)"/);
-  const instagram = block.match(/instagram:\s*"([^"]*)"/);
-  if (!name || name[1] !== '' || !instagram || instagram[1] !== '') {
-    return ['default identity must be empty'];
+  const block = start >= 0 && end > start ? source.slice(start, end) : '';
+  const name = (block.match(/name:\s*"([^"]*)"/) || [])[1] || '';
+  const instagram = (block.match(/instagram:\s*"([^"]*)"/) || [])[1] || '';
+  const strings = [name, instagram].filter((value) => value.length > 0);
+  const allowedHashes = new Set();
+  const deny = new Set(DENY_HASHES);
+  for (const value of strings) {
+    for (const token of tokensOf(value)) {
+      const hash = sha256(token);
+      if (deny.has(hash)) allowedHashes.add(hash);
+    }
   }
-  return [];
+  return { strings, allowedHashes };
+}
+
+function inInstafotosScope(rel) {
+  const name = rel.replace(/\\/g, '/');
+  return /(?:^|\/)Instafotos(?:\/|-[^/]+\.js$)/.test(name);
 }
 
 function decodedLiterals(text) {
@@ -164,12 +174,14 @@ export function findDeniedTokens(text, deny = new Set(DENY_HASHES), allowlist = 
 export function scanDist(root, deny = new Set(DENY_HASHES)) {
   const hits = [];
   let files = 0;
+  const brand = loadBrandScope();
 
   function walk(dir) {
     for (const name of readdirSync(dir)) {
       const abs = join(dir, name);
       const rel = relative(root, abs);
       for (const hash of findDeniedTokens(name, deny)) {
+        if (inInstafotosScope(rel) && brand.allowedHashes.has(hash)) continue;
         hits.push(`nombre de archivo: ${rel} → ${hash}`);
       }
       if (statSync(abs).isDirectory()) {
@@ -179,15 +191,22 @@ export function scanDist(root, deny = new Set(DENY_HASHES)) {
       files += 1;
       const ext = extname(name).toLowerCase();
       if (!TEXT.has(ext)) continue;
-      for (const hash of findDeniedTokens(readFileSync(abs, 'utf8'), deny)) {
+      const text = readFileSync(abs, 'utf8');
+      const scoped = inInstafotosScope(rel);
+      for (const hash of findDeniedTokens(text, deny)) {
+        if (scoped && brand.allowedHashes.has(hash)) continue;
         hits.push(`contenido: ${rel} → ${hash}`);
+      }
+      if (!scoped) {
+        for (const value of brand.strings) {
+          if (text.includes(value)) hits.push(`marca fuera de Instafotos: ${rel}`);
+        }
       }
     }
   }
 
   if (!existsSync(root)) throw new Error(`falta ${root}`);
   walk(root);
-  for (const problem of identityHits()) hits.push(problem);
   return { hits, files };
 }
 
@@ -239,6 +258,25 @@ export function selfTest() {
     }
     if (findPhoneLeaks('tel:+56922222222', SYNTHETIC_PHONE_ALLOWLIST).length === 0) {
       throw new Error('un número fuera de la allowlist debía fallar');
+    }
+
+    const brand = loadBrandScope();
+    if (brand.strings.length < 2) throw new Error('falta la marca pública de Instafotos');
+    const chunk = join(dir, 'Instafotos-fixture.js');
+    const other = join(dir, 'hub-other.js');
+    writeFileSync(chunk, brand.strings.join('\n'));
+    writeFileSync(other, brand.strings.join('\n'));
+    const scoped = scanDist(dir, new Set());
+    if (!scoped.hits.some((hit) => hit.includes('hub-other.js'))) {
+      throw new Error('la marca fuera de Instafotos debía fallar');
+    }
+    if (scoped.hits.some((hit) => hit.includes('Instafotos-fixture.js') && hit.startsWith('marca'))) {
+      throw new Error('la marca dentro de Instafotos no debía fallar');
+    }
+    writeFileSync(chunk, `${brand.strings.join('\n')}\ntel:+56922222222\n`);
+    const withPhone = scanDist(dir, new Set());
+    if (!withPhone.hits.some((hit) => hit.includes('Instafotos-fixture.js') && hit.includes('phone:'))) {
+      throw new Error('un teléfono dentro de Instafotos debía fallar');
     }
   } finally {
     rmSync(dir, { recursive: true, force: true });

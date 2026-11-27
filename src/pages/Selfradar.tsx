@@ -530,8 +530,7 @@ export default function Selfradar() {
       </MrTabs>
 
       <p className="mr-privacy">
-        Security by design: validación al cargar/guardar, límites de texto, export
-        cifrado opcional (AES-GCM), sin red. No diagnosticar desde el score — solo trazar.
+        Security by design: los datos quedan en este dispositivo. La descarga en claro está pendiente; el export disponible va cifrado (AES-GCM). Sin red.
       </p>
 
       <MrConfirmModal
@@ -548,7 +547,7 @@ export default function Selfradar() {
         payload={active}
         tool="selfradar"
         filenameBase={`selfradar-${active.date || 'sesion'}`}
-        preferEncrypted={false}
+        preferEncrypted={true}
         onDone={showToast}
         onError={showToast}
       />

@@ -108,10 +108,58 @@ module.exports = function register(test, section) {
     assert.strictEqual(els['uxtools-route-robots'], undefined);
   });
 
-  test('la identidad por defecto de Instafotos está vacía', function () {
-    var src = fs.readFileSync(path.join(ROOT, 'src/pages/Instafotos/data.ts'), 'utf8');
-    var block = src.slice(src.indexOf('INITIAL_CONFIG'), src.indexOf('DEFAULT_PARKS'));
-    assert.ok(/name:\s*""/.test(block));
-    assert.ok(/instagram:\s*""/.test(block));
+  test('la identidad por defecto de Instafotos es la marca pública guardada', function () {
+    var execSync = require('child_process').execSync;
+    function fields(src) {
+      var block = src.slice(src.indexOf('INITIAL_CONFIG'), src.indexOf('DEFAULT_PARKS'));
+      return {
+        name: (block.match(/name:\s*"([^"]*)"/) || [])[1],
+        instagram: (block.match(/instagram:\s*"([^"]*)"/) || [])[1],
+      };
+    }
+    var current = fs.readFileSync(path.join(ROOT, 'src/pages/Instafotos/data.ts'), 'utf8');
+    var saved = execSync('git show 0eac8db:src/pages/Instafotos/data.ts', { cwd: ROOT, encoding: 'utf8' });
+    assert.deepStrictEqual(fields(current), fields(saved));
+    assert.ok(fields(current).name.length > 0);
+    assert.ok(!/wa\.me\/|tel:\+?\d/.test(current));
+  });
+
+  test('un eje con nombre sintético se copia a Persona A y se conserva', function () {
+    var raw = {
+      id: 's3',
+      scores: { personaDemo: { score: 8, action: 'visible' } },
+    };
+    var session = storage.sanitizeSelfradarSession(raw);
+    assert.strictEqual(session.scores.e4.score, 8);
+    assert.strictEqual(session.scores.e4.action, 'visible');
+    assert.strictEqual(session.scores.personaDemo.score, 8);
+    assert.strictEqual(session.scores.personaDemo.action, 'visible');
+  });
+
+  test('migración y uso normal de Self Radar no llaman a la red', function () {
+    installMemoryStorage();
+    var calls = { fetch: 0, xhr: 0, beacon: 0 };
+    var prevFetch = global.fetch;
+    var prevXhr = global.XMLHttpRequest;
+    global.fetch = function () { calls.fetch += 1; return Promise.resolve(); };
+    global.XMLHttpRequest = function () { calls.xhr += 1; };
+    var prevBeacon = global.navigator && global.navigator.sendBeacon;
+    if (global.navigator) {
+      global.navigator.sendBeacon = function () { calls.beacon += 1; return true; };
+    }
+    try {
+      storage.sanitizeSelfradarSession({
+        id: 's4',
+        scores: { personaDemo: { score: 2, action: 'local' } },
+        sonrisaZebra: 'solo local',
+      });
+      storage.saveSelfradarSessions([storage.sanitizeSelfradarSession({ id: 's5', scores: {} })]);
+      storage.loadSelfradarSessions();
+    } finally {
+      global.fetch = prevFetch;
+      global.XMLHttpRequest = prevXhr;
+      if (global.navigator) global.navigator.sendBeacon = prevBeacon;
+    }
+    assert.strictEqual(calls.fetch + calls.xhr + calls.beacon, 0);
   });
 };

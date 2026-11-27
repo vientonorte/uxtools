@@ -4,8 +4,8 @@ export const FLOWER_BG =
   "https://images.unsplash.com/photo-1717683822568-3b85cb0b2844?w=700&h=500&fit=crop&auto=format"
 
 export const INITIAL_CONFIG: Config = {
-  name: "",
-  instagram: "",
+  name: "Fotos Instantáneas",
+  instagram: "@fotosinstantaneas.cl",
   price1: "$3.000",
   price2: "2 × $5.000",
   tagline: {
