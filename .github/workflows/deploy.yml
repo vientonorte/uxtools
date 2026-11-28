@@ -30,11 +30,14 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      - name: Install dependencies
+        run: npm install
+
       - name: Validate HTML and JS assets
         run: node scripts/validate-static.cjs
 
       - name: Run unit tests
-        run: node tests/unit.js || true
+        run: node tests/unit.cjs
 
   deploy:
     needs: validate
@@ -78,6 +81,9 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
         run: npm run build:pages
+
+      - name: Block deploy if dist has denied tokens
+        run: node scripts/qa-no-pii.mjs dist
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

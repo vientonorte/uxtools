@@ -10,7 +10,9 @@
     "publish:legacy": "node scripts/publish-legacy.cjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx"
+    "lint": "eslint src --ext .ts,.tsx",
+    "qa:no-pii": "node scripts/qa-no-pii.mjs dist",
+    "qa:no-pii:fixture": "node scripts/qa-no-pii.mjs --self-test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

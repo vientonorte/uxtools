@@ -1019,6 +1019,8 @@ test('Campo: el respaldo incluye fichas y lotes', function () {
   assert.ok(campoSrc.includes('"Exportar fichas"'));
 });
 
+require('./privacy-units.cjs')(test, section);
+
 /* ══════════════════════════════════════════════════════════════ */
 /*  RESULT SUMMARY                                               */
 /* ══════════════════════════════════════════════════════════════ */

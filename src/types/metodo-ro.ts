@@ -1,4 +1,4 @@
-/** Método Ro · Selfradar + Kit TLP (Bullet Ro / bujo-ro v1.2) */
+/** Self Radar + Kit TLP. Plantilla genérica, sin datos precargados. */
 
 export const SELFRADAR_STORAGE_KEY = 'uxtools-selfradar-sessions';
 export const KIT_TLP_STORAGE_KEY = 'uxtools-kit-tlp-sessions';
@@ -12,15 +12,15 @@ export interface SelfradarAxisDef {
   color: ClaveAColor;
 }
 
-/** Dimensiones fijas Selfradar Rö — no reinventar cada semana */
+/** Plantilla vacía. Etiquetas neutras; quien usa la herramienta escribe sus datos. */
 export const SELFRADAR_AXES: SelfradarAxisDef[] = [
-  { id: 'cuerpo', label: 'Cuerpo / salud', short: 'Cuerpo', color: 'rosa' },
-  { id: 'descanso', label: 'Descanso / buen vivir', short: 'Descanso', color: 'rosa' },
-  { id: 'vinculos', label: 'Vínculos', short: 'Vínculos', color: 'gris' },
-  { id: 'camila', label: 'Camila / pareja', short: 'Camila', color: 'verde' },
-  { id: 'trabajo', label: 'Trabajo / VN', short: 'Trabajo/VN', color: 'naranja' },
-  { id: 'dinero', label: 'Dinero / finanzas', short: 'Dinero', color: 'amarillo' },
-  { id: 'estudio', label: 'Estudio / contra-archivo', short: 'Estudio', color: 'naranja' },
+  { id: 'e1', label: 'Eje 1', short: '1', color: 'rosa' },
+  { id: 'e2', label: 'Eje 2', short: '2', color: 'rosa' },
+  { id: 'e3', label: 'Eje 3', short: '3', color: 'gris' },
+  { id: 'e4', label: 'Persona A', short: 'A', color: 'verde' },
+  { id: 'e5', label: 'Eje 5', short: '5', color: 'naranja' },
+  { id: 'e6', label: 'Eje 6', short: '6', color: 'amarillo' },
+  { id: 'e7', label: 'Eje 7', short: '7', color: 'naranja' },
 ];
 
 export interface SelfradarAxisScore {
@@ -46,14 +46,14 @@ export interface SelfradarSession {
   necesito: string;
   observo: string;
   sonrisaPersonal: string;
-  sonrisaCamila: string;
+  sonrisaPersona: string;
   sonrisaLaboral: string;
   reviewPersonal: string;
   reviewLaboral: string;
-  reviewCamila: string;
+  reviewPersona: string;
   accionesPersonal: string;
   accionesLaboral: string;
-  accionesCamila: string;
+  accionesPersona: string;
   notaCierre: string;
 }
 
@@ -83,14 +83,14 @@ export function createSelfradarSession(): SelfradarSession {
     necesito: '',
     observo: '',
     sonrisaPersonal: '',
-    sonrisaCamila: '',
+    sonrisaPersona: '',
     sonrisaLaboral: '',
     reviewPersonal: '',
     reviewLaboral: '',
-    reviewCamila: '',
+    reviewPersona: '',
     accionesPersonal: '',
     accionesLaboral: '',
-    accionesCamila: '',
+    accionesPersona: '',
     notaCierre: '',
   };
 }

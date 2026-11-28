@@ -1,19 +1,52 @@
+import { Component, lazy, Suspense, type ReactNode } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Nav } from './components/Nav';
 import { Footer } from './components/Footer';
+import { RoutePrivacy } from './components/RoutePrivacy';
 import { BenchmarkProvider } from './contexts/BenchmarkContext';
 import Dashboard from './pages/Dashboard';
 import Benchmark from './pages/Benchmark';
 import UxFlow from './pages/UxFlow';
 import Admin from './pages/Admin';
 import Brief from './pages/Brief';
-import Medicinal from './pages/Medicinal';
 import Selfradar from './pages/Selfradar';
 import KitTlp from './pages/KitTlp';
 import Onboarding from './pages/Onboarding';
 import Polijuego from './pages/Polijuego';
-import Camila from './pages/Camila';
 import { ToolGate } from './components/ToolGate';
+
+const Medicinal = lazy(() => import('./pages/Medicinal'));
+const Instafotos = lazy(() => import('./pages/Instafotos'));
+
+function PageFallback() {
+  return (
+    <main id="main" tabIndex={-1}>
+      <p role="status">Cargando…</p>
+    </main>
+  );
+}
+
+class MedicinalBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <main id="main" tabIndex={-1}>
+          <p role="alert">No se pudo abrir esta herramienta.</p>
+          <button type="button" className="route-fallback__reload" onClick={() => window.location.reload()}>
+            Recargar
+          </button>
+        </main>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   return (
@@ -22,6 +55,7 @@ export default function App() {
         Saltar al contenido principal
       </a>
       <Nav />
+      <RoutePrivacy />
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route
@@ -49,7 +83,16 @@ export default function App() {
             </ToolGate>
           }
         />
-        <Route path="/medicinal" element={<Medicinal />} />
+        <Route
+          path="/medicinal"
+          element={
+            <MedicinalBoundary>
+              <Suspense fallback={<PageFallback />}>
+                <Medicinal />
+              </Suspense>
+            </MedicinalBoundary>
+          }
+        />
         <Route
           path="/selfradar"
           element={
@@ -83,10 +126,22 @@ export default function App() {
             </ToolGate>
           }
         />
-        <Route path="/camila" element={<Camila />} />
-        <Route path="/camila/*" element={<Camila />} />
-        <Route path="/instafotos-app" element={<Camila />} />
-        <Route path="/instafotos-app/*" element={<Camila />} />
+        <Route
+          path="/instafotos-app"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <Instafotos />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/instafotos-app/*"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <Instafotos />
+            </Suspense>
+          }
+        />
       </Routes>
       <Footer />
     </BenchmarkProvider>

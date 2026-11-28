@@ -1,10 +1,11 @@
-import './camila.css'
+import './instafotos.css'
 import { useState, useRef, useCallback, useEffect } from "react"
 import { toPng } from "html-to-image"
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet"
 import L from "leaflet"
 import type { Lang, Tab, Config, Park, MeetingPoint, RoiSession, HistorialEntry, Task } from "./types"
 import { TR, INITIAL_CONFIG, DEFAULT_PARKS, DEFAULT_MEETING_POINTS, DEFAULT_TASKS, CATEGORY_META, getLevel } from "./data"
+import { loadSupportContact, phoneDigits, saveSupportContact, telHref, waHref } from "../../lib/support-contact"
 import FlyerCard from "./FlyerCard"
 import ApoyoPanel from "./ApoyoPanel"
 import HistorialPanel from "./HistorialPanel"
@@ -300,7 +301,7 @@ const TABS: { id: Tab; icon: string }[] = [
 ]
 const LANG_FLAGS: Record<Lang, string> = { es: "🇨🇱", en: "🇬🇧", pt: "🇧🇷" }
 
-export default function Camila() {
+export default function InstafotosApp() {
   const isDesktop = useIsDesktop()
   const [lang, setLang] = useState<Lang>("es")
   const [tab, setTab] = useState<Tab>("flyer")
@@ -312,8 +313,23 @@ export default function Camila() {
   const [historial, setHistorial] = useState<HistorialEntry[]>([])
   const [tasks, setTasks] = useState<Task[]>(DEFAULT_TASKS)
   const [showHelpModal, setShowHelpModal] = useState(false)
+  const [supportPhone, setSupportPhone] = useState("")
+  const [savedPhone, setSavedPhone] = useState("")
   const [downloading, setDownloading] = useState(false)
   const flyerRef = useRef<HTMLDivElement>(null)
+
+  function openHelp() {
+    const current = loadSupportContact().phone
+    setSupportPhone(current)
+    setSavedPhone(current)
+    setShowHelpModal(true)
+  }
+
+  function persistSupport() {
+    const phone = supportPhone.trim()
+    saveSupportContact({ label: "Persona de apoyo", phone })
+    setSavedPhone(phone)
+  }
 
   const tr = TR[lang]
   const parkData = parks.find((p) => p.id === selectedPark) ?? null
@@ -348,7 +364,7 @@ export default function Camila() {
   }
 
   return (
-    <div className="camila-overlay" style={{ background: "linear-gradient(160deg,#eff6ff 0%,#e0f2fe 50%,#f0fdf4 100%)", fontFamily: "Nunito,sans-serif", flexDirection: isDesktop ? "row" : "column" }}>
+    <div className="instafotos-overlay" style={{ background: "linear-gradient(160deg,#eff6ff 0%,#e0f2fe 50%,#f0fdf4 100%)", fontFamily: "Nunito,sans-serif", flexDirection: isDesktop ? "row" : "column" }}>
       {isDesktop && (
         <div style={{ width: 200, flexShrink: 0, background: "rgba(255,255,255,.92)", borderRight: "1px solid #e0eaff", display: "flex", flexDirection: "column", height: "100%", overflowY: "auto" }}>
           <div style={{ padding: "20px 16px 14px" }}>
@@ -368,7 +384,7 @@ export default function Camila() {
             {TABS.map(({ id, icon }) => <NavItem key={id} id={id} icon={icon} />)}
           </nav>
           <div style={{ padding: "12px 14px", borderTop: "1px solid #e0eaff" }}>
-            <button onClick={() => setShowHelpModal(true)} style={{ width: "100%", padding: "9px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>🆘 Ayuda — Rodrigo</button>
+            <button onClick={openHelp} style={{ width: "100%", padding: "9px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", fontWeight: 700, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>🆘 Ayuda</button>
           </div>
         </div>
       )}
@@ -381,7 +397,7 @@ export default function Camila() {
               <div style={{ fontSize: 10, color: "#6b7280" }}>Instafotos App · {level.icon} {level.name} · {totalPoints} ⭐</div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <button onClick={() => setShowHelpModal(true)} style={{ width: 34, height: 34, borderRadius: "50%", border: "none", background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>🆘</button>
+              <button type="button" onClick={openHelp} aria-label="Ayuda" style={{ width: 44, height: 44, borderRadius: "50%", border: "none", background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>🆘</button>
               <div style={{ display: "flex", gap: 2, background: "#f1f5f9", borderRadius: 10, padding: 3 }}>
                 {(["es", "en", "pt"] as Lang[]).map((l) => (
                   <button key={l} onClick={() => setLang(l)} style={{ padding: "3px 6px", borderRadius: 7, border: "none", cursor: "pointer", fontSize: 11, fontWeight: 700, background: lang === l ? "#2563eb" : "transparent", color: lang === l ? "#fff" : "#6b7280", fontFamily: "Nunito,sans-serif" }}>{LANG_FLAGS[l]}</button>
@@ -398,7 +414,7 @@ export default function Camila() {
                 <FlyerCard lang={lang} park={parkData} config={config} flyerRef={flyerRef} />
                 <button onClick={handleDownload} disabled={downloading} style={{ width: "100%", maxWidth: 300, padding: "14px 0", borderRadius: 20, border: "none", cursor: downloading ? "default" : "pointer", background: downloading ? "#93c5fd" : "linear-gradient(135deg,#2563eb,#1d4ed8)", color: "#fff", fontFamily: "Caveat,cursive", fontSize: 22, fontWeight: 700, boxShadow: downloading ? "none" : "0 6px 24px rgba(37,99,235,.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                   {downloading ? (
-                    <><svg style={{ animation: "camila-spin 1s linear infinite" }} width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round" /></svg>{tr.downloading}</>
+                    <><svg style={{ animation: "instafotos-spin 1s linear infinite" }} width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="32" strokeDashoffset="12" strokeLinecap="round" /></svg>{tr.downloading}</>
                   ) : tr.download}
                 </button>
                 {parkData && (
@@ -447,15 +463,51 @@ export default function Camila() {
 
       {showHelpModal && (
         <div onClick={() => setShowHelpModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 2000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 24, padding: 28, maxWidth: 320, width: "100%", textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,.25)" }}>
-            <div style={{ width: 64, height: 64, borderRadius: "50%", background: "linear-gradient(135deg,#16a34a,#15803d)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, margin: "0 auto 14px" }}>👨‍💻</div>
-            <div style={{ fontFamily: "Caveat,cursive", fontSize: 26, fontWeight: 700, color: "#1e3a8a", marginBottom: 4 }}>Rodrigo</div>
-            <div style={{ fontSize: 13, color: "#6b7280", marginBottom: 18, lineHeight: 1.5 }}>{lang === "es" ? "¿Necesitas ayuda técnica?" : lang === "en" ? "Need technical help?" : "Precisa de ajuda técnica?"}</div>
-            <div style={{ fontFamily: "Caveat,cursive", fontSize: 22, fontWeight: 700, color: "#16a34a", marginBottom: 22, padding: "10px 16px", background: "#f0fdf4", borderRadius: 12, border: "1.5px solid #bbf7d0" }}>📞 +56 9 4263 7408</div>
+          <div className="instafotos-help" role="dialog" aria-modal="true" aria-labelledby="support-title" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 24, padding: 28, maxWidth: 360, width: "100%", textAlign: "left", boxShadow: "0 20px 60px rgba(0,0,0,.25)" }}>
+            <h2 id="support-title" style={{ fontFamily: "Caveat,cursive", fontSize: 28, fontWeight: 700, color: "#1e3a8a", margin: "0 0 8px" }}>
+              {lang === "en" ? "Your support person" : lang === "pt" ? "Sua pessoa de apoio" : "Tu persona de apoyo"}
+            </h2>
+            <p style={{ fontSize: 13, color: "#374151", margin: "0 0 14px", lineHeight: 1.5 }}>
+              {lang === "en"
+                ? "Empty until you type a number. It stays in this browser only."
+                : lang === "pt"
+                  ? "Vazio até você escrever um número. Fica só neste navegador."
+                  : "Vacío hasta que escribas un número. Queda solo en este navegador."}
+            </p>
+            <label htmlFor="support-phone" style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#1e3a8a", marginBottom: 6 }}>
+              {lang === "en" ? "Phone" : lang === "pt" ? "Telefone" : "Teléfono"}
+            </label>
+            <input
+              id="support-phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="off"
+              value={supportPhone}
+              onChange={(e) => setSupportPhone(e.target.value)}
+              style={{ width: "100%", boxSizing: "border-box", padding: "12px 14px", borderRadius: 12, border: "1.5px solid #cbd5e1", fontSize: 16, marginBottom: 12 }}
+            />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <button onClick={() => setShowHelpModal(false)} style={{ padding: "12px", borderRadius: 14, border: "1.5px solid #e2e8f0", background: "#f9fafb", color: "#6b7280", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "Nunito,sans-serif" }}>Cancelar</button>
-              <a href="tel:+56942637408" onClick={() => setShowHelpModal(false)} style={{ padding: "12px", borderRadius: 14, border: "none", background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "Nunito,sans-serif", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>📞 {lang === "en" ? "Call" : "Llamar"}</a>
+              <button type="button" onClick={() => setShowHelpModal(false)} style={{ padding: "12px", borderRadius: 14, border: "1.5px solid #e2e8f0", background: "#f9fafb", color: "#374151", fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "Nunito,sans-serif" }}>
+                {lang === "en" ? "Close" : lang === "pt" ? "Fechar" : "Cerrar"}
+              </button>
+              <button type="button" onClick={persistSupport} style={{ padding: "12px", borderRadius: 14, border: "none", background: "#001A72", color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", fontFamily: "Nunito,sans-serif" }}>
+                {lang === "en" ? "Save" : lang === "pt" ? "Salvar" : "Guardar"}
+              </button>
             </div>
+            {phoneDigits(savedPhone).length >= 8 ? (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
+                <a href={telHref(savedPhone) ?? undefined} style={{ padding: "12px", borderRadius: 14, border: "none", background: "linear-gradient(135deg,#16a34a,#15803d)", color: "#fff", fontWeight: 800, fontSize: 14, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {lang === "en" ? "Call" : lang === "pt" ? "Ligar" : "Llamar"}
+                </a>
+                <a href={waHref(savedPhone) ?? undefined} target="_blank" rel="noopener noreferrer" style={{ padding: "12px", borderRadius: 14, border: "1.5px solid #16a34a", background: "#f0fdf4", color: "#166534", fontWeight: 800, fontSize: 14, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  WhatsApp
+                </a>
+              </div>
+            ) : (
+              <p style={{ fontSize: 12, color: "#4b5563", margin: "12px 0 0" }}>
+                {lang === "en" ? "SOS stays closed until a number is saved." : lang === "pt" ? "O SOS fica fechado até salvar um número." : "SOS no abre nada hasta que guardes un número."}
+              </p>
+            )}
           </div>
         </div>
       )}

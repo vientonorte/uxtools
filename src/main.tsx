@@ -9,7 +9,6 @@ import './styles/benchmark.css';
 import './styles/uxflow.css';
 import './styles/admin.css';
 import './styles/brief.css';
-import './styles/medicinal.css';
 import './styles/metodo-ro.css';
 import App from './App';
 import { consumeAuthCallback } from './lib/supabase';

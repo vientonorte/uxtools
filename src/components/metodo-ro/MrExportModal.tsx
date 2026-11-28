@@ -30,7 +30,7 @@ export function MrExportModal({
   onDone,
   onError,
 }: MrExportModalProps) {
-  const [mode, setMode] = useState<Mode>(preferEncrypted ? 'encrypted' : 'plain');
+  const [mode, setMode] = useState<Mode>(tool === 'selfradar' || preferEncrypted ? 'encrypted' : 'plain');
   const [pass, setPass] = useState('');
   const [pass2, setPass2] = useState('');
   const [busy, setBusy] = useState(false);
@@ -39,7 +39,7 @@ export function MrExportModal({
   function resetAndClose() {
     setPass('');
     setPass2('');
-    setMode(preferEncrypted ? 'encrypted' : 'plain');
+    setMode(tool === 'selfradar' || preferEncrypted ? 'encrypted' : 'plain');
     setBusy(false);
     onClose();
   }
@@ -47,6 +47,11 @@ export function MrExportModal({
   async function handleExport() {
     if (busy) return;
     if (mode === 'plain') {
+      if (tool === 'selfradar') {
+        onDone('Pendiente: export cifrado Self Radar. El JSON plano no se descarga.');
+        resetAndClose();
+        return;
+      }
       downloadJson(`${filenameBase}.json`, payload);
       onDone('JSON exportado (sin cifrar · solo este dispositivo)');
       resetAndClose();
@@ -82,7 +87,9 @@ export function MrExportModal({
       description={
         preferEncrypted
           ? 'Kit TLP y Selfradar pueden contener datos sensibles. Prefiere cifrado con frase.'
-          : 'Elige export plano (JSON) o cifrado con frase (AES-GCM, solo en tu dispositivo).'
+          : tool === 'selfradar'
+            ? 'Self Radar solo descarga un archivo cifrado. El JSON plano queda pendiente.'
+            : 'Elige export plano (JSON) o cifrado con frase (AES-GCM, solo en tu dispositivo).'
       }
       onClose={resetAndClose}
       initialFocusRef={passRef as RefObject<HTMLElement | null>}
@@ -104,9 +111,10 @@ export function MrExportModal({
             type="radio"
             name="export-mode"
             checked={mode === 'plain'}
+            disabled={tool === 'selfradar'}
             onChange={() => setMode('plain')}
           />
-          JSON plano
+          JSON plano{tool === 'selfradar' ? ' · pendiente' : ''}
         </label>
         <label className="mr-check">
           <input

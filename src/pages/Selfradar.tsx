@@ -148,11 +148,11 @@ export default function Selfradar() {
   return (
     <main className="mr-main" id="main" tabIndex={-1}>
       <header className="mr-header">
-        <div className="mr-eyebrow">Método Ro · Bullet Ro · Clave A · local-first</div>
+        <div className="mr-eyebrow">Self Radar · plantilla en blanco · local-first</div>
         <h1 className="mr-title">Self Radar</h1>
         <p className="mr-sub">
-          Review semanal: 7 dimensiones fijas (1–10), buen vivir y máx. 3 acciones.
-          Todo en localStorage validado — sin servidores.
+          Review semanal: 7 ejes neutros (1–10) y máx. 3 acciones.
+          Los datos los escribes tú. Todo en localStorage — sin servidores.
         </p>
       </header>
 
@@ -168,21 +168,21 @@ export default function Selfradar() {
         </MrButton>
       </div>
 
-      <div className="mr-clave" aria-label="Clave A">
+      <div className="mr-clave" aria-label="Colores de la plantilla">
         <span>
-          <span className="mr-dot mr-dot--rosa" /> Rosa · Personal
+          <span className="mr-dot mr-dot--rosa" /> Rosa · Ejes 1–2
         </span>
         <span>
-          <span className="mr-dot mr-dot--gris" /> Gris · Vínculos
+          <span className="mr-dot mr-dot--gris" /> Gris · Eje 3
         </span>
         <span>
-          <span className="mr-dot mr-dot--verde" /> Verde · Camila
+          <span className="mr-dot mr-dot--verde" /> Verde · Persona A
         </span>
         <span>
-          <span className="mr-dot mr-dot--naranja" /> Naranja · Laboral/VN
+          <span className="mr-dot mr-dot--naranja" /> Naranja · Ejes 5 y 7
         </span>
         <span>
-          <span className="mr-dot mr-dot--amarillo" /> Amarillo · Refs/$
+          <span className="mr-dot mr-dot--amarillo" /> Amarillo · Eje 6
         </span>
       </div>
 
@@ -237,7 +237,7 @@ export default function Selfradar() {
               <>
                 <MrCard title="Cómo usar">
                   <ol className="mr-rules">
-                    <li>Dimensiones fijas (estas 7). No reinventar cada semana.</li>
+                    <li>Siete ejes en blanco. Ponles el sentido que necesites.</li>
                     <li>Escala 1–10. Sin moralizar el score.</li>
                     <li>Una acción por eje bajo (≤5) → máx. 3 bloques Calendar.</li>
                     <li>Cadencia: domingo o fin de mes. No diario.</li>
@@ -288,7 +288,7 @@ export default function Selfradar() {
                 {bajos.length > 0 && (
                   <MrCard
                     title="Ejes bajos (≤5) → Calendar"
-                    hint="Máx. 3 bloques. No inventar eventos Camila."
+                    hint="Máx. 3 bloques."
                   >
                     <ul className="mr-rules">
                       {bajos.map((a) => (
@@ -310,7 +310,7 @@ export default function Selfradar() {
               <>
                 <MrCard
                   title="Preguntas × un buen vivir"
-                  hint="Estilo p.87 Bullet Ro"
+                  hint="Cuatro preguntas, en blanco"
                 >
                   <MrField
                     id="q1"
@@ -391,7 +391,7 @@ export default function Selfradar() {
                       as="textarea"
                       label={
                         <>
-                          <span className="mr-dot mr-dot--rosa" /> Personal / cuerpo
+                          <span className="mr-dot mr-dot--rosa" /> Eje 1
                         </>
                       }
                       value={active.sonrisaPersonal}
@@ -402,18 +402,18 @@ export default function Selfradar() {
                       as="textarea"
                       label={
                         <>
-                          <span className="mr-dot mr-dot--verde" /> Camila / vínculos
+                          <span className="mr-dot mr-dot--verde" /> Persona A
                         </>
                       }
-                      value={active.sonrisaCamila}
-                      onChange={(v) => patch({ sonrisaCamila: v })}
+                      value={active.sonrisaPersona}
+                      onChange={(v) => patch({ sonrisaPersona: v })}
                     />
                     <MrField
                       id="sl"
                       as="textarea"
                       label={
                         <>
-                          <span className="mr-dot mr-dot--naranja" /> Laboral / VN
+                          <span className="mr-dot mr-dot--naranja" /> Eje 5
                         </>
                       }
                       value={active.sonrisaLaboral}
@@ -427,23 +427,23 @@ export default function Selfradar() {
                     <MrField
                       id="rp"
                       as="textarea"
-                      label="Personal / bienestar"
+                      label="Eje 1"
                       value={active.reviewPersonal}
                       onChange={(v) => patch({ reviewPersonal: v })}
                     />
                     <MrField
                       id="rl"
                       as="textarea"
-                      label="VN / trabajo / estudio"
+                      label="Eje 5"
                       value={active.reviewLaboral}
                       onChange={(v) => patch({ reviewLaboral: v })}
                     />
                     <MrField
                       id="rc"
                       as="textarea"
-                      label="Camila / juntos"
-                      value={active.reviewCamila}
-                      onChange={(v) => patch({ reviewCamila: v })}
+                      label="Persona A"
+                      value={active.reviewPersona}
+                      onChange={(v) => patch({ reviewPersona: v })}
                     />
                   </div>
                 </MrCard>
@@ -456,23 +456,23 @@ export default function Selfradar() {
                     <MrField
                       id="ap"
                       as="textarea"
-                      label="Personal ○"
+                      label="Eje 1"
                       value={active.accionesPersonal}
                       onChange={(v) => patch({ accionesPersonal: v })}
                     />
                     <MrField
                       id="al"
                       as="textarea"
-                      label="Laboral / $ *"
+                      label="Eje 6"
                       value={active.accionesLaboral}
                       onChange={(v) => patch({ accionesLaboral: v })}
                     />
                     <MrField
                       id="ac"
                       as="textarea"
-                      label="Camila / vínculos >"
-                      value={active.accionesCamila}
-                      onChange={(v) => patch({ accionesCamila: v })}
+                      label="Persona A"
+                      value={active.accionesPersona}
+                      onChange={(v) => patch({ accionesPersona: v })}
                     />
                   </div>
                 </MrCard>
@@ -530,8 +530,7 @@ export default function Selfradar() {
       </MrTabs>
 
       <p className="mr-privacy">
-        Security by design: validación al cargar/guardar, límites de texto, export
-        cifrado opcional (AES-GCM), sin red. No diagnosticar desde el score — solo trazar.
+        Security by design: los datos quedan en este dispositivo. La descarga en claro está pendiente; el export disponible va cifrado (AES-GCM). Sin red.
       </p>
 
       <MrConfirmModal
@@ -548,7 +547,7 @@ export default function Selfradar() {
         payload={active}
         tool="selfradar"
         filenameBase={`selfradar-${active.date || 'sesion'}`}
-        preferEncrypted={false}
+        preferEncrypted={true}
         onDone={showToast}
         onError={showToast}
       />
